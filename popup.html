@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
   <meta charset="UTF-8">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,19 +20,16 @@
       --warning: #f0c040;
       --radius: 10px;
     }
-
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
-
     html {
       width: 320px;
       max-height: 600px;
       overflow: hidden;
     }
-
     body {
       width: 320px;
       max-height: 600px;
@@ -45,7 +41,6 @@
       display: flex;
       flex-direction: column;
     }
-
     .toast {
       position: fixed;
       top: 14px;
@@ -69,27 +64,22 @@
       align-items: center;
       gap: 6px;
     }
-
     .toast.show {
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
-
     .toast-success {
       border-color: var(--success);
       color: var(--success);
     }
-
     .toast-warning {
       border-color: var(--warning);
       color: var(--warning);
     }
-
     .toast-info {
       border-color: var(--accent);
       color: var(--accent);
     }
-
     .header {
       background: linear-gradient(135deg, #1a1929 0%, #12111e 100%);
       padding: 10px 14px;
@@ -98,25 +88,21 @@
       align-items: center;
       gap: 10px;
     }
-
     .header-logo {
       display: flex;
       align-items: center;
       user-select: none;
       pointer-events: none;
     }
-
     .header-logo img {
       display: block;
     }
-
     .header-actions {
       margin-left: auto;
       display: flex;
       align-items: center;
       gap: 6px;
     }
-
     .header-badge {
       background: var(--surface2);
       border: 1px solid var(--border);
@@ -127,7 +113,6 @@
       border-radius: 4px;
       letter-spacing: 0.5px;
     }
-
     .header-btn {
       background: var(--surface2);
       border: 1px solid var(--border);
@@ -141,26 +126,22 @@
       cursor: pointer;
       transition: all 0.2s;
     }
-
     .header-btn:hover {
       border-color: var(--accent);
       color: var(--accent);
     }
-
     .header-btn.active {
       background: var(--accent);
       color: #0f0e17;
       border-color: var(--accent);
       box-shadow: 0 0 10px rgba(232, 160, 69, 0.3);
     }
-
     .header-info-group {
       display: flex;
       align-items: center;
       gap: 4px;
       margin-left: 8px;
     }
-
     .info-badge {
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid var(--border);
@@ -173,40 +154,33 @@
       gap: 3px;
       font-variant-numeric: tabular-nums;
     }
-
     .info-badge svg {
       color: var(--text-muted);
       opacity: 0.7;
     }
-
     .info-badge.active {
       border-color: var(--accent);
       color: var(--accent);
       background: rgba(232, 160, 69, 0.05);
     }
-
     .info-badge.active svg {
       color: var(--accent);
       opacity: 1;
     }
-
     .info-badge.clickable {
       cursor: pointer;
       transition: all 0.2s;
     }
-
     .info-badge.clickable:hover {
       border-color: var(--accent);
       color: var(--accent);
     }
-
     .timer-selector {
       display: flex;
       flex-direction: column;
       gap: 8px;
       width: 140px;
     }
-
     .auto-stop-select {
       -webkit-appearance: none;
       -moz-appearance: none;
@@ -225,29 +199,24 @@
       transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
       width: 100%;
     }
-
     .auto-stop-select:hover {
       border-color: var(--accent);
       background-color: rgba(232, 160, 69, 0.05);
     }
-
     .auto-stop-select:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 2px rgba(232, 160, 69, 0.15);
     }
-
     .auto-stop-select option {
       background: #1a1929;
       color: var(--text);
       padding: 10px;
     }
-
     input[type=number]::-webkit-inner-spin-button,
     input[type=number]::-webkit-outer-spin-button {
       -webkit-appearance: none;
       margin: 0;
     }
-
     input[type=number] {
       -moz-appearance: textfield;
       appearance: textfield;
@@ -261,14 +230,12 @@
       font-size: 10.5px;
       font-weight: 700;
     }
-
     .auto-stop-input-group {
       display: flex;
       align-items: center;
       gap: 6px;
       margin-top: 2px;
     }
-
     .auto-stop-input {
       width: 40px;
       background: var(--surface);
@@ -279,12 +246,10 @@
       font-size: 10px;
       text-align: center;
     }
-
     .auto-stop-unit {
       font-size: 10px;
       color: var(--text-muted);
     }
-
     .book-card {
       display: flex;
       gap: 10px;
@@ -292,7 +257,6 @@
       background: var(--surface);
       border-bottom: 1px solid var(--border);
     }
-
     #cover-img {
       width: 54px;
       height: 78px;
@@ -303,12 +267,10 @@
       border: 1px solid var(--border);
       background: var(--surface2);
     }
-
     .book-meta {
       flex: 1;
       min-width: 0;
     }
-
     .book-label {
       font-size: 9px;
       color: var(--text-muted);
@@ -316,7 +278,6 @@
       letter-spacing: 1px;
       margin-bottom: 3px;
     }
-
     #current-title {
       font-weight: 600;
       font-size: 13px;
@@ -329,7 +290,6 @@
       overflow: hidden;
       margin-bottom: 4px;
     }
-
     #current-chap {
       font-size: 11px;
       color: var(--accent);
@@ -338,7 +298,6 @@
       text-overflow: ellipsis;
       margin-bottom: 6px;
     }
-
     .btn-save {
       background: transparent;
       border: 1px solid var(--border);
@@ -354,18 +313,15 @@
       gap: 6px;
       font-weight: 500;
     }
-
     .btn-save:hover {
       border-color: var(--accent);
       color: var(--accent);
     }
-
     .btn-save.saved {
       border-color: var(--success);
       color: var(--success);
       background: rgba(76, 175, 134, 0.1);
     }
-
     .status-bar {
       display: flex;
       align-items: center;
@@ -374,7 +330,6 @@
       background: var(--surface2);
       border-bottom: 1px solid var(--border);
     }
-
     .status-dot {
       width: 7px;
       height: 7px;
@@ -383,41 +338,33 @@
       transition: background 0.3s;
       flex-shrink: 0;
     }
-
     .status-dot.playing {
       background: var(--success);
       box-shadow: 0 0 6px var(--success);
       animation: pulse 1.4s infinite;
     }
-
     .status-dot.paused {
       background: var(--accent);
     }
-
     .hourglass-spin {
       display: inline-block;
       vertical-align: middle;
       margin-right: 4px;
       color: var(--warning);
     }
-
     @keyframes pulse {
-
       0%,
       100% {
         opacity: 1
       }
-
       50% {
         opacity: 0.4
       }
     }
-
     #status-text {
       font-size: 11px;
       color: var(--text-muted);
     }
-
     #tts-badge {
       font-size: 9px;
       padding: 1px 5px;
@@ -428,7 +375,6 @@
       margin-left: 6px;
       transition: color 0.3s, border-color 0.3s;
     }
-
     #timer-display {
       margin-left: auto;
       font-size: 11px;
@@ -438,7 +384,6 @@
       align-items: center;
       gap: 4px;
     }
-
     .sleep-timer-btn {
       background: var(--surface2);
       border: 1px solid var(--border);
@@ -449,18 +394,15 @@
       cursor: pointer;
       transition: all 0.2s;
     }
-
     .sleep-timer-btn:hover {
       border-color: var(--accent);
       color: var(--accent);
     }
-
     .sleep-timer-btn.active {
       background: var(--accent);
       color: #0f0e17;
       border-color: var(--accent);
     }
-
     #progress-text {
       font-size: 10.5px;
       font-weight: 600;
@@ -476,12 +418,10 @@
       cursor: pointer;
       transition: all 0.2s;
     }
-
     #progress-text:hover {
       background: rgba(232, 160, 69, 0.25);
       border-color: var(--accent);
     }
-
     #progress-input {
       width: 20px;
       background: transparent;
@@ -495,37 +435,31 @@
       padding: 0;
       margin: 0;
     }
-
     #progress-input::-webkit-outer-spin-button,
     #progress-input::-webkit-inner-spin-button {
       -webkit-appearance: none;
       appearance: none;
       margin: 0;
     }
-
     #progress-input[type=number] {
       -moz-appearance: textfield;
       appearance: textfield;
     }
-
     .progress-divider {
       color: var(--text-muted);
       opacity: 0.6;
       font-weight: 400;
     }
-
     #progress-total {
       min-width: 14px;
       text-align: left;
     }
-
     .progress-bar-wrapper {
       margin-bottom: 12px;
       display: flex;
       align-items: center;
       gap: 8px;
     }
-
     .progress-bar-container {
       flex: 1;
       height: 6px;
@@ -534,7 +468,6 @@
       overflow: hidden;
       position: relative;
     }
-
     .progress-bar-fill {
       position: absolute;
       left: 0;
@@ -546,7 +479,6 @@
       transition: width 0.3s ease;
       box-shadow: 0 0 8px rgba(232, 160, 69, 0.5);
     }
-
     #progress-percent {
       font-size: 10.5px;
       font-weight: 600;
@@ -554,7 +486,6 @@
       min-width: 32px;
       text-align: right;
     }
-
     .controls {
       padding: 12px 14px 8px;
       background: var(--surface);
@@ -563,7 +494,6 @@
       display: flex;
       flex-direction: column;
     }
-
     .ctrl-row {
       display: flex;
       align-items: center;
@@ -571,7 +501,6 @@
       gap: 8px;
       margin-bottom: 10px;
     }
-
     .chunk-nav {
       display: flex;
       justify-content: space-between;
@@ -582,7 +511,6 @@
       border-radius: 6px;
       border: 1px solid var(--border);
     }
-
     .btn-ctrl {
       background: var(--surface2);
       border: 1px solid var(--border);
@@ -595,28 +523,23 @@
       align-items: center;
       justify-content: center;
     }
-
     .btn-ctrl:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
-
     .btn-ctrl:hover:not(:disabled) {
       border-color: var(--accent);
       color: var(--accent);
       background: rgba(232, 160, 69, 0.05);
     }
-
     .btn-ctrl:active:not(:disabled) {
       transform: scale(0.96);
     }
-
     .btn-sm {
       width: 34px;
       height: 34px;
       font-size: 14px;
     }
-
     .btn-lg {
       height: 40px;
       padding: 0 16px;
@@ -628,24 +551,20 @@
       color: #fff;
       letter-spacing: 0.2px;
     }
-
     .btn-lg:hover {
       opacity: 0.9;
       color: #fff;
       border: none;
     }
-
     .sliders-row {
       display: flex;
       gap: 16px;
       margin-bottom: 10px;
       padding: 0 4px;
     }
-
     .slider-group {
       flex: 1;
     }
-
     .slider-label {
       display: flex;
       justify-content: space-between;
@@ -654,35 +573,28 @@
       color: var(--text-muted);
       margin-bottom: 5px;
     }
-
     #speed-val {
       color: #f0c040 !important;
       font-weight: 700;
     }
-
     #vol-val {
       color: #40c0f0 !important;
       font-weight: 700;
     }
-
     .label-speed {
       color: #f0c040 !important;
     }
-
     .label-vol {
       color: #40c0f0 !important;
     }
-
     input[type=range].speed-range::-webkit-slider-thumb {
       background: #f0c040;
       box-shadow: 0 0 6px rgba(240, 192, 64, 0.4);
     }
-
     input[type=range].vol-range::-webkit-slider-thumb {
       background: #40c0f0;
       box-shadow: 0 0 6px rgba(64, 192, 240, 0.4);
     }
-
     input[type=range] {
       -webkit-appearance: none;
       appearance: none;
@@ -693,7 +605,6 @@
       outline: none;
       cursor: pointer;
     }
-
     input[type=range]::-webkit-slider-thumb {
       -webkit-appearance: none;
       width: 13px;
@@ -703,11 +614,9 @@
       box-shadow: 0 0 4px rgba(232, 160, 69, 0.4);
       transition: transform 0.15s;
     }
-
     input[type=range]:hover::-webkit-slider-thumb {
       transform: scale(1.2);
     }
-
     .options-row {
       display: flex;
       gap: 8px;
@@ -715,7 +624,6 @@
       margin-top: 8px;
       width: 100%;
     }
-
     .voice-select {
       flex: 1;
       min-width: 0;
@@ -739,29 +647,24 @@
       background-position: right 12px center;
       transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
     }
-
     .voice-select:hover {
       border-color: var(--accent);
       background-color: rgba(232, 160, 69, 0.05);
     }
-
     .voice-select:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 2px rgba(232, 160, 69, 0.15);
     }
-
     .voice-select:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
-
     .voice-select option,
     .voice-select optgroup {
       background: #1a1929;
       color: var(--text);
       padding: 10px;
     }
-
     .voice-select optgroup {
       color: var(--accent);
       font-weight: 600;
@@ -769,7 +672,6 @@
       border-top: 1px solid var(--border);
       margin-top: 5px;
     }
-
     .toggle-group {
       display: flex;
       align-items: center;
@@ -778,19 +680,16 @@
       color: var(--text-muted);
       flex-shrink: 0;
     }
-
     .toggle {
       position: relative;
       width: 28px;
       height: 16px;
     }
-
     .toggle input {
       opacity: 0;
       width: 0;
       height: 0;
     }
-
     .toggle-slider {
       position: absolute;
       inset: 0;
@@ -799,7 +698,6 @@
       cursor: pointer;
       transition: 0.2s;
     }
-
     .toggle-slider::before {
       content: '';
       position: absolute;
@@ -811,15 +709,12 @@
       border-radius: 50%;
       transition: 0.2s;
     }
-
     .toggle input:checked+.toggle-slider {
       background: var(--accent);
     }
-
     .toggle input:checked+.toggle-slider::before {
       transform: translateX(12px);
     }
-
     .kbd-hint {
       font-size: 9px;
       color: var(--text-muted);
@@ -828,7 +723,6 @@
       padding-top: 10px;
       opacity: 0.65;
     }
-
     .kbd-hint kbd {
       background: var(--surface2);
       border: 1px solid var(--border);
@@ -837,11 +731,9 @@
       font-family: monospace;
       font-size: 8px;
     }
-
     .tab svg {
       flex-shrink: 0;
     }
-
     .panel {
       display: none;
       padding: 10px 14px;
@@ -849,25 +741,20 @@
       overflow-y: auto;
       border-top: 1px solid var(--border);
     }
-
     .panel.active {
       display: flex;
       flex-direction: column;
     }
-
     .panel::-webkit-scrollbar {
       width: 3px;
     }
-
     .panel::-webkit-scrollbar-track {
       background: transparent;
     }
-
     .panel::-webkit-scrollbar-thumb {
       background: var(--border);
       border-radius: 99px;
     }
-
     .search-box {
       position: sticky;
       top: -10px;
@@ -875,7 +762,6 @@
       padding: 5px 0 10px;
       z-index: 10;
     }
-
     #list-search {
       width: 100%;
       background: var(--surface2);
@@ -889,18 +775,15 @@
       background-repeat: no-repeat;
       background-position: 8px center;
     }
-
     #list-search:focus {
       border-color: var(--accent);
     }
-
     .list-empty {
       text-align: center;
       color: var(--text-muted);
       font-size: 11px;
       padding: 16px 0;
     }
-
     .list-item {
       display: flex;
       align-items: center;
@@ -910,15 +793,12 @@
       border-radius: 4px;
       transition: background 0.15s;
     }
-
     .list-item:last-child {
       border-bottom: none;
     }
-
     .list-item:hover {
       background: var(--surface2);
     }
-
     .list-thumb {
       width: 28px;
       height: 40px;
@@ -927,12 +807,10 @@
       flex-shrink: 0;
       background: var(--surface2);
     }
-
     .list-info {
       flex: 1;
       min-width: 0;
     }
-
     .list-name {
       font-size: 12px;
       font-weight: 500;
@@ -940,13 +818,11 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-
     .list-chap {
       font-size: 10px;
       color: var(--text-muted);
       margin-top: 1px;
     }
-
     .btn-remove {
       background: none;
       border: none;
@@ -958,11 +834,9 @@
       transition: color 0.2s;
       flex-shrink: 0;
     }
-
     .btn-remove:hover {
       color: var(--danger);
     }
-
     .setting-row {
       display: flex;
       justify-content: space-between;
@@ -971,20 +845,16 @@
       border-bottom: 1px solid var(--border);
       font-size: 12px;
     }
-
     .setting-row:last-child {
       border-bottom: none;
     }
-
     .setting-label {
       color: var(--text-muted);
     }
-
     .setting-val {
       color: var(--text);
       font-weight: 500;
     }
-
     .footer {
       padding: 8px 14px;
       text-align: center;
@@ -995,11 +865,9 @@
       letter-spacing: 0.5px;
       flex-shrink: 0;
     }
-
     .footer span {
       color: var(--accent);
     }
-
     #api-settings-box {
       width: 100%;
       background: var(--surface2);
@@ -1008,7 +876,6 @@
       border: 1px dashed var(--border);
       margin-top: 4px;
     }
-
     #api-key-input,
     #api-region-input {
       width: 100%;
@@ -1022,12 +889,10 @@
       outline: none;
       font-family: monospace;
     }
-
     #api-key-input:focus,
     #api-region-input:focus {
       border-color: var(--accent);
     }
-
     #btn-save-api {
       width: 100%;
       font-size: 11px;
@@ -1036,13 +901,11 @@
       color: var(--accent);
       border-color: var(--accent);
     }
-
     .icon-text {
       display: flex;
       align-items: center;
       gap: 5px;
     }
-
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -1054,11 +917,9 @@
       z-index: 10000;
       padding: 20px;
     }
-
     .modal-overlay.show {
       display: flex;
     }
-
     .modal {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -1069,48 +930,39 @@
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
       animation: modalSlide 0.25s ease-out;
     }
-
     @keyframes modalSlide {
       from {
         opacity: 0;
         transform: translateY(10px) scale(0.95);
       }
-
       to {
         opacity: 1;
         transform: translateY(0) scale(1);
       }
     }
-
     .modal-title {
       font-size: 15px;
       font-weight: 600;
       margin-bottom: 10px;
       color: var(--text);
     }
-
     .modal-body {
       font-size: 12px;
       color: var(--text-muted);
       line-height: 1.5;
       margin-bottom: 20px;
     }
-
     .modal-footer {
       display: flex;
       gap: 10px;
       justify-content: flex-end;
     }
-
-
-
     .custom-select-container {
       position: relative;
       flex: 1;
       min-width: 0;
       user-select: none;
     }
-
     .custom-select-trigger {
       background: var(--surface2);
       border: 1px solid var(--border);
@@ -1127,12 +979,10 @@
       background-position: right 12px center;
       transition: border-color 0.2s, background 0.2s;
     }
-
     .custom-select-trigger:hover {
       border-color: var(--accent);
       background-color: rgba(232, 160, 69, 0.05);
     }
-
     .custom-select-dropdown {
       position: absolute;
       top: calc(100% + 5px);
@@ -1154,48 +1004,38 @@
       max-height: 180px;
       overflow-y: auto;
     }
-
     .custom-select-dropdown::-webkit-scrollbar {
       width: 4px;
     }
-
     .custom-select-dropdown::-webkit-scrollbar-track {
       background: transparent;
     }
-
     .custom-select-dropdown::-webkit-scrollbar-thumb {
       background: var(--border);
       border-radius: 99px;
     }
-
     .custom-select-dropdown.show {
       opacity: 1;
       visibility: visible;
       transform: translateY(0);
     }
-
     .custom-option {
       padding: 8px 12px;
       font-size: 11px;
       color: var(--text);
       border-radius: 8px;
-
-
       cursor: pointer;
       transition: background 0.15s, color 0.15s;
     }
-
     .custom-option:hover {
       background: rgba(232, 160, 69, 0.15);
       color: var(--accent);
     }
-
     .custom-option.selected {
       background: var(--accent);
       color: #0f0e17;
       font-weight: 600;
     }
-
     .custom-optgroup {
       padding: 8px 12px 4px;
       font-size: 10px;
@@ -1207,27 +1047,21 @@
       border-top: 1px solid var(--border);
       margin-top: 4px;
     }
-
     .custom-optgroup:first-child {
       border-top: none;
       margin-top: 0;
     }
-
-
-
     .custom-select-container.drop-up .custom-select-dropdown {
       top: auto;
       bottom: calc(100% + 5px);
       box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.4);
       transform: translateY(10px);
     }
-
     .custom-select-container.drop-up .custom-select-dropdown.show {
       transform: translateY(0);
     }
   </style>
 </head>
-
 <body>
   <div class="toast" id="toast"></div>
   <div class="header">
@@ -1257,7 +1091,6 @@
       </button>
     </div>
   </div>
-
   <div class="panel active" id="panel-main" style="padding:0; border:none; max-height:none; overflow:visible;">
     <div class="book-card" id="book-card-content">
       <img id="cover-img" alt="Bìa truyện" style="display: none;">
@@ -1307,7 +1140,6 @@
         Trình duyệt chặn tự động phát!<br>Vui lòng <strong>nhấn chuột vào trang web truyện</strong> một lần trước khi
         bấm Nghe.
       </div>
-
       <div class="chunk-nav" style="margin-bottom: 8px;">
         <button class="btn-ctrl" id="btn-prev-chunk"
           style="padding: 4px 8px; font-size: 11px; border: none; background: transparent; color: var(--text-muted);"
@@ -1333,14 +1165,12 @@
           </svg>
         </button>
       </div>
-
       <div class="progress-bar-wrapper">
         <div class="progress-bar-container">
           <div class="progress-bar-fill" id="progress-bar-fill"></div>
         </div>
         <span id="progress-percent">0%</span>
       </div>
-
       <div class="ctrl-row">
         <button class="btn-ctrl btn-sm" id="btn-prev" title="Chương trước  [←]">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
@@ -1379,7 +1209,6 @@
           </svg>
         </button>
       </div>
-
       <div class="sliders-row">
         <div class="slider-group">
           <div class="slider-label">
@@ -1409,7 +1238,6 @@
           <input type="range" id="vol-slider" class="vol-range" min="0" max="1" step="0.05" value="1">
         </div>
       </div>
-
       <div class="options-row">
         <div class="custom-select-container drop-up">
           <div class="custom-select-trigger" id="custom-voice-trigger">
@@ -1418,9 +1246,7 @@
           <div class="custom-select-dropdown" id="custom-voice-dropdown">
           </div>
         </div>
-
         <select class="voice-select" id="voice-select" style="display: none;"></select>
-
         <div class="toggle-group">
           <label class="toggle">
             <input type="checkbox" id="chk-autonext" checked>
@@ -1429,7 +1255,6 @@
           <span>Tự qua chương</span>
         </div>
       </div>
-
       <div id="voice-hint"
         style="color: var(--danger); font-size: 10px; text-align: center; margin-top: 6px; display: none;">
         Hệ điều hành chưa có giọng Tiếng Việt.
@@ -1439,7 +1264,6 @@
       </div>
     </div>
   </div>
-
   <div class="panel" id="panel-reading-list">
     <div class="search-box">
       <input type="text" id="list-search" placeholder="Tìm tên truyện hoặc chương...">
@@ -1456,7 +1280,6 @@
           <span id="custom-engine-text">Web Speech API (Miễn phí)</span>
         </div>
         <div class="custom-select-dropdown" id="custom-engine-dropdown"></div>
-
         <select class="voice-select" id="engine-select" style="display: none;">
           <option value="web">Web Speech API (Miễn phí)</option>
           <optgroup label="API Cao Cấp (Cần Key)">
@@ -1507,7 +1330,6 @@
             <span id="custom-autostop-text">Không có</span>
           </div>
           <div class="custom-select-dropdown" id="custom-autostop-dropdown"></div>
-
           <select class="auto-stop-select" id="select-auto-stop" style="display: none;">
             <option value="off">Không có</option>
             <option value="time">Theo thời gian</option>
@@ -1533,6 +1355,27 @@
       <span class="setting-val" id="info-voice">Mặc định</span>
     </div>
     <div class="setting-row">
+      <span class="setting-label">Sử dụng phím tắt (K, R, mũi tên)</span>
+      <label class="toggle">
+        <input type="checkbox" id="chk-shortcuts" checked>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">Đọc tên truyện</span>
+      <label class="toggle">
+        <input type="checkbox" id="chk-read-book" checked>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">Đọc tên chương</span>
+      <label class="toggle">
+        <input type="checkbox" id="chk-read-chap" checked>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="setting-row">
       <span class="setting-label">Tổng truyện đã lưu</span>
       <span class="setting-val" id="info-count">0 truyện</span>
     </div>
@@ -1543,7 +1386,7 @@
         cả</button>
     </div>
   </div>
-  <div class="footer">Auto Đọc STV · Powered by <span>Web Speech & FPT.AI</span></div>
+  <div class="footer">Auto Đọc STV · Sử dụng <span id="footer-engine">Web Speech API</span></div>
   <div class="modal-overlay" id="confirm-modal">
     <div class="modal">
       <div class="modal-title" id="modal-title">Xác nhận</div>
@@ -1556,8 +1399,6 @@
       </div>
     </div>
   </div>
-
   <script src="popup.js"></script>
 </body>
-
 </html>
