@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="52" viewBox="0 0 160 52">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&amp;family=Dancing+Script:wght@700&amp;display=swap');
+    </style>
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8a045"/>
+      <stop offset="100%" stop-color="#c45c8a"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <text
+    x="4" y="38"
+    font-family="'Baloo 2', cursive"
+    font-size="46"
+    font-weight="800"
+    font-style="italic"
+    fill="url(#g1)"
+    filter="url(#glow)"
+  >STV</text>
+
+  <text
+    x="6" y="50"
+    font-family="'Dancing Script', cursive"
+    font-size="13"
+    font-weight="700"
+    fill="#ffffff"
+    stroke="#5CAAFC"
+    stroke-width="0.4"
+    letter-spacing="0.5"
+  >sangtacviet.com</text>
+</svg>
