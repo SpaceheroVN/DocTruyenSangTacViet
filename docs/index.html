@@ -2,516 +2,423 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Releases — Đọc Truyện STV</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
   <style>
     :root {
-      --bg: #0f0e17;
-      --surface: #1a1929;
-      --surface2: #222136;
-      --border: #2e2c45;
-      --accent: #e8a045;
-      --accent2: #c45c8a;
-      --text: #e8e6f0;
-      --text-muted: #7a7896;
-      --success: #4caf86;
-      --danger: #e05c6e;
+      --bg:        #0c0b15;
+      --surface:   #13121e;
+      --surface2:  #1c1b2e;
+      --surface3:  #232237;
+      --border:    #2a2840;
+      --border2:   #343259;
+      --accent:    #e8a045;
+      --accent2:   #c45c8a;
+      --text:      #eae8f2;
+      --text-sub:  #a09dc0;
+      --text-muted:#5e5c7a;
+      --green:     #4cca96;
+      --danger:    #e05c6e;
+      --r:         12px;
     }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
     body {
       background: var(--bg);
       color: var(--text);
       font-family: 'Be Vietnam Pro', sans-serif;
       font-size: 14px;
-      line-height: 1.7;
+      line-height: 1.65;
       min-height: 100vh;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 15% 10%, rgba(232,160,69,.07) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 35% at 85% 80%, rgba(196,92,138,.06) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
     }
 
-    /* ── HEADER ── */
-    header {
+    /* HEADER */
+    .header {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(12,11,21,.88);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
       border-bottom: 1px solid var(--border);
-      background: linear-gradient(180deg, #15131f 0%, var(--bg) 100%);
-      padding: 20px 0 0;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      backdrop-filter: blur(12px);
     }
-    .header-inner {
-      max-width: 860px;
-      margin: 0 auto;
-      padding: 0 24px 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
+    .header-top {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 16px 0;
     }
-    .header-logo {
-      width: 32px;
-      height: 32px;
-      background: var(--accent);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .logo-ring {
+      width: 34px; height: 34px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), #c47820);
+      display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
+      box-shadow: 0 0 18px rgba(232,160,69,.28);
     }
-    .header-logo svg { color: #0f0e17; }
-    .header-breadcrumb {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 13px;
-      color: var(--text-muted);
+    .logo-ring svg { color: #0c0b15; }
+    .header-title { flex: 1; min-width: 0; }
+    .header-title h1 {
+      font-size: 14px; font-weight: 700; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .header-breadcrumb a {
-      color: var(--text-muted);
+    .header-title p { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .header-github {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 11px; font-weight: 500; color: var(--text-sub);
       text-decoration: none;
-      transition: color 0.2s;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 5px 10px;
+      transition: all .2s; flex-shrink: 0;
     }
-    .header-breadcrumb a:hover { color: var(--accent); }
-    .header-breadcrumb .sep { opacity: 0.4; }
-    .header-breadcrumb .current { color: var(--text); font-weight: 500; }
-    .header-tabs {
-      max-width: 860px;
-      margin: 0 auto;
-      padding: 0 24px;
-      display: flex;
-      gap: 0;
+    .header-github:hover { border-color: var(--accent); color: var(--accent); }
+    .header-tabs { display: flex; padding: 0 12px; gap: 0; margin-top: 4px; }
+    .htab {
+      padding: 8px 12px; font-size: 12px; font-weight: 500;
+      color: var(--text-muted); border-bottom: 2px solid transparent;
+      cursor: pointer; transition: color .2s; text-decoration: none;
     }
-    .tab {
-      padding: 8px 16px;
-      font-size: 13px;
-      color: var(--text-muted);
-      border-bottom: 2px solid transparent;
-      cursor: pointer;
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-    .tab.active {
-      color: var(--text);
-      border-bottom-color: var(--accent);
-      font-weight: 500;
-    }
-    .tab:hover:not(.active) { color: var(--text); }
+    .htab.active { color: var(--text); border-bottom-color: var(--accent); }
+    .htab:hover:not(.active) { color: var(--text-sub); }
 
-    /* ── MAIN ── */
+    /* MAIN */
     main {
-      max-width: 860px;
-      margin: 0 auto;
-      padding: 40px 24px 80px;
+      position: relative; z-index: 1;
+      max-width: 680px; margin: 0 auto;
+      padding: 24px 16px 80px;
     }
 
-    /* ── RELEASE CARD ── */
-    .release {
-      display: grid;
-      grid-template-columns: 160px 1fr;
-      gap: 0 32px;
-      margin-bottom: 60px;
-      animation: fadeUp 0.4s ease both;
+    /* LOADING */
+    .loading {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 14px; padding: 60px 0;
+      color: var(--text-muted); font-size: 13px;
     }
-    .release:nth-child(2) { animation-delay: 0.1s; }
+    .spinner {
+      width: 30px; height: 30px;
+      border: 2px solid var(--border2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(12px); }
+    /* ERROR */
+    .error-box {
+      background: rgba(224,92,110,.08);
+      border: 1px solid rgba(224,92,110,.3);
+      border-radius: var(--r); padding: 20px;
+      text-align: center; color: var(--danger); font-size: 13px;
+    }
+
+    /* RELEASE CARD */
+    .release-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      margin-bottom: 14px; overflow: hidden;
+      transition: border-color .25s, box-shadow .25s;
+      animation: slideUp .35s ease both;
+    }
+    .release-card:hover { border-color: var(--border2); }
+    .release-card.latest {
+      border-color: rgba(232,160,69,.28);
+      box-shadow: 0 0 0 1px rgba(232,160,69,.06);
+    }
+    .release-card.latest:hover { border-color: rgba(232,160,69,.5); }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(14px); }
       to   { opacity: 1; transform: translateY(0); }
     }
+    .release-card:nth-child(1) { animation-delay:.05s }
+    .release-card:nth-child(2) { animation-delay:.13s }
+    .release-card:nth-child(3) { animation-delay:.21s }
+    .release-card:nth-child(n+4) { animation-delay:.28s }
 
-    /* sidebar */
-    .release-meta {
-      padding-top: 4px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+    /* CARD HEAD */
+    .card-head {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px; cursor: pointer;
+      user-select: none; -webkit-tap-highlight-color: transparent;
+      transition: background .15s;
     }
-    .release-date {
-      font-size: 12px;
-      color: var(--text-muted);
+    .card-head:active { background: rgba(255,255,255,.025); }
+    .version-dot {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--border2); flex-shrink: 0;
+      transition: background .2s, box-shadow .2s;
     }
-    .release-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 11px;
-      color: var(--text-muted);
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 3px 8px;
-      width: fit-content;
+    .release-card.latest .version-dot {
+      background: var(--accent);
+      box-shadow: 0 0 8px rgba(232,160,69,.55);
     }
-    .release-tag svg { opacity: 0.6; }
-    .badge-latest {
-      display: inline-block;
-      font-size: 10px;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 99px;
-      background: rgba(76, 175, 134, 0.12);
-      color: var(--success);
-      border: 1px solid rgba(76, 175, 134, 0.35);
-      letter-spacing: 0.4px;
-      width: fit-content;
-    }
-    .btn-download {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--accent);
-      background: rgba(232, 160, 69, 0.08);
-      border: 1px solid rgba(232, 160, 69, 0.3);
-      border-radius: 8px;
-      padding: 7px 12px;
-      text-decoration: none;
-      transition: all 0.2s;
-      cursor: pointer;
-      width: fit-content;
-    }
-    .btn-download:hover {
-      background: rgba(232, 160, 69, 0.16);
-      border-color: var(--accent);
-    }
-    .source-links {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .source-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 11px;
-      color: var(--text-muted);
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-    .source-link:hover { color: var(--accent); }
+    .release-card.open:not(.latest) .version-dot { background: var(--accent2); }
 
-    /* body */
-    .release-body {
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      background: var(--surface);
-      overflow: hidden;
+    .card-head-info { flex: 1; min-width: 0; }
+    .card-version-row {
+      display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
     }
-    .release-header {
-      padding: 18px 24px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
+    .card-title { font-size: 15px; font-weight: 700; color: var(--text); }
+    .badge {
+      font-size: 9px; font-weight: 700; letter-spacing: .6px;
+      text-transform: uppercase; padding: 2px 7px; border-radius: 5px;
     }
-    .release-title {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    .badge-latest { background: rgba(76,202,150,.12); color: var(--green); border: 1px solid rgba(76,202,150,.3); }
+    .badge-first  { background: rgba(196,92,138,.12); color: var(--accent2); border: 1px solid rgba(196,92,138,.3); }
+    .card-date { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+    .tag-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 10px; color: var(--text-muted);
+      background: var(--surface3); border: 1px solid var(--border);
+      border-radius: 5px; padding: 2px 7px; margin-top: 4px;
     }
-    .version-chip {
-      font-size: 11px;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 6px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      color: var(--accent);
-      letter-spacing: 0.3px;
-    }
-    .release-content {
-      padding: 24px;
-    }
-
-    /* markdown rendering */
-    .md h2 {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--accent2);
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 8px;
-      margin: 28px 0 14px;
-    }
-    .md h2:first-child { margin-top: 0; }
-    .md h3 {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--success);
-      margin: 18px 0 8px;
-      display: flex;
-      align-items: center;
-      gap: 7px;
-    }
-    .md h3::before {
-      content: '';
-      display: inline-block;
-      width: 3px;
-      height: 13px;
-      background: var(--success);
-      border-radius: 2px;
+    .chevron {
+      color: var(--text-muted);
+      transition: transform .28s cubic-bezier(.4,0,.2,1);
       flex-shrink: 0;
     }
-    .md ul {
-      list-style: none;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
+    .release-card.open .chevron { transform: rotate(180deg); }
+
+    /* CARD BODY */
+    .card-body { max-height: 0; overflow: hidden; transition: max-height .42s cubic-bezier(.4,0,.2,1); }
+    .release-card.open .card-body { max-height: 9999px; }
+    .card-body-inner { border-top: 1px solid var(--border); }
+
+    /* DOWNLOAD STRIP */
+    .download-strip {
+      padding: 12px 16px;
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      background: var(--surface2); border-bottom: 1px solid var(--border);
     }
-    .md li {
-      display: flex;
-      gap: 8px;
-      font-size: 13px;
-      color: #ccc9e0;
-      line-height: 1.6;
+    .btn-dl {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 600; color: #0c0b15;
+      background: var(--accent); border-radius: 8px;
+      padding: 7px 14px; text-decoration: none;
+      transition: opacity .2s, transform .15s;
+      box-shadow: 0 2px 12px rgba(232,160,69,.22);
     }
-    .md li::before {
-      content: '–';
-      color: var(--text-muted);
-      flex-shrink: 0;
-      margin-top: 1px;
+    .btn-dl:active { opacity: .85; transform: scale(.97); }
+    .btn-src {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 11px; color: var(--text-sub); text-decoration: none;
+      border: 1px solid var(--border); border-radius: 7px;
+      padding: 5px 10px; transition: all .2s;
     }
-    .md li ul {
-      margin-top: 6px;
-      padding-left: 0;
+    .btn-src:hover { border-color: var(--border2); color: var(--text); }
+
+    /* MARKDOWN */
+    .md-content {
+      padding: 20px 18px 22px;
+      font-size: 13px; color: #c5c2dc; line-height: 1.72;
     }
-    .md li li::before { content: '◦'; }
-    .md strong { color: var(--text); font-weight: 600; }
-    .md code {
-      font-family: 'SFMono-Regular', 'Consolas', monospace;
-      font-size: 11px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 1px 5px;
-      color: var(--accent);
+    .md-content h2 {
+      font-size: 11px; font-weight: 700; color: var(--accent2);
+      text-transform: uppercase; letter-spacing: .8px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 7px; margin: 24px 0 12px;
     }
-    .md hr {
-      border: none;
+    .md-content h2:first-child { margin-top: 0; }
+    .md-content h3 {
+      font-size: 13px; font-weight: 600; color: var(--green);
+      margin: 16px 0 8px;
+      display: flex; align-items: center; gap: 7px;
+    }
+    .md-content h3::before {
+      content: ''; width: 3px; height: 12px;
+      background: var(--green); border-radius: 2px;
+      display: inline-block; flex-shrink: 0;
+    }
+    .md-content ul { list-style: none; display: flex; flex-direction: column; gap: 6px; padding: 0; }
+    .md-content li { display: flex; gap: 8px; }
+    .md-content li::before { content: '–'; color: var(--text-muted); flex-shrink: 0; }
+    .md-content li > ul { margin-top: 6px; padding-left: 8px; }
+    .md-content li > ul > li::before { content: '◦'; }
+    .md-content strong { color: var(--text); font-weight: 600; }
+    .md-content em { color: var(--text-sub); font-style: italic; }
+    .md-content code {
+      font-family: 'SFMono-Regular', 'Menlo', monospace; font-size: 11px;
+      background: var(--surface3); border: 1px solid var(--border);
+      border-radius: 4px; padding: 1px 5px; color: var(--accent);
+    }
+    .md-content hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+    .md-content p { margin-bottom: 10px; }
+    .md-content p:last-child { margin-bottom: 0; }
+
+    /* FOOTER */
+    footer {
+      position: relative; z-index: 1;
+      text-align: center; padding: 22px 16px;
+      font-size: 11px; color: var(--text-muted);
       border-top: 1px solid var(--border);
-      margin: 20px 0;
     }
-    .md p {
-      font-size: 13px;
-      color: #ccc9e0;
-      margin-bottom: 10px;
-    }
+    footer a { color: var(--text-muted); text-decoration: none; }
+    footer a:hover { color: var(--accent); }
 
-    /* first release special */
-    .release-first-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 10px;
-      font-weight: 600;
-      padding: 3px 9px;
-      border-radius: 6px;
-      background: rgba(196, 92, 138, 0.1);
-      color: var(--accent2);
-      border: 1px solid rgba(196, 92, 138, 0.3);
-      letter-spacing: 0.4px;
-      text-transform: uppercase;
-    }
-
-    /* ── RESPONSIVE ── */
-    @media (max-width: 620px) {
-      .release { grid-template-columns: 1fr; }
-      .release-meta {
-        flex-direction: row;
-        flex-wrap: wrap;
-        align-items: center;
-        padding-bottom: 16px;
-      }
-      .header-tabs { gap: 4px; }
+    @supports (padding: max(0px)) {
+      main { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
     }
   </style>
 </head>
 <body>
 
-<header>
-  <div class="header-inner">
-    <div class="header-logo">
+<header class="header">
+  <div class="header-top">
+    <div class="logo-ring">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
         <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
         <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
       </svg>
     </div>
-    <div class="header-breadcrumb">
-      <a href="https://github.com/SpaceheroVN" target="_blank">SpaceheroVN</a>
-      <span class="sep">/</span>
-      <a href="https://github.com/SpaceheroVN/DocTruyenSangTacViet" target="_blank">DocTruyenSangTacViet</a>
-      <span class="sep">/</span>
-      <span class="current">Releases</span>
+    <div class="header-title">
+      <h1>Đọc Truyện STV</h1>
+      <p>SpaceheroVN / DocTruyenSangTacViet</p>
     </div>
+    <a class="header-github" href="https://github.com/SpaceheroVN/DocTruyenSangTacViet" target="_blank">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/></svg>
+      GitHub
+    </a>
   </div>
   <div class="header-tabs">
-    <a class="tab active" href="#">Releases</a>
-    <a class="tab" href="https://github.com/SpaceheroVN/DocTruyenSangTacViet/tags" target="_blank">Tags</a>
+    <a class="htab active" href="#">Releases</a>
+    <a class="htab" href="https://github.com/SpaceheroVN/DocTruyenSangTacViet/tags" target="_blank">Tags</a>
   </div>
 </header>
 
-<main>
-
-  <!-- ══ v0.2 ══ -->
-  <div class="release">
-    <div class="release-meta">
-      <span class="release-date">07 tháng 5, 2026</span>
-      <span class="badge-latest">Latest</span>
-      <div class="release-tag">
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-        DocTruyenSTV_v0.2
-      </div>
-      <a class="btn-download" href="https://github.com/SpaceheroVN/DocTruyenSangTacViet/releases/download/DocTruyenSTV_v0.2/DocTruyenSTV.rar" target="_blank">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        DocTruyenSTV.rar
-      </a>
-      <div class="source-links">
-        <a class="source-link" href="https://github.com/SpaceheroVN/DocTruyenSangTacViet/archive/refs/tags/DocTruyenSTV_v0.2.zip" target="_blank">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
-          Source code (zip)
-        </a>
-        <a class="source-link" href="https://github.com/SpaceheroVN/DocTruyenSangTacViet/archive/refs/tags/DocTruyenSTV_v0.2.tar.gz" target="_blank">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
-          Source code (tar.gz)
-        </a>
-      </div>
-    </div>
-
-    <div class="release-body">
-      <div class="release-header">
-        <div class="release-title">
-          Đọc Truyện STV
-          <span class="version-chip">v0.2</span>
-        </div>
-      </div>
-      <div class="release-content md">
-        <h2>Tính năng mới</h2>
-
-        <h3>Danh sách đọc</h3>
-        <ul>
-          <li>Lưu truyện vào danh sách cá nhân bằng nút bookmark (biểu tượng dấu trang) trên cửa sổ tiện ích.</li>
-          <li>Tự động ghi nhớ chương và đoạn đang đọc, cho phép tiếp tục từ vị trí đã dừng khi mở lại trang.</li>
-          <li>Ô tìm kiếm lọc nhanh theo tên truyện hoặc tên chương trong danh sách.</li>
-        </ul>
-
-        <h3>Ảnh bìa truyện</h3>
-        <ul>
-          <li>Tự động lấy và lưu tạm ảnh bìa từ trang thông tin truyện, không cần tải lại mỗi lần mở.</li>
-          <li>Nhấn vào ảnh bìa hoặc tên truyện trên cửa sổ tiện ích để mở trang thông tin trong tab mới.</li>
-        </ul>
-
-        <h3>Hẹn giờ tắt tự động</h3>
-        <ul>
-          <li>Dừng đọc sau một khoảng thời gian (phút) tùy chọn.</li>
-          <li>Dừng đọc sau một số chương nhất định.</li>
-          <li>Trạng thái hẹn giờ được lưu lại trong bộ nhớ của tiện ích, khôi phục đúng nếu cửa sổ tiện ích bị đóng giữa chừng.</li>
-        </ul>
-
-        <h3>Đồng hồ thời gian đọc</h3>
-        <ul>
-          <li>Hiển thị thời gian đã đọc trong phiên hiện tại, đồng bộ chính xác giữa trang đọc truyện và cửa sổ tiện ích.</li>
-        </ul>
-
-        <h3>Cài đặt bổ sung</h3>
-        <ul>
-          <li>Bật/tắt đọc tên truyện và tên chương trước khi vào nội dung.</li>
-          <li>Bật/tắt toàn bộ phím tắt bàn phím (<code>K</code>, <code>R</code>, <code>←</code>, <code>→</code>, <code>Esc</code>).</li>
-          <li>Nút <strong>Thử Key</strong> để kiểm tra API Key (mã xác thực dịch vụ giọng đọc) của FPT.AI hoặc Azure có hợp lệ không trước khi lưu.</li>
-        </ul>
-
-        <hr>
-
-        <h2>Cải tiến</h2>
-        <ul>
-          <li><strong>Mở rộng phạm vi hoạt động:</strong> Trước đây tiện ích chỉ chạy trên các trang chương truyện (<code>/truyen/...</code>), nay hoạt động trên toàn bộ trang <code>sangtacviet.com</code>, bao gồm trang danh mục và trang thông tin truyện.</li>
-          <li><strong>Thanh tiến độ:</strong> Hiển thị phần trăm vị trí đoạn đang đọc so với tổng số đoạn trong chương.</li>
-          <li><strong>Ô chọn tùy chỉnh:</strong> Thay thế ô chọn mặc định của trình duyệt bằng ô chọn thiết kế riêng, thống nhất giao diện cho phần chọn giọng đọc, nguồn giọng và hẹn giờ tự động dừng. Các nhóm lựa chọn được thụt lề để dễ phân biệt.</li>
-          <li><strong>Thông báo nhỏ:</strong> Phản hồi hành động của người dùng (lưu thành công, cảnh báo, thông tin) hiện ra dưới dạng dòng chữ nhỏ thoáng qua ở đầu cửa sổ, thay vì hộp thoại chặn màn hình.</li>
-          <li><strong>Nút tắt tiếng:</strong> Nhấn vào nhãn "Âm lượng" để tắt/bật tiếng nhanh mà không cần kéo thanh trượt về 0.</li>
-          <li><strong>Hộp thoại xác nhận:</strong> Hiện ra yêu cầu xác nhận trước khi xóa toàn bộ dữ liệu, tránh xóa nhầm.</li>
-          <li>Cửa sổ tiện ích tự dừng cập nhật trạng thái khi bị thu nhỏ hoặc chuyển sang tab khác, tiếp tục khi mở lại — giảm tải cho trình duyệt.</li>
-          <li>Thanh dưới cùng hiển thị tên nguồn giọng đọc đang dùng, đổi màu theo từng loại.</li>
-        </ul>
-
-        <hr>
-
-        <h2>Loại bỏ</h2>
-        <ul>
-          <li><strong>Google TTS (Google Translate)</strong> bị gỡ hoàn toàn khỏi tiện ích. Tiện ích hiện hỗ trợ 3 nguồn giọng đọc:
-            <ul>
-              <li><strong>Web Speech API</strong> — giọng đọc có sẵn trong trình duyệt / hệ điều hành, miễn phí, không cần Key.</li>
-              <li><strong>FPT.AI</strong> — dịch vụ giọng đọc tiếng Việt của FPT, cần API Key miễn phí.</li>
-              <li><strong>Microsoft Azure TTS</strong> — dịch vụ giọng đọc của Microsoft, cần API Key và chọn khu vực (Region).</li>
-            </ul>
-          </li>
-        </ul>
-      </div>
-    </div>
+<main id="releases-list">
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <span>Đang tải danh sách phiên bản...</span>
   </div>
-
-  <!-- ══ v0.1 ══ -->
-  <div class="release">
-    <div class="release-meta">
-      <span class="release-date">07 tháng 5, 2026</span>
-      <span class="release-first-badge">Phiên bản đầu tiên</span>
-      <div class="release-tag">
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
-        DocTruyenSTV_v0.1
-      </div>
-      <a class="btn-download" href="https://github.com/SpaceheroVN/DocTruyenSangTacViet/releases/download/DocTruyenSTV_v0.1/DocTruyenSTV.rar" target="_blank">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        DocTruyenSTV.rar
-      </a>
-      <div class="source-links">
-        <a class="source-link" href="https://github.com/SpaceheroVN/DocTruyenSangTacViet/archive/refs/tags/DocTruyenSTV_v0.1.zip" target="_blank">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
-          Source code (zip)
-        </a>
-        <a class="source-link" href="https://github.com/SpaceheroVN/DocTruyenSangTacViet/archive/refs/tags/DocTruyenSTV_v0.1.tar.gz" target="_blank">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
-          Source code (tar.gz)
-        </a>
-      </div>
-    </div>
-
-    <div class="release-body">
-      <div class="release-header">
-        <div class="release-title">
-          Đọc Truyện STV
-          <span class="version-chip">v0.1</span>
-        </div>
-      </div>
-      <div class="release-content md">
-        <p>Tiện ích đọc truyện tự động cho trang Sáng Tác Việt, hoạt động ngay trong trình duyệt mà không cần cài thêm phần mềm.</p>
-
-        <h2>Tính năng</h2>
-        <ul>
-          <li>Tự động nhận diện và đọc to nội dung chương, tô sáng đoạn đang đọc.</li>
-          <li>Tự động sang chương tiếp theo khi đọc xong.</li>
-          <li>Điều chỉnh tốc độ đọc và âm lượng.</li>
-          <li>Chọn giọng đọc từ danh sách giọng có sẵn trên trình duyệt / hệ điều hành.</li>
-          <li>Phím tắt: <code>K</code> Phát/Dừng · <code>R</code> Đọc lại · <code>←</code> <code>→</code> Chuyển chương · <code>Esc</code> Tắt.</li>
-        </ul>
-
-        <h2>Hỗ trợ 4 nguồn giọng đọc</h2>
-        <ul>
-          <li><strong>Web Speech API</strong> — có sẵn trong trình duyệt / hệ điều hành, miễn phí, không cần Key.</li>
-          <li><strong>Google TTS</strong> — giọng Google Dịch, miễn phí.</li>
-          <li><strong>FPT.AI</strong> — giọng tiếng Việt tự nhiên của FPT, cần API Key miễn phí.</li>
-          <li><strong>Microsoft Azure TTS</strong> — giọng đọc cao cấp của Microsoft, cần API Key.</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-
 </main>
 
+<footer>
+  <p>Tự động cập nhật từ <a href="https://github.com/SpaceheroVN/DocTruyenSangTacViet/releases" target="_blank">GitHub Releases</a> · © 2026 SpaceheroVN</p>
+</footer>
+
+<script>
+const REPO = 'SpaceheroVN/DocTruyenSangTacViet';
+const API  = `https://api.github.com/repos/${REPO}/releases`;
+
+function fmtDate(iso) {
+  return new Date(iso).toLocaleDateString('vi-VN', { day: '2-digit', month: 'long', year: 'numeric' });
+}
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function dlUrl(tag, assets) {
+  const rar = assets.find(a => a.name.endsWith('.rar'));
+  return rar
+    ? { url: rar.browser_download_url, name: rar.name, size: Math.round(rar.size/1024) + ' KB' }
+    : { url: `https://github.com/${REPO}/releases/download/${tag}/DocTruyenSTV.rar`, name: 'DocTruyenSTV.rar', size: '' };
+}
+
+function buildCard(release, index) {
+  const isLatest = index === 0;
+  const tag   = release.tag_name;
+  const name  = release.name || tag;
+  const date  = fmtDate(release.published_at);
+  const dl    = dlUrl(tag, release.assets || []);
+  const body  = release.body || '';
+  const isFirst = tag.includes('0.1') || release.prerelease === false && index === (/* filled later */0);
+
+  const card = document.createElement('div');
+  card.className = 'release-card' + (isLatest ? ' latest open' : '');
+
+  // Detect first release heuristically
+  const firstBadge = !isLatest ? `<span class="badge badge-first">Phiên bản đầu</span>` : '';
+
+  card.innerHTML = `
+    <div class="card-head" role="button" aria-expanded="${isLatest}">
+      <div class="version-dot"></div>
+      <div class="card-head-info">
+        <div class="card-version-row">
+          <span class="card-title">${esc(name)}</span>
+          ${isLatest ? '<span class="badge badge-latest">Latest</span>' : firstBadge}
+        </div>
+        <div class="card-date">${date}</div>
+        <div class="tag-pill">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          ${esc(tag)}
+        </div>
+      </div>
+      <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="card-body">
+      <div class="card-body-inner">
+        <div class="download-strip">
+          <a class="btn-dl" href="${esc(dl.url)}" target="_blank">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            ${esc(dl.name)}${dl.size ? ' <span style="opacity:.55;font-weight:400;font-size:11px">· '+dl.size+'</span>' : ''}
+          </a>
+          <a class="btn-src" href="https://github.com/${REPO}/archive/refs/tags/${esc(tag)}.zip" target="_blank">zip</a>
+          <a class="btn-src" href="https://github.com/${REPO}/archive/refs/tags/${esc(tag)}.tar.gz" target="_blank">tar.gz</a>
+        </div>
+        <div class="md-content">${marked.parse(body)}</div>
+      </div>
+    </div>
+  `;
+
+  card.querySelector('.card-head').addEventListener('click', () => {
+    const open = card.classList.toggle('open');
+    card.querySelector('.card-head').setAttribute('aria-expanded', String(open));
+  });
+
+  return card;
+}
+
+async function loadReleases() {
+  const list = document.getElementById('releases-list');
+  try {
+    const res = await fetch(API, { headers: { 'Accept': 'application/vnd.github+json' } });
+    if (!res.ok) throw new Error(`GitHub API trả về ${res.status}`);
+    const releases = await res.json();
+
+    list.innerHTML = '';
+    if (!releases.length) {
+      list.innerHTML = '<div class="error-box">Chưa có phiên bản nào được phát hành.</div>';
+      return;
+    }
+
+    // Mark last item as "first release"
+    releases.forEach((r, i) => {
+      const card = buildCard(r, i);
+      if (i === releases.length - 1) {
+        // last = oldest = first release
+        const row = card.querySelector('.card-version-row');
+        if (!row.querySelector('.badge')) {
+          const b = document.createElement('span');
+          b.className = 'badge badge-first';
+          b.textContent = 'Phiên bản đầu';
+          row.appendChild(b);
+        }
+      }
+      list.appendChild(card);
+    });
+  } catch (err) {
+    list.innerHTML = `
+      <div class="error-box">
+        <p style="margin-bottom:8px;font-weight:600;">Không thể tải dữ liệu từ GitHub</p>
+        <p style="font-size:12px;opacity:.75;">${esc(err.message)}</p>
+        <p style="font-size:12px;margin-top:10px;opacity:.7;">
+          Xem trực tiếp tại
+          <a href="https://github.com/${REPO}/releases" target="_blank"
+            style="color:var(--accent);text-decoration:none;">github.com/${REPO}/releases</a>
+        </p>
+      </div>`;
+  }
+}
+
+loadReleases();
+</script>
 </body>
-  </html>
+</html>
