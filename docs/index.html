@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Releases — Đọc Truyện STV</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0e17;
+      --surface: #1a1929;
+      --surface2: #222136;
+      --border: #2e2c45;
+      --accent: #e8a045;
+      --accent2: #c45c8a;
+      --text: #e8e6f0;
+      --text-muted: #7a7896;
+      --success: #4caf86;
+      --danger: #e05c6e;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Be Vietnam Pro', sans-serif;
+      font-size: 14px;
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, #15131f 0%, var(--bg) 100%);
+      padding: 20px 0 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+    .header-inner {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 24px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .header-logo {
+      width: 32px;
+      height: 32px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .header-logo svg { color: #0f0e17; }
+    .header-breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .header-breadcrumb a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .header-breadcrumb a:hover { color: var(--accent); }
+    .header-breadcrumb .sep { opacity: 0.4; }
+    .header-breadcrumb .current { color: var(--text); font-weight: 500; }
+    .header-tabs {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      gap: 0;
+    }
+    .tab {
+      padding: 8px 16px;
+      font-size: 13px;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .tab.active {
+      color: var(--text);
+      border-bottom-color: var(--accent);
+      font-weight: 500;
+    }
+    .tab:hover:not(.active) { color: var(--text); }
+
+    /* ── MAIN ── */
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    /* ── RELEASE CARD ── */
+    .release {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 0 32px;
+      margin-bottom: 60px;
+      animation: fadeUp 0.4s ease both;
+    }
+    .release:nth-child(2) { animation-delay: 0.1s; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* sidebar */
+    .release-meta {
+      padding-top: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .release-date {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .release-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--text-muted);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 3px 8px;
+      width: fit-content;
+    }
+    .release-tag svg { opacity: 0.6; }
+    .badge-latest {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 99px;
+      background: rgba(76, 175, 134, 0.12);
+      color: var(--success);
+      border: 1px solid rgba(76, 175, 134, 0.35);
+      letter-spacing: 0.4px;
+      width: fit-content;
+    }
+    .btn-download {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--accent);
+      background: rgba(232, 160, 69, 0.08);
+      border: 1px solid rgba(232, 160, 69, 0.3);
+      border-radius: 8px;
+      padding: 7px 12px;
+      text-decoration: none;
+      transition: all 0.2s;
+      cursor: pointer;
+      width: fit-content;
+    }
+    .btn-download:hover {
+      background: rgba(232, 160, 69, 0.16);
+      border-color: var(--accent);
+    }
+    .source-links {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .source-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .source-link:hover { color: var(--accent); }
+
+    /* body */
+    .release-body {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      overflow: hidden;
+    }
+    .release-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .release-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .version-chip {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      letter-spacing: 0.3px;
+    }
+    .release-content {
+      padding: 24px;
+    }
+
+    /* markdown rendering */
+    .md h2 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--accent2);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      margin: 28px 0 14px;
+    }
+    .md h2:first-child { margin-top: 0; }
+    .md h3 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--success);
+      margin: 18px 0 8px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .md h3::before {
+      content: '';
+      display: inline-block;
+      width: 3px;
+      height: 13px;
+      background: var(--success);
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .md ul {
+      list-style: none;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .md li {
+      display: flex;
+      gap: 8px;
+      font-size: 13px;
+      color: #ccc9e0;
+      line-height: 1.6;
+    }
+    .md li::before {
+      content: '–';
+      color: var(--text-muted);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .md li ul {
+      margin-top: 6px;
+      padding-left: 0;
+    }
+    .md li li::before { content: '◦'; }
+    .md strong { color: var(--text); font-weight: 600; }
+    .md code {
+      font-family: 'SFMono-Regular', 'Consolas', monospace;
+      font-size: 11px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 5px;
+      color: var(--accent);
+    }
+    .md hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 20px 0;
+    }
+    .md p {
+      font-size: 13px;
+      color: #ccc9e0;
+      margin-bottom: 10px;
+    }
+
+    /* first release special */
+    .release-first-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 6px;
+      background: rgba(196, 92, 138, 0.1);
+      color: var(--accent2);
+      border: 1px solid rgba(196, 92, 138, 0.3);
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 620px) {
+      .release { grid-template-columns: 1fr; }
+      .release-meta {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        padding-bottom: 16px;
+      }
+      .header-tabs { gap: 4px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-logo">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+      </svg>
+    </div>
+    <div class="header-breadcrumb">
+      <a href="https://github.com/SpaceheroVN" target="_blank">SpaceheroVN</a>
+      <span class="sep">/</span>
+      <a href="https://github.com/SpaceheroVN/DocTruyenSangTacViet" target="_blank">DocTruyenSangTacViet</a>
+      <span class="sep">/</span>
+      <span class="current">Releases</span>
+    </div>
+  </div>
+  <div class="header-tabs">
+    <a class="tab active" href="#">Releases</a>
+    <a class="tab" href="https://github.com/SpaceheroVN/DocTruyenSangTacViet/tags" target="_blank">Tags</a>
+  </div>
+</header>
+
+<main>
+
+  <!-- ══ v0.2 ══ -->
+  <div class="release">
+    <div class="release-meta">
+      <span class="release-date">07 tháng 5, 2026</span>
+      <span class="badge-latest">Latest</span>
+      <div class="release-tag">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+        DocTruyenSTV_v0.2
+      </div>
+      <a class="btn-download" href="https://github.com/SpaceheroVN/DocTruyenSangTacViet/releases/download/DocTruyenSTV_v0.2/DocTruyenSTV.rar" target="_blank">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        DocTruyenSTV.rar
+      </a>
+      <div class="source-links">
+        <a class="source-link" href="https://github.com/SpaceheroVN/DocTruyenSangTacViet/archive/refs/tags/DocTruyenSTV_v0.2.zip" target="_blank">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+          Source code (zip)
+        </a>
+        <a class="source-link" href="https://github.com/SpaceheroVN/DocTruyenSangTacViet/archive/refs/tags/DocTruyenSTV_v0.2.tar.gz" target="_blank">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+          Source code (tar.gz)
+        </a>
+      </div>
+    </div>
+
+    <div class="release-body">
+      <div class="release-header">
+        <div class="release-title">
+          Đọc Truyện STV
+          <span class="version-chip">v0.2</span>
+        </div>
+      </div>
+      <div class="release-content md">
+        <h2>Tính năng mới</h2>
+
+        <h3>Danh sách đọc</h3>
+        <ul>
+          <li>Lưu truyện vào danh sách cá nhân bằng nút bookmark (biểu tượng dấu trang) trên cửa sổ tiện ích.</li>
+          <li>Tự động ghi nhớ chương và đoạn đang đọc, cho phép tiếp tục từ vị trí đã dừng khi mở lại trang.</li>
+          <li>Ô tìm kiếm lọc nhanh theo tên truyện hoặc tên chương trong danh sách.</li>
+        </ul>
+
+        <h3>Ảnh bìa truyện</h3>
+        <ul>
+          <li>Tự động lấy và lưu tạm ảnh bìa từ trang thông tin truyện, không cần tải lại mỗi lần mở.</li>
+          <li>Nhấn vào ảnh bìa hoặc tên truyện trên cửa sổ tiện ích để mở trang thông tin trong tab mới.</li>
+        </ul>
+
+        <h3>Hẹn giờ tắt tự động</h3>
+        <ul>
+          <li>Dừng đọc sau một khoảng thời gian (phút) tùy chọn.</li>
+          <li>Dừng đọc sau một số chương nhất định.</li>
+          <li>Trạng thái hẹn giờ được lưu lại trong bộ nhớ của tiện ích, khôi phục đúng nếu cửa sổ tiện ích bị đóng giữa chừng.</li>
+        </ul>
+
+        <h3>Đồng hồ thời gian đọc</h3>
+        <ul>
+          <li>Hiển thị thời gian đã đọc trong phiên hiện tại, đồng bộ chính xác giữa trang đọc truyện và cửa sổ tiện ích.</li>
+        </ul>
+
+        <h3>Cài đặt bổ sung</h3>
+        <ul>
+          <li>Bật/tắt đọc tên truyện và tên chương trước khi vào nội dung.</li>
+          <li>Bật/tắt toàn bộ phím tắt bàn phím (<code>K</code>, <code>R</code>, <code>←</code>, <code>→</code>, <code>Esc</code>).</li>
+          <li>Nút <strong>Thử Key</strong> để kiểm tra API Key (mã xác thực dịch vụ giọng đọc) của FPT.AI hoặc Azure có hợp lệ không trước khi lưu.</li>
+        </ul>
+
+        <hr>
+
+        <h2>Cải tiến</h2>
+        <ul>
+          <li><strong>Mở rộng phạm vi hoạt động:</strong> Trước đây tiện ích chỉ chạy trên các trang chương truyện (<code>/truyen/...</code>), nay hoạt động trên toàn bộ trang <code>sangtacviet.com</code>, bao gồm trang danh mục và trang thông tin truyện.</li>
+          <li><strong>Thanh tiến độ:</strong> Hiển thị phần trăm vị trí đoạn đang đọc so với tổng số đoạn trong chương.</li>
+          <li><strong>Ô chọn tùy chỉnh:</strong> Thay thế ô chọn mặc định của trình duyệt bằng ô chọn thiết kế riêng, thống nhất giao diện cho phần chọn giọng đọc, nguồn giọng và hẹn giờ tự động dừng. Các nhóm lựa chọn được thụt lề để dễ phân biệt.</li>
+          <li><strong>Thông báo nhỏ:</strong> Phản hồi hành động của người dùng (lưu thành công, cảnh báo, thông tin) hiện ra dưới dạng dòng chữ nhỏ thoáng qua ở đầu cửa sổ, thay vì hộp thoại chặn màn hình.</li>
+          <li><strong>Nút tắt tiếng:</strong> Nhấn vào nhãn "Âm lượng" để tắt/bật tiếng nhanh mà không cần kéo thanh trượt về 0.</li>
+          <li><strong>Hộp thoại xác nhận:</strong> Hiện ra yêu cầu xác nhận trước khi xóa toàn bộ dữ liệu, tránh xóa nhầm.</li>
+          <li>Cửa sổ tiện ích tự dừng cập nhật trạng thái khi bị thu nhỏ hoặc chuyển sang tab khác, tiếp tục khi mở lại — giảm tải cho trình duyệt.</li>
+          <li>Thanh dưới cùng hiển thị tên nguồn giọng đọc đang dùng, đổi màu theo từng loại.</li>
+        </ul>
+
+        <hr>
+
+        <h2>Loại bỏ</h2>
+        <ul>
+          <li><strong>Google TTS (Google Translate)</strong> bị gỡ hoàn toàn khỏi tiện ích. Tiện ích hiện hỗ trợ 3 nguồn giọng đọc:
+            <ul>
+              <li><strong>Web Speech API</strong> — giọng đọc có sẵn trong trình duyệt / hệ điều hành, miễn phí, không cần Key.</li>
+              <li><strong>FPT.AI</strong> — dịch vụ giọng đọc tiếng Việt của FPT, cần API Key miễn phí.</li>
+              <li><strong>Microsoft Azure TTS</strong> — dịch vụ giọng đọc của Microsoft, cần API Key và chọn khu vực (Region).</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ v0.1 ══ -->
+  <div class="release">
+    <div class="release-meta">
+      <span class="release-date">07 tháng 5, 2026</span>
+      <span class="release-first-badge">Phiên bản đầu tiên</span>
+      <div class="release-tag">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+        DocTruyenSTV_v0.1
+      </div>
+      <a class="btn-download" href="https://github.com/SpaceheroVN/DocTruyenSangTacViet/releases/download/DocTruyenSTV_v0.1/DocTruyenSTV.rar" target="_blank">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        DocTruyenSTV.rar
+      </a>
+      <div class="source-links">
+        <a class="source-link" href="https://github.com/SpaceheroVN/DocTruyenSangTacViet/archive/refs/tags/DocTruyenSTV_v0.1.zip" target="_blank">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+          Source code (zip)
+        </a>
+        <a class="source-link" href="https://github.com/SpaceheroVN/DocTruyenSangTacViet/archive/refs/tags/DocTruyenSTV_v0.1.tar.gz" target="_blank">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+          Source code (tar.gz)
+        </a>
+      </div>
+    </div>
+
+    <div class="release-body">
+      <div class="release-header">
+        <div class="release-title">
+          Đọc Truyện STV
+          <span class="version-chip">v0.1</span>
+        </div>
+      </div>
+      <div class="release-content md">
+        <p>Tiện ích đọc truyện tự động cho trang Sáng Tác Việt, hoạt động ngay trong trình duyệt mà không cần cài thêm phần mềm.</p>
+
+        <h2>Tính năng</h2>
+        <ul>
+          <li>Tự động nhận diện và đọc to nội dung chương, tô sáng đoạn đang đọc.</li>
+          <li>Tự động sang chương tiếp theo khi đọc xong.</li>
+          <li>Điều chỉnh tốc độ đọc và âm lượng.</li>
+          <li>Chọn giọng đọc từ danh sách giọng có sẵn trên trình duyệt / hệ điều hành.</li>
+          <li>Phím tắt: <code>K</code> Phát/Dừng · <code>R</code> Đọc lại · <code>←</code> <code>→</code> Chuyển chương · <code>Esc</code> Tắt.</li>
+        </ul>
+
+        <h2>Hỗ trợ 4 nguồn giọng đọc</h2>
+        <ul>
+          <li><strong>Web Speech API</strong> — có sẵn trong trình duyệt / hệ điều hành, miễn phí, không cần Key.</li>
+          <li><strong>Google TTS</strong> — giọng Google Dịch, miễn phí.</li>
+          <li><strong>FPT.AI</strong> — giọng tiếng Việt tự nhiên của FPT, cần API Key miễn phí.</li>
+          <li><strong>Microsoft Azure TTS</strong> — giọng đọc cao cấp của Microsoft, cần API Key.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+</body>
+  </html>
