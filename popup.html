@@ -1,39 +1,56 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
   <style>
     :root {
-      --bg:         #0f0e17;
-      --surface:    #1a1929;
-      --surface2:   #222136;
-      --border:     #2e2c45;
-      --accent:     #e8a045;
-      --accent2:    #c45c8a;
-      --text:       #e8e6f0;
+      --bg: #0f0e17;
+      --surface: #1a1929;
+      --surface2: #222136;
+      --border: #2e2c45;
+      --accent: #e8a045;
+      --accent2: #c45c8a;
+      --text: #e8e6f0;
       --text-muted: #7a7896;
-      --success:    #4caf86;
-      --danger:     #e05c6e;
-      --warning:    #f0c040;
-      --radius:     10px;
+      --success: #4caf86;
+      --danger: #e05c6e;
+      --warning: #f0c040;
+      --radius: 10px;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      width: 320px;
+      max-height: 600px;
+      overflow: hidden;
+    }
+
     body {
       width: 320px;
-      min-height: 460px;
+      max-height: 600px;
       background: var(--bg);
       color: var(--text);
       font-family: 'Be Vietnam Pro', sans-serif;
       font-size: 13px;
-      overflow-x: hidden;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
+
     .toast {
       position: fixed;
-      bottom: 36px;
+      top: 14px;
       left: 50%;
-      transform: translateX(-50%) translateY(12px);
+      transform: translateX(-50%) translateY(-12px);
       background: var(--surface2);
       border: 1px solid var(--border);
       color: var(--text);
@@ -52,10 +69,27 @@
       align-items: center;
       gap: 6px;
     }
-    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-    .toast-success { border-color: var(--success); color: var(--success); }
-    .toast-warning { border-color: var(--warning); color: var(--warning); }
-    .toast-info    { border-color: var(--accent);  color: var(--accent); }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast-success {
+      border-color: var(--success);
+      color: var(--success);
+    }
+
+    .toast-warning {
+      border-color: var(--warning);
+      color: var(--warning);
+    }
+
+    .toast-info {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
     .header {
       background: linear-gradient(135deg, #1a1929 0%, #12111e 100%);
       padding: 10px 14px;
@@ -64,18 +98,193 @@
       align-items: center;
       gap: 10px;
     }
-    .header-logo { display: flex; align-items: center; user-select: none; }
-    .header-logo object { display: block; pointer-events: none; }
-    .header-badge {
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .header-logo img {
+      display: block;
+    }
+
+    .header-actions {
       margin-left: auto;
-      background: var(--accent);
-      color: #0f0e17;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .header-badge {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
       font-size: 9px;
       font-weight: 600;
       padding: 2px 6px;
-      border-radius: 99px;
+      border-radius: 4px;
       letter-spacing: 0.5px;
     }
+
+    .header-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .header-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .header-btn.active {
+      background: var(--accent);
+      color: #0f0e17;
+      border-color: var(--accent);
+      box-shadow: 0 0 10px rgba(232, 160, 69, 0.3);
+    }
+
+    .header-info-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: 8px;
+    }
+
+    .info-badge {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .info-badge svg {
+      color: var(--text-muted);
+      opacity: 0.7;
+    }
+
+    .info-badge.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(232, 160, 69, 0.05);
+    }
+
+    .info-badge.active svg {
+      color: var(--accent);
+      opacity: 1;
+    }
+
+    .info-badge.clickable {
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .info-badge.clickable:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .timer-selector {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 140px;
+    }
+
+    .auto-stop-select {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      background: var(--surface2);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23e8a045' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 11px;
+      padding: 8px 32px 8px 12px;
+      border-radius: 10px;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      width: 100%;
+    }
+
+    .auto-stop-select:hover {
+      border-color: var(--accent);
+      background-color: rgba(232, 160, 69, 0.05);
+    }
+
+    .auto-stop-select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(232, 160, 69, 0.15);
+    }
+
+    .auto-stop-select option {
+      background: #1a1929;
+      color: var(--text);
+      padding: 10px;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input[type=number] {
+      -moz-appearance: textfield;
+      appearance: textfield;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      padding: 2px 4px;
+      border-radius: 4px;
+      outline: none;
+      font-family: inherit;
+      font-size: 10.5px;
+      font-weight: 700;
+    }
+
+    .auto-stop-input-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .auto-stop-input {
+      width: 40px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-size: 10px;
+      text-align: center;
+    }
+
+    .auto-stop-unit {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
     .book-card {
       display: flex;
       gap: 10px;
@@ -83,16 +292,23 @@
       background: var(--surface);
       border-bottom: 1px solid var(--border);
     }
+
     #cover-img {
-      width: 54px; height: 78px;
+      width: 54px;
+      height: 78px;
       object-fit: cover;
       border-radius: 5px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
       flex-shrink: 0;
       border: 1px solid var(--border);
       background: var(--surface2);
     }
-    .book-meta { flex: 1; min-width: 0; }
+
+    .book-meta {
+      flex: 1;
+      min-width: 0;
+    }
+
     .book-label {
       font-size: 9px;
       color: var(--text-muted);
@@ -100,6 +316,7 @@
       letter-spacing: 1px;
       margin-bottom: 3px;
     }
+
     #current-title {
       font-weight: 600;
       font-size: 13px;
@@ -112,6 +329,7 @@
       overflow: hidden;
       margin-bottom: 4px;
     }
+
     #current-chap {
       font-size: 11px;
       color: var(--accent);
@@ -120,6 +338,7 @@
       text-overflow: ellipsis;
       margin-bottom: 6px;
     }
+
     .btn-save {
       background: transparent;
       border: 1px solid var(--border);
@@ -135,8 +354,18 @@
       gap: 6px;
       font-weight: 500;
     }
-    .btn-save:hover { border-color: var(--accent); color: var(--accent); }
-    .btn-save.saved { border-color: var(--success); color: var(--success); background: rgba(76, 175, 134, 0.1); }
+
+    .btn-save:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .btn-save.saved {
+      border-color: var(--success);
+      color: var(--success);
+      background: rgba(76, 175, 134, 0.1);
+    }
+
     .status-bar {
       display: flex;
       align-items: center;
@@ -145,21 +374,50 @@
       background: var(--surface2);
       border-bottom: 1px solid var(--border);
     }
+
     .status-dot {
-      width: 7px; height: 7px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
       background: var(--text-muted);
       transition: background 0.3s;
       flex-shrink: 0;
     }
+
     .status-dot.playing {
       background: var(--success);
       box-shadow: 0 0 6px var(--success);
       animation: pulse 1.4s infinite;
     }
-    .status-dot.paused { background: var(--accent); }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-    #status-text { font-size: 11px; color: var(--text-muted); }
+
+    .status-dot.paused {
+      background: var(--accent);
+    }
+
+    .hourglass-spin {
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 4px;
+      color: var(--warning);
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0.4
+      }
+    }
+
+    #status-text {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
     #tts-badge {
       font-size: 9px;
       padding: 1px 5px;
@@ -170,6 +428,7 @@
       margin-left: 6px;
       transition: color 0.3s, border-color 0.3s;
     }
+
     #timer-display {
       margin-left: auto;
       font-size: 11px;
@@ -179,22 +438,132 @@
       align-items: center;
       gap: 4px;
     }
+
+    .sleep-timer-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 9px;
+      padding: 1px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .sleep-timer-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .sleep-timer-btn.active {
+      background: var(--accent);
+      color: #0f0e17;
+      border-color: var(--accent);
+    }
+
     #progress-text {
       font-size: 10.5px;
       font-weight: 600;
       color: var(--accent);
       background: rgba(232, 160, 69, 0.15);
       border: 1px solid rgba(232, 160, 69, 0.4);
-      padding: 2px 8px;
+      padding: 2px 12px;
       border-radius: 99px;
-      min-width: 48px;
-      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      cursor: pointer;
+      transition: all 0.2s;
     }
+
+    #progress-text:hover {
+      background: rgba(232, 160, 69, 0.25);
+      border-color: var(--accent);
+    }
+
+    #progress-input {
+      width: 20px;
+      background: transparent;
+      border: none;
+      color: var(--accent);
+      font-family: inherit;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-align: right;
+      outline: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    #progress-input::-webkit-outer-spin-button,
+    #progress-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      appearance: none;
+      margin: 0;
+    }
+
+    #progress-input[type=number] {
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+
+    .progress-divider {
+      color: var(--text-muted);
+      opacity: 0.6;
+      font-weight: 400;
+    }
+
+    #progress-total {
+      min-width: 14px;
+      text-align: left;
+    }
+
+    .progress-bar-wrapper {
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .progress-bar-container {
+      flex: 1;
+      height: 6px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-bar-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      background: var(--accent);
+      width: 0%;
+      border-radius: 99px;
+      transition: width 0.3s ease;
+      box-shadow: 0 0 8px rgba(232, 160, 69, 0.5);
+    }
+
+    #progress-percent {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      min-width: 32px;
+      text-align: right;
+    }
+
     .controls {
       padding: 12px 14px 8px;
       background: var(--surface);
       border-bottom: 1px solid var(--border);
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
     }
+
     .ctrl-row {
       display: flex;
       align-items: center;
@@ -202,6 +571,7 @@
       gap: 8px;
       margin-bottom: 10px;
     }
+
     .chunk-nav {
       display: flex;
       justify-content: space-between;
@@ -212,6 +582,7 @@
       border-radius: 6px;
       border: 1px solid var(--border);
     }
+
     .btn-ctrl {
       background: var(--surface2);
       border: 1px solid var(--border);
@@ -219,18 +590,33 @@
       font-family: inherit;
       border-radius: 8px;
       cursor: pointer;
-      transition: all 0.18s;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
       display: flex;
       align-items: center;
       justify-content: center;
     }
+
     .btn-ctrl:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
-    .btn-ctrl:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
-    .btn-ctrl:active:not(:disabled) { transform: translateY(0); }
-    .btn-sm { width: 34px; height: 34px; font-size: 14px; }
+
+    .btn-ctrl:hover:not(:disabled) {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(232, 160, 69, 0.05);
+    }
+
+    .btn-ctrl:active:not(:disabled) {
+      transform: scale(0.96);
+    }
+
+    .btn-sm {
+      width: 34px;
+      height: 34px;
+      font-size: 14px;
+    }
+
     .btn-lg {
       height: 40px;
       padding: 0 16px;
@@ -242,17 +628,61 @@
       color: #fff;
       letter-spacing: 0.2px;
     }
-    .btn-lg:hover { opacity: 0.9; color: #fff; border: none; }
-    .slider-group { margin-bottom: 8px; }
+
+    .btn-lg:hover {
+      opacity: 0.9;
+      color: #fff;
+      border: none;
+    }
+
+    .sliders-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 10px;
+      padding: 0 4px;
+    }
+
+    .slider-group {
+      flex: 1;
+    }
+
     .slider-label {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 10px;
+      font-size: 9.5px;
       color: var(--text-muted);
-      margin-bottom: 4px;
+      margin-bottom: 5px;
     }
-    .slider-label span:last-child { color: var(--accent); font-weight: 600; }
+
+    #speed-val {
+      color: #f0c040 !important;
+      font-weight: 700;
+    }
+
+    #vol-val {
+      color: #40c0f0 !important;
+      font-weight: 700;
+    }
+
+    .label-speed {
+      color: #f0c040 !important;
+    }
+
+    .label-vol {
+      color: #40c0f0 !important;
+    }
+
+    input[type=range].speed-range::-webkit-slider-thumb {
+      background: #f0c040;
+      box-shadow: 0 0 6px rgba(240, 192, 64, 0.4);
+    }
+
+    input[type=range].vol-range::-webkit-slider-thumb {
+      background: #40c0f0;
+      box-shadow: 0 0 6px rgba(64, 192, 240, 0.4);
+    }
+
     input[type=range] {
       -webkit-appearance: none;
       appearance: none;
@@ -263,15 +693,21 @@
       outline: none;
       cursor: pointer;
     }
+
     input[type=range]::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 13px; height: 13px;
+      width: 13px;
+      height: 13px;
       border-radius: 50%;
       background: var(--accent);
-      box-shadow: 0 0 4px rgba(232,160,69,0.4);
+      box-shadow: 0 0 4px rgba(232, 160, 69, 0.4);
       transition: transform 0.15s;
     }
-    input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.2); }
+
+    input[type=range]:hover::-webkit-slider-thumb {
+      transform: scale(1.2);
+    }
+
     .options-row {
       display: flex;
       gap: 8px;
@@ -279,24 +715,61 @@
       margin-top: 8px;
       width: 100%;
     }
+
     .voice-select {
       flex: 1;
       min-width: 0;
+      max-width: 100%;
       background: var(--surface2);
       border: 1px solid var(--border);
       color: var(--text);
       font-family: inherit;
       font-size: 11px;
-      padding: 5px 8px;
-      border-radius: 6px;
+      padding: 8px 32px 8px 12px;
+      border-radius: 10px;
       cursor: pointer;
       outline: none;
       text-overflow: ellipsis;
       white-space: nowrap;
       overflow: hidden;
+      -webkit-appearance: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23e8a045' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
     }
-    .voice-select:focus { border-color: var(--accent); }
-    .voice-select:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .voice-select:hover {
+      border-color: var(--accent);
+      background-color: rgba(232, 160, 69, 0.05);
+    }
+
+    .voice-select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(232, 160, 69, 0.15);
+    }
+
+    .voice-select:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .voice-select option,
+    .voice-select optgroup {
+      background: #1a1929;
+      color: var(--text);
+      padding: 10px;
+    }
+
+    .voice-select optgroup {
+      color: var(--accent);
+      font-weight: 600;
+      font-style: normal;
+      border-top: 1px solid var(--border);
+      margin-top: 5px;
+    }
+
     .toggle-group {
       display: flex;
       align-items: center;
@@ -305,8 +778,19 @@
       color: var(--text-muted);
       flex-shrink: 0;
     }
-    .toggle { position: relative; width: 28px; height: 16px; }
-    .toggle input { opacity: 0; width: 0; height: 0; }
+
+    .toggle {
+      position: relative;
+      width: 28px;
+      height: 16px;
+    }
+
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
     .toggle-slider {
       position: absolute;
       inset: 0;
@@ -315,24 +799,36 @@
       cursor: pointer;
       transition: 0.2s;
     }
+
     .toggle-slider::before {
       content: '';
       position: absolute;
-      width: 10px; height: 10px;
-      left: 3px; top: 3px;
+      width: 10px;
+      height: 10px;
+      left: 3px;
+      top: 3px;
       background: #fff;
       border-radius: 50%;
       transition: 0.2s;
     }
-    .toggle input:checked + .toggle-slider { background: var(--accent); }
-    .toggle input:checked + .toggle-slider::before { transform: translateX(12px); }
+
+    .toggle input:checked+.toggle-slider {
+      background: var(--accent);
+    }
+
+    .toggle input:checked+.toggle-slider::before {
+      transform: translateX(12px);
+    }
+
     .kbd-hint {
       font-size: 9px;
       color: var(--text-muted);
       text-align: center;
-      margin-top: 6px;
+      margin-top: auto;
+      padding-top: 10px;
       opacity: 0.65;
     }
+
     .kbd-hint kbd {
       background: var(--surface2);
       border: 1px solid var(--border);
@@ -341,35 +837,70 @@
       font-family: monospace;
       font-size: 8px;
     }
-    .tabs {
-      display: flex;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
+
+    .tab svg {
+      flex-shrink: 0;
     }
-    .tab {
+
+    .panel {
+      display: none;
+      padding: 10px 14px;
       flex: 1;
-      padding: 8px;
-      text-align: center;
-      font-size: 11px;
-      color: var(--text-muted);
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: all 0.2s;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
+      overflow-y: auto;
+      border-top: 1px solid var(--border);
     }
-    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-    .tab:hover:not(.active) { color: var(--text); }
-    .tab svg { flex-shrink: 0; }
-    .panel { display: none; padding: 10px 14px; max-height: 160px; overflow-y: auto; }
-    .panel.active { display: block; }
-    .panel::-webkit-scrollbar { width: 3px; }
-    .panel::-webkit-scrollbar-track { background: transparent; }
-    .panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
-    .list-empty { text-align: center; color: var(--text-muted); font-size: 11px; padding: 16px 0; }
+
+    .panel.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel::-webkit-scrollbar {
+      width: 3px;
+    }
+
+    .panel::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .panel::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 99px;
+    }
+
+    .search-box {
+      position: sticky;
+      top: -10px;
+      background: var(--bg);
+      padding: 5px 0 10px;
+      z-index: 10;
+    }
+
+    #list-search {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 10px 6px 30px;
+      border-radius: 6px;
+      font-size: 11px;
+      outline: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%237a7896' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'%3E%3C/circle%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'%3E%3C/line%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: 8px center;
+    }
+
+    #list-search:focus {
+      border-color: var(--accent);
+    }
+
+    .list-empty {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 11px;
+      padding: 16px 0;
+    }
+
     .list-item {
       display: flex;
       align-items: center;
@@ -379,16 +910,29 @@
       border-radius: 4px;
       transition: background 0.15s;
     }
-    .list-item:last-child { border-bottom: none; }
-    .list-item:hover { background: var(--surface2); }
+
+    .list-item:last-child {
+      border-bottom: none;
+    }
+
+    .list-item:hover {
+      background: var(--surface2);
+    }
+
     .list-thumb {
-      width: 28px; height: 40px;
+      width: 28px;
+      height: 40px;
       object-fit: cover;
       border-radius: 3px;
       flex-shrink: 0;
       background: var(--surface2);
     }
-    .list-info { flex: 1; min-width: 0; }
+
+    .list-info {
+      flex: 1;
+      min-width: 0;
+    }
+
     .list-name {
       font-size: 12px;
       font-weight: 500;
@@ -396,7 +940,13 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .list-chap { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+
+    .list-chap {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
     .btn-remove {
       background: none;
       border: none;
@@ -408,7 +958,11 @@
       transition: color 0.2s;
       flex-shrink: 0;
     }
-    .btn-remove:hover { color: var(--danger); }
+
+    .btn-remove:hover {
+      color: var(--danger);
+    }
+
     .setting-row {
       display: flex;
       justify-content: space-between;
@@ -417,9 +971,20 @@
       border-bottom: 1px solid var(--border);
       font-size: 12px;
     }
-    .setting-row:last-child { border-bottom: none; }
-    .setting-label { color: var(--text-muted); }
-    .setting-val { color: var(--text); font-weight: 500; }
+
+    .setting-row:last-child {
+      border-bottom: none;
+    }
+
+    .setting-label {
+      color: var(--text-muted);
+    }
+
+    .setting-val {
+      color: var(--text);
+      font-weight: 500;
+    }
+
     .footer {
       padding: 8px 14px;
       text-align: center;
@@ -428,8 +993,13 @@
       border-top: 1px solid var(--border);
       background: var(--surface);
       letter-spacing: 0.5px;
+      flex-shrink: 0;
     }
-    .footer span { color: var(--accent); }
+
+    .footer span {
+      color: var(--accent);
+    }
+
     #api-settings-box {
       width: 100%;
       background: var(--surface2);
@@ -438,7 +1008,9 @@
       border: 1px dashed var(--border);
       margin-top: 4px;
     }
-    #api-key-input, #api-region-input {
+
+    #api-key-input,
+    #api-region-input {
       width: 100%;
       margin-bottom: 8px;
       padding: 6px 8px;
@@ -450,7 +1022,12 @@
       outline: none;
       font-family: monospace;
     }
-    #api-key-input:focus, #api-region-input:focus { border-color: var(--accent); }
+
+    #api-key-input:focus,
+    #api-region-input:focus {
+      border-color: var(--accent);
+    }
+
     #btn-save-api {
       width: 100%;
       font-size: 11px;
@@ -459,123 +1036,414 @@
       color: var(--accent);
       border-color: var(--accent);
     }
-    .icon-text { display: flex; align-items: center; gap: 5px; }
+
+    .icon-text {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(2px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 20px;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      width: 100%;
+      max-width: 280px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      animation: modalSlide 0.25s ease-out;
+    }
+
+    @keyframes modalSlide {
+      from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.95);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .modal-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+
+    .modal-body {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+
+
+    .custom-select-container {
+      position: relative;
+      flex: 1;
+      min-width: 0;
+      user-select: none;
+    }
+
+    .custom-select-trigger {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 11px;
+      padding: 8px 32px 8px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23e8a045' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .custom-select-trigger:hover {
+      border-color: var(--accent);
+      background-color: rgba(232, 160, 69, 0.05);
+    }
+
+    .custom-select-dropdown {
+      position: absolute;
+      top: calc(100% + 5px);
+      left: 0;
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+      z-index: 999;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.2s ease;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+
+    .custom-select-dropdown::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .custom-select-dropdown::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .custom-select-dropdown::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 99px;
+    }
+
+    .custom-select-dropdown.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .custom-option {
+      padding: 8px 12px;
+      font-size: 11px;
+      color: var(--text);
+      border-radius: 8px;
+
+
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .custom-option:hover {
+      background: rgba(232, 160, 69, 0.15);
+      color: var(--accent);
+    }
+
+    .custom-option.selected {
+      background: var(--accent);
+      color: #0f0e17;
+      font-weight: 600;
+    }
+
+    .custom-optgroup {
+      padding: 8px 12px 4px;
+      font-size: 10px;
+      color: var(--accent);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      cursor: default;
+      border-top: 1px solid var(--border);
+      margin-top: 4px;
+    }
+
+    .custom-optgroup:first-child {
+      border-top: none;
+      margin-top: 0;
+    }
+
+
+
+    .custom-select-container.drop-up .custom-select-dropdown {
+      top: auto;
+      bottom: calc(100% + 5px);
+      box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.4);
+      transform: translateY(10px);
+    }
+
+    .custom-select-container.drop-up .custom-select-dropdown.show {
+      transform: translateY(0);
+    }
   </style>
 </head>
+
 <body>
   <div class="toast" id="toast"></div>
   <div class="header">
-    <div class="header-logo">
-      <object type="image/svg+xml" data="icons/logo.svg" width="160" height="52" aria-label="Auto Đọc STV"></object>
+    <div class="header-logo tab" data-tab="main" style="cursor: pointer; pointer-events: auto;" title="Về trang chủ">
+      <img src="icons/logo.svg" width="160" height="52" alt="Auto Đọc STV">
     </div>
-    <div class="header-badge">v0.1</div>
-  </div>
-  <div class="book-card">
-    <img id="cover-img" alt="Bìa truyện">
-    <div class="book-meta">
-      <div class="book-label">Đang mở</div>
-      <div id="current-title">Chưa mở truyện...</div>
-      <div id="current-chap">—</div>
-      <button class="btn-save" id="btn-save">
-        <svg id="save-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
-        <span id="save-text">Lưu</span>
+    <div class="header-actions">
+      <div class="header-badge" id="version-badge">v0.1</div>
+      <button class="header-btn tab" id="btn-show-list" data-tab="reading-list" title="Danh sách đọc">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 5h.01" />
+          <path d="M3 12h.01" />
+          <path d="M3 19h.01" />
+          <path d="M8 5h13" />
+          <path d="M8 12h13" />
+          <path d="M8 19h13" />
+        </svg>
+      </button>
+      <button class="header-btn tab" id="btn-show-settings" data-tab="settings" title="Cài đặt">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path
+            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+          <circle cx="12" cy="12" r="4" />
+        </svg>
       </button>
     </div>
   </div>
-  <div class="status-bar">
-    <div class="status-dot" id="status-dot"></div>
-    <span id="status-text">Sẵn sàng</span>
-    <span id="tts-badge">Web TTS</span>
-    <div id="timer-display">
-      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      <span id="timer-text">00:00</span>
-    </div>
-  </div>
-  <div class="controls">
-    <div id="interaction-warning" style="display: none; background: rgba(240, 192, 64, 0.15); color: var(--warning); padding: 8px; border-radius: 6px; font-size: 10.5px; text-align: center; margin-bottom: 10px; border: 1px solid rgba(240, 192, 64, 0.3);">
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      Trình duyệt chặn tự động phát!<br>Vui lòng <strong>nhấn chuột vào trang web truyện</strong> một lần trước khi bấm Nghe.
-    </div>
 
-    <div class="chunk-nav">
-        <button class="btn-ctrl" id="btn-prev-chunk" style="padding: 4px 8px; font-size: 11px; border: none; background: transparent; color: var(--text-muted);" title="Lùi lại một đoạn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:text-bottom; margin-right:2px"><polyline points="15 18 9 12 15 6"/></svg>Lùi
+  <div class="panel active" id="panel-main" style="padding:0; border:none; max-height:none; overflow:visible;">
+    <div class="book-card" id="book-card-content">
+      <img id="cover-img" alt="Bìa truyện" style="display: none;">
+      <div class="book-meta" id="book-meta">
+        <div class="book-label">Đang mở</div>
+        <div id="current-title">Đang tải...</div>
+        <div id="current-chap">—</div>
+        <button class="btn-save" id="btn-save">
+          <svg id="save-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
+          </svg>
+          <span id="save-text">Lưu</span>
         </button>
-        <span id="progress-text" title="Đoạn hiện tại / tổng số đoạn">0/0</span>
-        <button class="btn-ctrl" id="btn-next-chunk" style="padding: 4px 8px; font-size: 11px; border: none; background: transparent; color: var(--text-muted);" title="Chuyển đoạn tiếp theo">
-            Tiếp<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:text-bottom; margin-left:2px"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+      <div id="book-empty-state" style="display: none; width: 100%; padding: 4px 0;">
+        <button class="btn-ctrl btn-lg" id="btn-open-stv"
+          style="width: 100%; font-size: 12px; background: var(--surface2); border: 1px solid var(--border); color: var(--accent);">
+          Mở trang sangtacviet.com ngay!
         </button>
+      </div>
     </div>
+    <div class="status-bar">
+      <div class="status-dot" id="status-dot"></div>
+      <span id="status-icon"></span>
+      <span id="status-text">Sẵn sàng</span>
+      <span id="tts-badge">Web TTS</span>
+      <div id="timer-display">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+        <span id="timer-text">00:00</span>
+      </div>
+    </div>
+    <div class="controls">
+      <div id="interaction-warning"
+        style="display: none; background: rgba(240, 192, 64, 0.15); color: var(--warning); padding: 8px; border-radius: 6px; font-size: 10.5px; text-align: center; margin-bottom: 10px; border: 1px solid rgba(240, 192, 64, 0.3);">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          style="vertical-align: text-bottom; margin-right: 4px;">
+          <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+          <line x1="12" y1="9" x2="12" y2="13" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+        Trình duyệt chặn tự động phát!<br>Vui lòng <strong>nhấn chuột vào trang web truyện</strong> một lần trước khi
+        bấm Nghe.
+      </div>
 
-    <div class="ctrl-row">
-      <button class="btn-ctrl btn-sm" id="btn-prev" title="Chương trước  [←]">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="19 20 9 12 19 4 19 20"/><rect x="5" y="4" width="2" height="16"/></svg>
-      </button>
-      <button class="btn-ctrl btn-sm" id="btn-replay" title="Đọc lại từ đầu  [R]">
-        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
-      </button>
-      <button class="btn-ctrl btn-lg" id="btn-play">
-        <svg id="btn-play-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        <span id="btn-play-text">Nghe</span>
-      </button>
-      <button class="btn-ctrl btn-sm" id="btn-stop" title="Dừng hẳn  [Esc]">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
-      </button>
-      <button class="btn-ctrl btn-sm" id="btn-next" title="Chương sau  [→]">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 4 15 12 5 20 5 4"/><rect x="17" y="4" width="2" height="16"/></svg>
-      </button>
-    </div>
-    <div class="slider-group">
-      <div class="slider-label">
-        <span class="icon-text">
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          Tốc độ đọc
-        </span>
-        <span id="speed-val">1.0×</span>
+      <div class="chunk-nav" style="margin-bottom: 8px;">
+        <button class="btn-ctrl" id="btn-prev-chunk"
+          style="padding: 4px 8px; font-size: 11px; border: none; background: transparent; color: var(--text-muted);"
+          title="Lùi lại một đoạn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            style="vertical-align:text-bottom; margin-right:2px">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>Lùi
+        </button>
+        <div id="progress-text" title="Nhấn để nhập số đoạn muốn nhảy tới">
+          <input type="number" id="progress-input" value="0" min="1">
+          <span class="progress-divider">/</span>
+          <span id="progress-total">0</span>
+        </div>
+        <button class="btn-ctrl" id="btn-next-chunk"
+          style="padding: 4px 8px; font-size: 11px; border: none; background: transparent; color: var(--text-muted);"
+          title="Chuyển đoạn tiếp theo">
+          Tiếp<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            style="vertical-align:text-bottom; margin-left:2px">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
       </div>
-      <input type="range" id="speed-slider" min="0.5" max="3.0" step="0.1" value="1.0">
-    </div>
-    <div class="slider-group">
-      <div class="slider-label">
-        <span class="icon-text">
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-          Âm lượng
-        </span>
-        <span id="vol-val">100%</span>
+
+      <div class="progress-bar-wrapper">
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" id="progress-bar-fill"></div>
+        </div>
+        <span id="progress-percent">0%</span>
       </div>
-      <input type="range" id="vol-slider" min="0" max="1" step="0.05" value="1">
-    </div>
-    <div class="options-row">
-      <select class="voice-select" id="voice-select">
-        <option value="-1">Giọng mặc định</option>
-      </select>
-      <div class="toggle-group">
-        <label class="toggle">
-          <input type="checkbox" id="chk-autonext" checked>
-          <span class="toggle-slider"></span>
-        </label>
-        <span>Tự qua chương</span>
+
+      <div class="ctrl-row">
+        <button class="btn-ctrl btn-sm" id="btn-prev" title="Chương trước  [←]">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
+            stroke="none">
+            <polygon points="19 20 9 12 19 4 19 20" />
+            <rect x="5" y="4" width="2" height="16" />
+          </svg>
+        </button>
+        <button class="btn-ctrl btn-sm" id="btn-replay" title="Đọc lại từ đầu  [R]">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m17 2 4 4-4 4" />
+            <path d="M3 11v-1a4 4 0 0 1 4-4h14" />
+            <path d="m7 22-4-4 4-4" />
+            <path d="M21 13v1a4 4 0 0 1-4 4H3" />
+          </svg>
+        </button>
+        <button class="btn-ctrl btn-lg" id="btn-play">
+          <svg id="btn-play-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+            fill="currentColor" stroke="none">
+            <polygon points="5 3 19 12 5 21 5 3" />
+          </svg>
+          <span id="btn-play-text">Nghe</span>
+        </button>
+        <button class="btn-ctrl btn-sm" id="btn-stop" title="Dừng hẳn  [Esc]">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
+            stroke="none">
+            <rect x="4" y="4" width="16" height="16" rx="2" />
+          </svg>
+        </button>
+        <button class="btn-ctrl btn-sm" id="btn-next" title="Chương sau  [→]">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
+            stroke="none">
+            <polygon points="5 4 15 12 5 20 5 4" />
+            <rect x="17" y="4" width="2" height="16" />
+          </svg>
+        </button>
       </div>
-    </div>
-    <div id="voice-hint" style="color: var(--danger); font-size: 10px; text-align: center; margin-top: 6px; display: none;">
-      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>
-      Hệ điều hành chưa có giọng Tiếng Việt. Vui lòng tải gói ngôn ngữ Tiếng Việt trong phần Cài đặt máy tính!
-    </div>
-    <div class="kbd-hint">
-      <kbd>K</kbd> Phát/Dừng &nbsp; <kbd>←</kbd><kbd>→</kbd> Chương &nbsp; <kbd>R</kbd> Đọc lại &nbsp; <kbd>Esc</kbd> Tắt
+
+      <div class="sliders-row">
+        <div class="slider-group">
+          <div class="slider-label">
+            <span class="icon-text label-speed">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+              </svg>
+              Tốc độ
+            </span>
+            <span id="speed-val">1.0×</span>
+          </div>
+          <input type="range" id="speed-slider" class="speed-range" min="0.5" max="3.0" step="0.1" value="1.0">
+        </div>
+        <div class="slider-group">
+          <div class="slider-label">
+            <span class="icon-text label-vol" id="btn-mute" style="cursor: pointer;" title="Bật/Tắt tiếng">
+              <svg id="mute-icon" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+              </svg>
+              Âm lượng
+            </span>
+            <span id="vol-val">100%</span>
+          </div>
+          <input type="range" id="vol-slider" class="vol-range" min="0" max="1" step="0.05" value="1">
+        </div>
+      </div>
+
+      <div class="options-row">
+        <div class="custom-select-container drop-up">
+          <div class="custom-select-trigger" id="custom-voice-trigger">
+            <span id="custom-voice-text">Đang tải giọng...</span>
+          </div>
+          <div class="custom-select-dropdown" id="custom-voice-dropdown">
+          </div>
+        </div>
+
+        <select class="voice-select" id="voice-select" style="display: none;"></select>
+
+        <div class="toggle-group">
+          <label class="toggle">
+            <input type="checkbox" id="chk-autonext" checked>
+            <span class="toggle-slider"></span>
+          </label>
+          <span>Tự qua chương</span>
+        </div>
+      </div>
+
+      <div id="voice-hint"
+        style="color: var(--danger); font-size: 10px; text-align: center; margin-top: 6px; display: none;">
+        Hệ điều hành chưa có giọng Tiếng Việt.
+      </div>
+      <div class="kbd-hint">
+        <kbd>K</kbd> Phát/Dừng &nbsp; <kbd>←</kbd><kbd>→</kbd> Chương &nbsp; <kbd>R</kbd> Lại &nbsp; <kbd>Esc</kbd> Tắt
+      </div>
     </div>
   </div>
-  <div class="tabs">
-    <div class="tab active" data-tab="reading-list">
-      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h.01"/><path d="M3 12h.01"/><path d="M3 19h.01"/><path d="M8 5h13"/><path d="M8 12h13"/><path d="M8 19h13"/></svg>
-      Danh sách
+
+  <div class="panel" id="panel-reading-list">
+    <div class="search-box">
+      <input type="text" id="list-search" placeholder="Tìm tên truyện hoặc chương...">
     </div>
-    <div class="tab" data-tab="settings">
-      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><circle cx="12" cy="12" r="4"/></svg>
-      Cài đặt
-    </div>
-  </div>
-  <div class="panel active" id="panel-reading-list">
     <div id="list-container">
       <div class="list-empty">Chưa có truyện nào được lưu.</div>
     </div>
@@ -583,27 +1451,80 @@
   <div class="panel" id="panel-settings">
     <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 6px; padding-bottom: 12px;">
       <span class="setting-label">Nguồn giọng đọc (TTS Engine)</span>
-      <select class="voice-select" id="engine-select" style="width: 100%;">
-        <optgroup label="1. Có sẵn (Miễn phí)">
-          <option value="web">Web Speech API (Hệ điều hành)</option>
-        </optgroup>
-        <optgroup label="2. API Cao Cấp (Cần Key)">
-          <option value="fpt">FPT.AI TTS (Việt Nam)</option>
-          <option value="azure">Microsoft Azure TTS (Quốc Tế)</option>
-        </optgroup>
-      </select>
+      <div class="custom-select-container" style="width: 100%;">
+        <div class="custom-select-trigger">
+          <span id="custom-engine-text">Web Speech API (Miễn phí)</span>
+        </div>
+        <div class="custom-select-dropdown" id="custom-engine-dropdown"></div>
+
+        <select class="voice-select" id="engine-select" style="display: none;">
+          <option value="web">Web Speech API (Miễn phí)</option>
+          <optgroup label="API Cao Cấp (Cần Key)">
+            <option value="fpt">FPT.AI TTS (Việt Nam)</option>
+            <option value="azure">Microsoft Azure TTS</option>
+          </optgroup>
+        </select>
+      </div>
       <div id="api-settings-box" style="display:none;">
         <input type="password" id="api-key-input" placeholder="Nhập API Key vào đây...">
         <input type="text" id="api-region-input" placeholder="Azure Region (VD: southeastasia)" style="display:none;">
-        <button class="btn-ctrl btn-sm" id="btn-save-api">
-          <svg id="btn-save-api-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-          <span id="btn-save-api-text">Lưu API Key</span>
-        </button>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-ctrl btn-sm" id="btn-save-api" style="flex: 1;">
+            <svg id="btn-save-api-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              style="margin-right: 4px;">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+              <polyline points="17 21 17 13 7 13 7 21" />
+              <polyline points="7 3 7 8 15 8" />
+            </svg>
+            <span id="btn-save-api-text">Lưu API Key</span>
+          </button>
+          <button class="btn-ctrl btn-sm" id="btn-test-api"
+            style="width: auto; padding: 0 12px; height: 28px; font-size: 10px; border-color: var(--accent2); color: var(--accent2);"
+            title="Kiểm tra Key này có hoạt động không">
+            Thử Key
+          </button>
+        </div>
         <div style="margin-top: 10px; text-align: center;">
           <a href="guide.html" target="_blank" style="color: var(--accent); text-decoration: none; font-size: 11px;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 2px;"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              style="vertical-align: middle; margin-right: 2px;">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
             Hướng dẫn cách lấy API Key miễn phí
           </a>
+        </div>
+      </div>
+    </div>
+    <div class="setting-row" style="align-items: flex-start; padding: 10px 0;">
+      <span class="setting-label" style="margin-top: 5px;">Tự động dừng</span>
+      <div class="timer-selector">
+        <div class="custom-select-container" style="width: 100%;">
+          <div class="custom-select-trigger">
+            <span id="custom-autostop-text">Không có</span>
+          </div>
+          <div class="custom-select-dropdown" id="custom-autostop-dropdown"></div>
+
+          <select class="auto-stop-select" id="select-auto-stop" style="display: none;">
+            <option value="off">Không có</option>
+            <option value="time">Theo thời gian</option>
+            <option value="chapters">Theo số chương</option>
+          </select>
+        </div>
+        <div id="group-stop-time" class="auto-stop-input-group" style="display: none;">
+          <input type="number" id="input-stop-time" class="auto-stop-input" value="30" min="1">
+          <span class="auto-stop-unit">phút</span>
+          <button class="btn-ctrl btn-sm" id="btn-apply-stop-time"
+            style="height: 20px; width: 34px; font-size: 9px; margin-left: auto;">Lưu</button>
+        </div>
+        <div id="group-stop-chapters" class="auto-stop-input-group" style="display: none;">
+          <input type="number" id="input-stop-chapters" class="auto-stop-input" value="1" min="1">
+          <span class="auto-stop-unit">chương</span>
+          <button class="btn-ctrl btn-sm" id="btn-apply-stop-chapters"
+            style="height: 20px; width: 34px; font-size: 9px; margin-left: auto;">Lưu</button>
         </div>
       </div>
     </div>
@@ -616,11 +1537,27 @@
       <span class="setting-val" id="info-count">0 truyện</span>
     </div>
     <div class="setting-row" style="border-bottom:none;">
-      <span class="setting-label">Xoá toàn bộ danh sách</span>
-      <button class="btn-ctrl btn-sm" id="btn-clear-all" style="color:var(--danger);border-color:var(--danger);font-size:11px;width:auto;padding:4px 8px;">Xoá tất cả</button>
+      <span class="setting-label">Xoá toàn bộ dữ liệu</span>
+      <button class="btn-ctrl btn-sm" id="btn-clear-all"
+        style="color:var(--danger);border-color:var(--danger);font-size:11px;width:auto;padding:4px 8px;">Xoá tất
+        cả</button>
     </div>
   </div>
   <div class="footer">Auto Đọc STV · Powered by <span>Web Speech & FPT.AI</span></div>
+  <div class="modal-overlay" id="confirm-modal">
+    <div class="modal">
+      <div class="modal-title" id="modal-title">Xác nhận</div>
+      <div class="modal-body" id="modal-body">Bạn có chắc chắn muốn thực hiện hành động này không?</div>
+      <div class="modal-footer">
+        <button class="btn-ctrl btn-sm" id="modal-cancel"
+          style="width: auto; padding: 0 15px; border: none; background: var(--surface2);">Hủy</button>
+        <button class="btn-ctrl btn-sm" id="modal-confirm"
+          style="width: auto; padding: 0 15px; background: var(--danger); border: none; color: white;">Đồng ý</button>
+      </div>
+    </div>
+  </div>
+
   <script src="popup.js"></script>
 </body>
+
 </html>
