@@ -36,21 +36,42 @@ async function guitoithe(idthe, lenh, them = {}) {
     });
 }
 
+let id_the_stv_cached = null;
+
 async function guilenh(lenh, them = {}) {
+    if (id_the_stv_cached) {
+        try {
+            const phanhoi = await guitoithe(id_the_stv_cached, lenh, them);
+            if (phanhoi && !phanhoi.noTab) return phanhoi;
+        } catch (e) {
+            id_the_stv_cached = null;
+        }
+    }
+
     const [the_danghoatdong] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (the_danghoatdong && the_danghoatdong.url && the_danghoatdong.url.includes('sangtacviet.com')) {
         const phanhoi = await guitoithe(the_danghoatdong.id, lenh, them);
-        if (phanhoi) return phanhoi;
+        if (phanhoi) {
+            id_the_stv_cached = the_danghoatdong.id;
+            return phanhoi;
+        }
     }
+
     let cacthe = await chrome.tabs.query({ url: "*://*.sangtacviet.com/*" });
     if (cacthe.length === 0) return { noTab: true };
     cacthe.sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0));
     const the_truyen = cacthe.filter(t => t.url.includes('/truyen/'));
     const the_ungvien = the_truyen.length > 0 ? the_truyen : cacthe;
+
     for (const the of the_ungvien) {
         const phanhoi = await guitoithe(the.id, lenh, them);
-        if (phanhoi && phanhoi.bookTitle) return phanhoi;
+        if (phanhoi && phanhoi.bookTitle) {
+            id_the_stv_cached = the.id;
+            return phanhoi;
+        }
     }
+
+    id_the_stv_cached = cacthe[0].id;
     return guitoithe(cacthe[0].id, lenh, them);
 }
 
@@ -525,7 +546,7 @@ function hienthidanhsachdoc(danh_sach) {
         item.addEventListener('click', () => {
             const title = item.dataset.title;
             chrome.storage.local.get('readingList', data => {
-                const entry = (data.readingList || []).find(e => e.title.trim().toLowerCase() === title.trim().toLowerCase());
+                const entry = (data.readingList || []).find(e => (e.title || '').trim().toLowerCase() === (title || '').trim().toLowerCase());
                 if (entry?.url) chrome.tabs.create({ url: entry.url });
                 else hienthithongbao('URL không được lưu cho truyện này', 'warning');
             });
@@ -536,15 +557,14 @@ function hienthidanhsachdoc(danh_sach) {
 function xoakhoidanhsach(title) {
     chrome.storage.local.get('readingList', data => {
         const danh_sach = data.readingList || [];
-        const vitri = danh_sach.findIndex(i => i.title.trim().toLowerCase() === title.trim().toLowerCase());
-        if (vitri === -1) return;
+        const vitri = danh_sach.findIndex(i => (i.title || '').trim().toLowerCase() === (title || '').trim().toLowerCase()); if (vitri === -1) return;
         danh_sach.splice(vitri, 1);
         chrome.storage.local.set({ readingList: danh_sach }, () => {
             danhsachdochientai = danh_sach;
             hienthidanhsachdoc(danh_sach);
             document.getElementById('info-count').textContent = `${danh_sach.length} truyện`;
             if (dulieutruyenhientai) {
-                const van_luu = danh_sach.some(i => i.title === dulieutruyenhientai.bookTitle);
+                const van_luu = danh_sach.some(i => (i.title || '').trim().toLowerCase() === (dulieutruyenhientai.bookTitle || '').trim().toLowerCase());
                 dattrangthailuu(van_luu);
             }
         });
@@ -564,8 +584,7 @@ document.getElementById('btn-save').addEventListener('click', () => {
     if (!dulieutruyenhientai) { hienthithongbao('Không có truyện nào đang mở', 'warning'); return; }
     chrome.storage.local.get('readingList', data => {
         const danh_sach = data.readingList || [];
-        const vitri = danh_sach.findIndex(i => i.title.trim().toLowerCase() === dulieutruyenhientai.bookTitle.trim().toLowerCase());
-        if (vitri !== -1) {
+        const vitri = danh_sach.findIndex(i => (i.title || '').trim().toLowerCase() === (dulieutruyenhientai.bookTitle || '').trim().toLowerCase()); if (vitri !== -1) {
             danh_sach.splice(vitri, 1);
             chrome.storage.local.set({ readingList: danh_sach }, () => {
                 danhsachdochientai = danh_sach;
@@ -1073,7 +1092,7 @@ async function khoitaopopup() {
 
     chrome.storage.local.get('readingList', data => {
         let danh_sach = data.readingList || [];
-        const muc_da_luu = danh_sach.findIndex(i => i.title.trim().toLowerCase() === phanhoi.bookTitle.trim().toLowerCase());
+        const muc_da_luu = danh_sach.findIndex(i => (i.title || '').trim().toLowerCase() === (phanhoi.bookTitle || '').trim().toLowerCase());
 
         if (!phanhoi.imgUrl) {
             coverImg.src = (muc_da_luu !== -1 && danh_sach[muc_da_luu].imgUrl) ? danh_sach[muc_da_luu].imgUrl : FALLBACK_COVER;

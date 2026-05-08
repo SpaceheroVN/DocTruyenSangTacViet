@@ -225,7 +225,7 @@ function capnhatnoibat(chiso, mangcacdoan) {
             }
         }
     }
-    luutrangthaitienhat();
+    luutrangthaitienhat_debounce();
 }
 
 async function layamthanhtuapi(vanban, congcudoc, retries = 3) {
@@ -799,7 +799,7 @@ chrome.storage.local.get([
 ], data => {
     let tentruyen = document.getElementById('booknameholder')?.innerText.trim() || document.getElementById('book_name2')?.innerText.trim() || document.querySelector('h1')?.innerText.trim() || '';
     let danh_sach = data.readingList || [];
-    let muc = danh_sach.find(i => i.title.trim().toLowerCase() === tentruyen.trim().toLowerCase());
+    let muc = danh_sach.find(i => (i.title || '').trim().toLowerCase() === (tentruyen || '').trim().toLowerCase());
     if (muc && muc.url === window.location.href && muc.chunkIndex > 1) {
         doandaluu = muc.chunkIndex - 1;
     }
@@ -864,6 +864,12 @@ document.addEventListener('keydown', e => {
     }
 });
 
+let timer_luutrangthai = null;
+function luutrangthaitienhat_debounce() {
+    if (timer_luutrangthai) clearTimeout(timer_luutrangthai);
+    timer_luutrangthai = setTimeout(luutrangthaitienhat, 1000);
+}
+
 function luutrangthaitienhat() {
     const congcu = maydoc === 'auto' || maydoc === 'google' ? 'web' : maydoc;
     const cur = (congcu === 'web' ? chisodoan_ws : chisoamthanh) + 1;
@@ -880,7 +886,7 @@ function luutrangthaitienhat() {
     });
     chrome.storage.local.get('readingList', data => {
         let danh_sach = data.readingList || [];
-        let idx = danh_sach.findIndex(i => i.title.trim().toLowerCase() === tentruyen.trim().toLowerCase());
+        let idx = danh_sach.findIndex(i => (i.title || '').trim().toLowerCase() === (tentruyen || '').trim().toLowerCase());
         if (idx !== -1) {
             let cap_nhat = false;
             if (danh_sach[idx].url !== window.location.href) { danh_sach[idx].url = window.location.href; cap_nhat = true; }
