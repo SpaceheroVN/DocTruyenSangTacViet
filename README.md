@@ -24,7 +24,7 @@
 ---
 ## Hướng dẫn cài đặt
 
-1. **Tải về:** [Tải bộ DocTruyenSTV_v.x](https://github.com/SpaceheroVN/DocTruyenSangTacViet/releases) và giải nén.
+1. **Tải về:** [Tải bộ DocTruyenSTV_v.`x`](https://github.com/SpaceheroVN/DocTruyenSangTacViet/releases) và giải nén.
 2. **Mở quản lý tiện ích:** Truy cập `chrome://extensions/` (Chrome) hoặc `edge://extensions/` (Edge).
 3. **Chế độ nhà phát triển:** Bật công tắc **Developer mode** ở góc trên bên phải.
 4. **Cài đặt:** Chọn **Load unpacked** (Tải tiện ích đã giải nén) và chọn thư mục vừa giải nén.
