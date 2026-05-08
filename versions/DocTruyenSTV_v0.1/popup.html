@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&family=Baloo+2:wght@800&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:         #0f0e17;
+      --surface:    #1a1929;
+      --surface2:   #222136;
+      --border:     #2e2c45;
+      --accent:     #e8a045;
+      --accent2:    #c45c8a;
+      --text:       #e8e6f0;
+      --text-muted: #7a7896;
+      --success:    #4caf86;
+      --danger:     #e05c6e;
+      --warning:    #f0c040;
+      --radius:     10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 320px;
+      min-height: 460px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Be Vietnam Pro', sans-serif;
+      font-size: 13px;
+      overflow-x: hidden;
+    }
+    .toast {
+      position: fixed;
+      bottom: 36px;
+      left: 50%;
+      transform: translateX(-50%) translateY(12px);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 11px;
+      padding: 6px 14px;
+      border-radius: 99px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s, transform 0.25s;
+      z-index: 9999;
+      max-width: 280px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast-success { border-color: var(--success); color: var(--success); }
+    .toast-warning { border-color: var(--warning); color: var(--warning); }
+    .toast-info    { border-color: var(--accent);  color: var(--accent); }
+    .header {
+      background: linear-gradient(135deg, #1a1929 0%, #12111e 100%);
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-logo { display: flex; align-items: center; user-select: none; }
+    .header-logo object { display: block; pointer-events: none; }
+    .header-badge {
+      margin-left: auto;
+      background: var(--accent);
+      color: #0f0e17;
+      font-size: 9px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 99px;
+      letter-spacing: 0.5px;
+    }
+    .book-card {
+      display: flex;
+      gap: 10px;
+      padding: 12px 14px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    #cover-img {
+      width: 54px; height: 78px;
+      object-fit: cover;
+      border-radius: 5px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+    }
+    .book-meta { flex: 1; min-width: 0; }
+    .book-label {
+      font-size: 9px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 3px;
+    }
+    #current-title {
+      font-weight: 600;
+      font-size: 13px;
+      line-height: 1.35;
+      color: var(--text);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+    #current-chap {
+      font-size: 11px;
+      color: var(--accent);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 6px;
+    }
+    .btn-save {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 10px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 500;
+    }
+    .btn-save:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-save.saved { border-color: var(--success); color: var(--success); background: rgba(76, 175, 134, 0.1); }
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+    .status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      transition: background 0.3s;
+      flex-shrink: 0;
+    }
+    .status-dot.playing {
+      background: var(--success);
+      box-shadow: 0 0 6px var(--success);
+      animation: pulse 1.4s infinite;
+    }
+    .status-dot.paused { background: var(--accent); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    #status-text { font-size: 11px; color: var(--text-muted); }
+    #tts-badge {
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 99px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      margin-left: 6px;
+      transition: color 0.3s, border-color 0.3s;
+    }
+    #timer-display {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    #progress-text {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--accent);
+      background: rgba(232, 160, 69, 0.15);
+      border: 1px solid rgba(232, 160, 69, 0.4);
+      padding: 2px 8px;
+      border-radius: 99px;
+      min-width: 48px;
+      text-align: center;
+    }
+    .controls {
+      padding: 12px 14px 8px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    .ctrl-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .chunk-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      background: var(--surface2);
+      padding: 4px 6px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+    .btn-ctrl {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: inherit;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.18s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-ctrl:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .btn-ctrl:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+    .btn-ctrl:active:not(:disabled) { transform: translateY(0); }
+    .btn-sm { width: 34px; height: 34px; font-size: 14px; }
+    .btn-lg {
+      height: 40px;
+      padding: 0 16px;
+      font-size: 13px;
+      font-weight: 600;
+      gap: 6px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      border: none;
+      color: #fff;
+      letter-spacing: 0.2px;
+    }
+    .btn-lg:hover { opacity: 0.9; color: #fff; border: none; }
+    .slider-group { margin-bottom: 8px; }
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .slider-label span:last-child { color: var(--accent); font-weight: 600; }
+    input[type=range] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 3px;
+      background: var(--border);
+      border-radius: 99px;
+      outline: none;
+      cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 13px; height: 13px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 4px rgba(232,160,69,0.4);
+      transition: transform 0.15s;
+    }
+    input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.2); }
+    .options-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 8px;
+      width: 100%;
+    }
+    .voice-select {
+      flex: 1;
+      min-width: 0;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 11px;
+      padding: 5px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      outline: none;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .voice-select:focus { border-color: var(--accent); }
+    .voice-select:disabled { opacity: 0.6; cursor: not-allowed; }
+    .toggle-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .toggle { position: relative; width: 28px; height: 16px; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: var(--border);
+      border-radius: 99px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 10px; height: 10px;
+      left: 3px; top: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: 0.2s;
+    }
+    .toggle input:checked + .toggle-slider { background: var(--accent); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(12px); }
+    .kbd-hint {
+      font-size: 9px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 6px;
+      opacity: 0.65;
+    }
+    .kbd-hint kbd {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 0 3px;
+      font-family: monospace;
+      font-size: 8px;
+    }
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .tab {
+      flex: 1;
+      padding: 8px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab:hover:not(.active) { color: var(--text); }
+    .tab svg { flex-shrink: 0; }
+    .panel { display: none; padding: 10px 14px; max-height: 160px; overflow-y: auto; }
+    .panel.active { display: block; }
+    .panel::-webkit-scrollbar { width: 3px; }
+    .panel::-webkit-scrollbar-track { background: transparent; }
+    .panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+    .list-empty { text-align: center; color: var(--text-muted); font-size: 11px; padding: 16px 0; }
+    .list-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 4px;
+      border-bottom: 1px solid var(--border);
+      border-radius: 4px;
+      transition: background 0.15s;
+    }
+    .list-item:last-child { border-bottom: none; }
+    .list-item:hover { background: var(--surface2); }
+    .list-thumb {
+      width: 28px; height: 40px;
+      object-fit: cover;
+      border-radius: 3px;
+      flex-shrink: 0;
+      background: var(--surface2);
+    }
+    .list-info { flex: 1; min-width: 0; }
+    .list-name {
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .list-chap { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+    .btn-remove {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 13px;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: color 0.2s;
+      flex-shrink: 0;
+    }
+    .btn-remove:hover { color: var(--danger); }
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+    .setting-row:last-child { border-bottom: none; }
+    .setting-label { color: var(--text-muted); }
+    .setting-val { color: var(--text); font-weight: 500; }
+    .footer {
+      padding: 8px 14px;
+      text-align: center;
+      font-size: 9px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      letter-spacing: 0.5px;
+    }
+    .footer span { color: var(--accent); }
+    #api-settings-box {
+      width: 100%;
+      background: var(--surface2);
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px dashed var(--border);
+      margin-top: 4px;
+    }
+    #api-key-input, #api-region-input {
+      width: 100%;
+      margin-bottom: 8px;
+      padding: 6px 8px;
+      font-size: 11px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      outline: none;
+      font-family: monospace;
+    }
+    #api-key-input:focus, #api-region-input:focus { border-color: var(--accent); }
+    #btn-save-api {
+      width: 100%;
+      font-size: 11px;
+      height: 28px;
+      background: rgba(232, 160, 69, 0.1);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+    .icon-text { display: flex; align-items: center; gap: 5px; }
+  </style>
+</head>
+<body>
+  <div class="toast" id="toast"></div>
+  <div class="header">
+    <div class="header-logo">
+      <svg xmlns="http://www.w3.org/2000/svg" width="160" height="52" viewBox="0 0 160 52" aria-label="Auto Đọc STV">
+        <defs>
+          <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#e8a045"/>
+            <stop offset="100%" stop-color="#c45c8a"/>
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="1.5" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <text x="4" y="38" font-family="'Baloo 2', cursive" font-size="46" font-weight="800" font-style="italic" fill="url(#g1)" filter="url(#glow)">STV</text>
+        <text x="6" y="50" font-family="'Dancing Script', cursive" font-size="13" font-weight="700" fill="#ffffff" stroke="#5CAAFC" stroke-width="0.4" letter-spacing="0.5">sangtacviet.com</text>
+      </svg>
+    </div>
+    <div class="header-badge">v0.1</div>
+  </div>
+  <div class="book-card">
+    <img id="cover-img" alt="Bìa truyện">
+    <div class="book-meta">
+      <div class="book-label">Đang mở</div>
+      <div id="current-title">Chưa mở truyện...</div>
+      <div id="current-chap">—</div>
+      <button class="btn-save" id="btn-save">
+        <svg id="save-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+        <span id="save-text">Lưu</span>
+      </button>
+    </div>
+  </div>
+  <div class="status-bar">
+    <div class="status-dot" id="status-dot"></div>
+    <span id="status-text">Sẵn sàng</span>
+    <span id="tts-badge">Web TTS</span>
+    <div id="timer-display">
+      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span id="timer-text">00:00</span>
+    </div>
+  </div>
+  <div class="controls">
+    <div id="interaction-warning" style="display: none; background: rgba(240, 192, 64, 0.15); color: var(--warning); padding: 8px; border-radius: 6px; font-size: 10.5px; text-align: center; margin-bottom: 10px; border: 1px solid rgba(240, 192, 64, 0.3);">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Trình duyệt chặn tự động phát!<br>Vui lòng <strong>nhấn chuột vào trang web truyện</strong> một lần trước khi bấm Nghe.
+    </div>
+
+    <div class="chunk-nav">
+        <button class="btn-ctrl" id="btn-prev-chunk" style="padding: 4px 8px; font-size: 11px; border: none; background: transparent; color: var(--text-muted);" title="Lùi lại một đoạn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:text-bottom; margin-right:2px"><polyline points="15 18 9 12 15 6"/></svg>Lùi
+        </button>
+        <span id="progress-text" title="Đoạn hiện tại / tổng số đoạn">0/0</span>
+        <button class="btn-ctrl" id="btn-next-chunk" style="padding: 4px 8px; font-size: 11px; border: none; background: transparent; color: var(--text-muted);" title="Chuyển đoạn tiếp theo">
+            Tiếp<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:text-bottom; margin-left:2px"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+    </div>
+
+    <div class="ctrl-row">
+      <button class="btn-ctrl btn-sm" id="btn-prev" title="Chương trước  [←]">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="19 20 9 12 19 4 19 20"/><rect x="5" y="4" width="2" height="16"/></svg>
+      </button>
+      <button class="btn-ctrl btn-sm" id="btn-replay" title="Đọc lại từ đầu  [R]">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+      </button>
+      <button class="btn-ctrl btn-lg" id="btn-play">
+        <svg id="btn-play-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        <span id="btn-play-text">Nghe</span>
+      </button>
+      <button class="btn-ctrl btn-sm" id="btn-stop" title="Dừng hẳn  [Esc]">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+      </button>
+      <button class="btn-ctrl btn-sm" id="btn-next" title="Chương sau  [→]">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 4 15 12 5 20 5 4"/><rect x="17" y="4" width="2" height="16"/></svg>
+      </button>
+    </div>
+    <div class="slider-group">
+      <div class="slider-label">
+        <span class="icon-text">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Tốc độ đọc
+        </span>
+        <span id="speed-val">1.0×</span>
+      </div>
+      <input type="range" id="speed-slider" min="0.5" max="3.0" step="0.1" value="1.0">
+    </div>
+    <div class="slider-group">
+      <div class="slider-label">
+        <span class="icon-text">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          Âm lượng
+        </span>
+        <span id="vol-val">100%</span>
+      </div>
+      <input type="range" id="vol-slider" min="0" max="1" step="0.05" value="1">
+    </div>
+    <div class="options-row">
+      <select class="voice-select" id="voice-select">
+        <option value="-1">Giọng mặc định</option>
+      </select>
+      <div class="toggle-group">
+        <label class="toggle">
+          <input type="checkbox" id="chk-autonext" checked>
+          <span class="toggle-slider"></span>
+        </label>
+        <span>Tự qua chương</span>
+      </div>
+    </div>
+    <div id="voice-hint" style="color: var(--danger); font-size: 10px; text-align: center; margin-top: 6px; display: none;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>
+      Hệ điều hành chưa có giọng Tiếng Việt. Vui lòng tải gói ngôn ngữ Tiếng Việt trong phần Cài đặt máy tính!
+    </div>
+    <div class="kbd-hint">
+      <kbd>K</kbd> Phát/Dừng &nbsp; <kbd>←</kbd><kbd>→</kbd> Chương &nbsp; <kbd>R</kbd> Đọc lại &nbsp; <kbd>Esc</kbd> Tắt
+    </div>
+  </div>
+  <div class="tabs">
+    <div class="tab active" data-tab="reading-list">
+      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h.01"/><path d="M3 12h.01"/><path d="M3 19h.01"/><path d="M8 5h13"/><path d="M8 12h13"/><path d="M8 19h13"/></svg>
+      Danh sách
+    </div>
+    <div class="tab" data-tab="settings">
+      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><circle cx="12" cy="12" r="4"/></svg>
+      Cài đặt
+    </div>
+  </div>
+  <div class="panel active" id="panel-reading-list">
+    <div id="list-container">
+      <div class="list-empty">Chưa có truyện nào được lưu.</div>
+    </div>
+  </div>
+  <div class="panel" id="panel-settings">
+    <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 6px; padding-bottom: 12px;">
+      <span class="setting-label">Nguồn giọng đọc (TTS Engine)</span>
+      <select class="voice-select" id="engine-select" style="width: 100%;">
+        <optgroup label="1. Có sẵn (Miễn phí)">
+          <option value="web">Web Speech API (Hệ điều hành)</option>
+        </optgroup>
+        <optgroup label="2. API Cao Cấp (Cần Key)">
+          <option value="fpt">FPT.AI TTS (Việt Nam)</option>
+          <option value="azure">Microsoft Azure TTS (Quốc Tế)</option>
+        </optgroup>
+      </select>
+      <div id="api-settings-box" style="display:none;">
+        <input type="password" id="api-key-input" placeholder="Nhập API Key vào đây...">
+        <input type="text" id="api-region-input" placeholder="Azure Region (VD: southeastasia)" style="display:none;">
+        <button class="btn-ctrl btn-sm" id="btn-save-api">
+          <svg id="btn-save-api-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          <span id="btn-save-api-text">Lưu API Key</span>
+        </button>
+        <div style="margin-top: 10px; text-align: center;">
+          <a href="guide.html" target="_blank" style="color: var(--accent); text-decoration: none; font-size: 11px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 2px;"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Hướng dẫn cách lấy API Key miễn phí
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">Giọng Web Speech</span>
+      <span class="setting-val" id="info-voice">Mặc định</span>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">Tổng truyện đã lưu</span>
+      <span class="setting-val" id="info-count">0 truyện</span>
+    </div>
+    <div class="setting-row" style="border-bottom:none;">
+      <span class="setting-label">Xoá toàn bộ danh sách</span>
+      <button class="btn-ctrl btn-sm" id="btn-clear-all" style="color:var(--danger);border-color:var(--danger);font-size:11px;width:auto;padding:4px 8px;">Xoá tất cả</button>
+    </div>
+  </div>
+  <div class="footer">Auto Đọc STV · Powered by <span>Web Speech & FPT.AI</span></div>
+  <script src="popup.js"></script>
+</body>
+</html>
