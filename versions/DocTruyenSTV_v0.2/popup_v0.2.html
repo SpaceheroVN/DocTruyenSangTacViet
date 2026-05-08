@@ -27,6 +27,9 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      user-select: none;
     }
 
     html {
@@ -244,7 +247,7 @@
     }
 
     input[type=number]::-webkit-inner-spin-button,
-    input[type=number]::-webkit-outer-spin-button {
+    input[type=number]::-webkit-inner-spin-button {
       -webkit-appearance: none;
       margin: 0;
     }
@@ -709,68 +712,6 @@
       transform: scale(1.2);
     }
 
-    .options-row {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      margin-top: 8px;
-      width: 100%;
-    }
-
-    .voice-select {
-      flex: 1;
-      min-width: 0;
-      max-width: 100%;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      font-family: inherit;
-      font-size: 11px;
-      padding: 8px 32px 8px 12px;
-      border-radius: 10px;
-      cursor: pointer;
-      outline: none;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      overflow: hidden;
-      -webkit-appearance: none;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23e8a045' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 12px center;
-      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-    }
-
-    .voice-select:hover {
-      border-color: var(--accent);
-      background-color: rgba(232, 160, 69, 0.05);
-    }
-
-    .voice-select:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 2px rgba(232, 160, 69, 0.15);
-    }
-
-    .voice-select:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .voice-select option,
-    .voice-select optgroup {
-      background: #1a1929;
-      color: var(--text);
-      padding: 10px;
-    }
-
-    .voice-select optgroup {
-      color: var(--accent);
-      font-weight: 600;
-      font-style: normal;
-      border-top: 1px solid var(--border);
-      margin-top: 5px;
-    }
-
     .toggle-group {
       display: flex;
       align-items: center;
@@ -819,6 +760,22 @@
 
     .toggle input:checked+.toggle-slider::before {
       transform: translateX(12px);
+    }
+
+    .toggle-mini {
+      width: 26px !important;
+      height: 14px !important;
+    }
+
+    .toggle-mini .toggle-slider:before {
+      height: 8px !important;
+      width: 8px !important;
+      left: 3px !important;
+      bottom: 3px !important;
+    }
+
+    .toggle-mini input:checked+.toggle-slider:before {
+      transform: translateX(12px) !important;
     }
 
     .kbd-hint {
@@ -1150,7 +1107,7 @@
       visibility: hidden;
       transform: translateY(-10px);
       transition: all 0.2s ease;
-      max-height: 180px;
+      max-height: 140px;
       overflow-y: auto;
     }
 
@@ -1189,7 +1146,7 @@
 
     .custom-option.selected {
       background: var(--accent);
-      color: #0f0e17;
+      color: #ffffff;
       font-weight: 600;
     }
 
@@ -1219,6 +1176,352 @@
 
     .custom-select-container.drop-up .custom-select-dropdown.show {
       transform: translateY(0);
+    }
+
+    input,
+    textarea {
+      -webkit-user-select: text;
+      -moz-user-select: text;
+      user-select: text;
+    }
+
+    img,
+    svg {
+      -webkit-user-drag: none;
+      pointer-events: none;
+    }
+
+
+    svg .drag-handle,
+    svg .ring-group {
+      pointer-events: all;
+    }
+
+    input[type="time"] {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-family: inherit;
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="time"]::-webkit-calendar-picker-indicator {
+      cursor: pointer;
+      opacity: 0.7;
+      transition: 0.2s;
+    }
+
+    input[type="time"]::-webkit-calendar-picker-indicator:hover {
+      opacity: 1;
+    }
+
+    .custom-cond-select,
+    #custom-operator {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      background: var(--surface2);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23e8a045' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 6px center;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 10px;
+      padding: 4px 20px 4px 8px;
+      border-radius: 6px;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .custom-cond-select:hover,
+    #custom-operator:hover {
+      border-color: var(--accent);
+    }
+
+    .custom-cond-select option,
+    #custom-operator option {
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    #custom-operator {
+      color: var(--accent);
+      font-weight: 600;
+      background-color: rgba(232, 160, 69, 0.1);
+      text-align: center;
+      padding: 4px 16px 4px 8px;
+    }
+
+    .custom-select-trigger {
+      line-height: normal !important;
+      padding-top: 7px !important;
+      padding-bottom: 7px !important;
+    }
+
+    .custom-select-sm {
+      flex: none !important;
+    }
+
+    .custom-select-sm .custom-select-trigger {
+      padding: 4px 16px 4px 6px !important;
+      font-size: 9.5px !important;
+      border-radius: 6px !important;
+      background-position: right 4px center !important;
+      background-size: 10px !important;
+    }
+
+    .custom-select-sm .custom-select-dropdown {
+      border-radius: 8px !important;
+      padding: 4px !important;
+    }
+
+    .custom-select-sm .custom-option {
+      padding: 5px 8px !important;
+      font-size: 10px !important;
+      border-radius: 5px !important;
+    }
+
+    #custom-operator-container .custom-select-trigger {
+      color: var(--accent) !important;
+      font-weight: bold !important;
+      background-color: rgba(232, 160, 69, 0.1) !important;
+      border-color: var(--accent) !important;
+      text-align: center !important;
+    }
+
+
+    .digital-clock-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      margin-bottom: 6px;
+      position: relative;
+    }
+
+    .digital-digit {
+      background: rgba(232, 160, 69, 0.08);
+      color: var(--accent);
+      font-size: 22px;
+      font-family: 'Baloo 2', monospace;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(232, 160, 69, 0.3);
+      min-width: 40px;
+      text-align: center;
+      cursor: text;
+      transition: all 0.2s;
+      text-shadow: 0 0 12px rgba(232, 160, 69, 0.5);
+      box-shadow: inset 0 0 10px rgba(232, 160, 69, 0.05);
+      user-select: none;
+    }
+
+    .digital-digit:hover {
+      border-color: var(--accent);
+      background: rgba(232, 160, 69, 0.15);
+      box-shadow: 0 0 10px rgba(232, 160, 69, 0.2), inset 0 0 10px rgba(232, 160, 69, 0.05);
+    }
+
+    .digital-digit.editing {
+      border-color: var(--accent);
+      background: rgba(232, 160, 69, 0.2);
+      box-shadow: 0 0 14px rgba(232, 160, 69, 0.4);
+      outline: none;
+    }
+
+    .digit-input-overlay {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      pointer-events: none;
+    }
+
+    .digital-separator {
+      color: var(--accent);
+      font-weight: 800;
+      font-size: 20px;
+      opacity: 0.8;
+      animation: blink-sep 1.8s step-start infinite;
+    }
+
+    @keyframes blink-sep {
+
+      0%,
+      60% {
+        opacity: 0.8;
+      }
+
+      30% {
+        opacity: 0.3;
+      }
+    }
+
+    .digital-clock-hint {
+      font-size: 9px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: -2px;
+      margin-bottom: 4px;
+      opacity: 0.6;
+    }
+
+    .ampm-select-wrap {
+      align-self: center;
+      margin-left: 4px;
+      flex-shrink: 0;
+      position: relative;
+      width: 52px;
+    }
+
+    .ampm-select-wrap .custom-select-trigger {
+      padding: 4px 22px 4px 8px !important;
+      font-size: 10px !important;
+      font-weight: 700 !important;
+      border-radius: 7px !important;
+      background-position: right 5px center !important;
+      background-size: 10px !important;
+      color: var(--accent) !important;
+      border-color: rgba(232, 160, 69, 0.35) !important;
+      background-color: rgba(232, 160, 69, 0.08) !important;
+      letter-spacing: 0.5px;
+    }
+
+    .ampm-select-wrap .custom-select-trigger:hover {
+      border-color: var(--accent) !important;
+      background-color: rgba(232, 160, 69, 0.15) !important;
+    }
+
+    .ampm-select-wrap .custom-select-dropdown {
+      min-width: 52px;
+      border-radius: 8px !important;
+      padding: 4px !important;
+    }
+
+    .ampm-select-wrap .custom-option {
+      padding: 5px 8px !important;
+      font-size: 10px !important;
+      font-weight: 700 !important;
+      border-radius: 5px !important;
+      text-align: center;
+      letter-spacing: 0.5px;
+    }
+
+    .circular-picker-container {
+      margin: 4px 0;
+    }
+
+    .circular-picker-svg {
+      filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.5));
+      background: radial-gradient(ellipse at center, rgba(34, 33, 54, 0.8) 0%, rgba(15, 14, 23, 0) 70%);
+      border-radius: 50%;
+    }
+
+    .base-circle {
+      fill: none;
+      stroke: var(--surface2);
+      stroke-width: 1px;
+    }
+
+    .ring-path {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.06);
+      stroke-width: 4px;
+    }
+
+    .active-progress {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 4px;
+      stroke-linecap: round;
+      transform: rotate(-90deg);
+      transform-origin: center;
+      stroke-dasharray: 0, 999;
+      filter: drop-shadow(0 0 4px rgba(232, 160, 69, 0.6));
+      transition: stroke-dasharray 0.08s linear;
+    }
+
+    .active-progress.minute-prog {
+      stroke: var(--accent2);
+      filter: drop-shadow(0 0 4px rgba(196, 92, 138, 0.6));
+    }
+
+    .drag-handle {
+      fill: var(--accent);
+      stroke: #ffffff;
+      stroke-width: 2px;
+      cursor: grab;
+      filter: drop-shadow(0 0 5px rgba(232, 160, 69, 0.8));
+      transition:
+        r 0.15s,
+        cx 0.08s linear,
+        cy 0.08s linear,
+        filter 0.2s ease;
+    }
+
+    .drag-handle.minute-handle {
+      fill: var(--accent2);
+      filter: drop-shadow(0 0 5px rgba(196, 92, 138, 0.8));
+    }
+
+    .drag-handle:hover {
+      r: 9.5px;
+    }
+
+    .drag-handle.dragging {
+      cursor: grabbing;
+      r: 10px;
+    }
+
+    .picker-number {
+      fill: var(--text);
+      font-size: 9px;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      opacity: 0.55;
+      font-weight: 700;
+    }
+
+    .picker-number.sm {
+      font-size: 7.5px;
+      opacity: 0.45;
+    }
+
+    .picker-center-label {
+      fill: var(--text-muted);
+      font-size: 7.5px;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      opacity: 0.5;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .picker-ring-label {
+      fill: var(--accent);
+      font-size: 6.5px;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      opacity: 0.7;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .tick-mark {
+      stroke: rgba(255, 255, 255, 0.12);
+      stroke-width: 1px;
+    }
+
+    .tick-mark.major {
+      stroke: rgba(255, 255, 255, 0.25);
+      stroke-width: 1.5px;
     }
   </style>
 </head>
@@ -1417,21 +1720,20 @@
           <input type="range" id="vol-slider" class="vol-range" min="0" max="1" step="0.05" value="1">
         </div>
       </div>
-      <div class="options-row">
-        <div class="custom-select-container drop-up">
-          <div class="custom-select-trigger" id="custom-voice-trigger">
+      <div class="options-row" style="display: flex; align-items: center; gap: 8px;">
+        <div class="custom-select-container drop-up" style="flex: 1; min-width: 0;">
+          <div class="custom-select-trigger" id="custom-voice-trigger" style="padding: 6px 28px 6px 10px !important; font-size: 10.5px !important; border-radius: 8px !important;">
             <span id="custom-voice-text">Đang tải giọng...</span>
           </div>
-          <div class="custom-select-dropdown" id="custom-voice-dropdown">
-          </div>
+          <div class="custom-select-dropdown" id="custom-voice-dropdown"></div>
+          <select class="voice-select" id="voice-select" style="display: none;"></select>
         </div>
-        <select class="voice-select" id="voice-select" style="display: none;"></select>
-        <div class="toggle-group">
-          <label class="toggle">
+        <div class="toggle-group" style="flex-shrink: 0; background: var(--surface2); padding: 4px 8px; border-radius: 8px; border: 1px solid var(--border); display: flex; align-items: center; gap: 6px;">
+          <label class="toggle toggle-mini">
             <input type="checkbox" id="chk-autonext" checked>
             <span class="toggle-slider"></span>
           </label>
-          <span>Tự qua chương</span>
+          <span style="font-size: 9.5px; color: var(--text); white-space: nowrap;">Tự qua chương</span>
         </div>
       </div>
       <div id="voice-hint"
@@ -1488,7 +1790,8 @@
           </button>
         </div>
         <div style="margin-top: 10px; text-align: center;">
-          <a href="guide.html" target="_blank" style="color: var(--accent); text-decoration: none; font-size: 11px;">
+          <a href="guide_v0.2.html" target="_blank"
+            style="color: var(--accent); text-decoration: none; font-size: 11px;">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
               style="vertical-align: middle; margin-right: 2px;">
@@ -1501,11 +1804,11 @@
         </div>
       </div>
     </div>
-    <!-- Trong popup.html, tìm đến dòng có comment "Tự động dừng" và thay toàn bộ setting-row đó bằng: -->
-    <div class="setting-row" style="align-items: flex-start; padding: 10px 0;">
-      <span class="setting-label" style="margin-top: 5px;">Tự động dừng</span>
-      <div class="timer-selector">
-        <div class="custom-select-container" style="width: 100%;">
+    <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 10px; padding: 10px 0;">
+
+      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 10px;">
+        <span class="setting-label" style="white-space: nowrap;">Tự động dừng</span>
+        <div class="custom-select-container" style="flex: 1; max-width: 155px;">
           <div class="custom-select-trigger">
             <span id="custom-autostop-text">Không có</span>
           </div>
@@ -1518,79 +1821,166 @@
             <option value="custom">Theo tùy chỉnh</option>
           </select>
         </div>
+      </div>
 
-        <!-- Nhóm Hẹn giờ -->
-        <div id="group-stop-time" class="auto-stop-input-group" style="display: none;">
-          <div style="display: flex; align-items: center; gap: 4px;">
-            <input type="number" id="input-stop-hours" class="auto-stop-input" value="0" min="0" style="width: 40px;">
-            <span class="auto-stop-unit">Giờ</span>
-            <input type="number" id="input-stop-minutes" class="auto-stop-input" value="30" min="0" max="59"
-              style="width: 40px;">
-            <span class="auto-stop-unit">Phút</span>
-          </div>
-          <div style="display: flex; gap: 3px; margin-top: 4px;">
-            <button class="btn-ctrl btn-sm preset-time" data-min="15"
-              style="height: 20px; width: auto; font-size: 9px;">+15p</button>
-            <button class="btn-ctrl btn-sm preset-time" data-min="30"
-              style="height: 20px; width: auto; font-size: 9px;">+30p</button>
-            <button class="btn-ctrl btn-sm preset-time" data-min="60"
-              style="height: 20px; width: auto; font-size: 9px;">+60p</button>
-            <button class="btn-ctrl btn-sm preset-time" data-min="120"
-              style="height: 20px; width: auto; font-size: 9px;">+120p</button>
-          </div>
+      <div id="group-stop-time" class="auto-stop-input-group"
+        style="display: none; width: 100%; justify-content: flex-start; flex-wrap: wrap; gap: 6px; margin-top: 0;">
+        <div style="display: flex; align-items: center; gap: 4px;">
+          <input type="number" id="input-stop-hours" class="auto-stop-input" value="0" min="0" style="width: 36px;">
+          <span class="auto-stop-unit">Giờ</span>
+          <input type="number" id="input-stop-minutes" class="auto-stop-input" value="30" min="0" max="59"
+            style="width: 36px;">
+          <span class="auto-stop-unit">Phút</span>
+        </div>
+        <div style="display: flex; gap: 4px; margin-left: auto;">
+          <button class="btn-ctrl btn-sm" id="btn-toggle-sign"
+            style="height: 22px; width: 22px; font-size: 15px; font-weight: bold; padding: 0; display: flex; align-items: center; justify-content: center; line-height: 1; letter-spacing: 0; color: var(--accent);">+</button>
+          <button class="btn-ctrl btn-sm preset-time" data-min="15"
+            style="height: 22px; width: auto; font-size: 9px; padding: 0 6px;">15p</button>
+          <button class="btn-ctrl btn-sm preset-time" data-min="30"
+            style="height: 22px; width: auto; font-size: 9px; padding: 0 6px;">30p</button>
           <button class="btn-ctrl btn-sm" id="btn-apply-stop-time"
-            style="height: 20px; width: 34px; font-size: 9px; margin-left: 4px;">Lưu</button>
+            style="height: 22px; width: 34px; font-size: 9px; margin-left: 4px;">Lưu</button>
         </div>
+      </div>
 
-        <!-- Nhóm Theo thời gian thực -->
-        <div id="group-stop-realtime" class="auto-stop-input-group" style="display: none;">
-          <input type="time" id="input-stop-realtime" class="auto-stop-input" style="width: auto;">
-          <button class="btn-ctrl btn-sm" id="btn-apply-stop-realtime"
-            style="height: 20px; width: 34px; font-size: 9px;">Lưu</button>
-        </div>
+      <div id="group-stop-realtime" class="auto-stop-input-group"
+        style="display: none; width: 100%; flex-direction: column; align-items: center; gap: 10px; margin-top: 0; position: relative;">
 
-        <!-- Nhóm Theo số chương -->
-        <div id="group-stop-chapters" class="auto-stop-input-group" style="display: none;">
-          <input type="number" id="input-stop-chapters" class="auto-stop-input" value="1" min="1" style="width: 60px;">
-          <span class="auto-stop-unit">chương</span>
-          <button class="btn-ctrl btn-sm" id="btn-apply-stop-chapters"
-            style="height: 20px; width: 34px; font-size: 9px; margin-left: auto;">Lưu</button>
-        </div>
-
-        <!-- Nhóm Tùy chỉnh -->
-        <div id="group-stop-custom" class="auto-stop-input-group"
-          style="display: none; flex-direction: column; gap: 10px;">
-          <!-- Điều kiện trái -->
-          <div style="display: flex; align-items: center; gap: 4px;">
-            <select id="custom-left-type" class="custom-cond-select">
-              <option value="">-- Chọn --</option>
-              <option value="time">Hẹn giờ</option>
-              <option value="realtime">Giờ thực</option>
-              <option value="chapters">Số chương</option>
-            </select>
-            <div id="custom-left-input" style="display: flex; gap: 4px;"></div>
+        <div class="digital-clock-display" id="realtime-digital-display">
+          <input class="digit-input-overlay" id="digit-input-hidden" type="number" min="0" max="59" inputmode="numeric">
+          <span class="digital-digit" id="digit-hours" title="Nhấn để nhập giờ">00</span>
+          <span class="digital-separator">:</span>
+          <span class="digital-digit" id="digit-minutes" title="Nhấn để nhập phút">00</span>
+          <div class="custom-select-container ampm-select-wrap" id="ampm-container">
+            <div class="custom-select-trigger"><span id="ampm-text">AM</span></div>
+            <div class="custom-select-dropdown" id="ampm-dropdown">
+              <div class="custom-option selected" data-val="AM">AM</div>
+              <div class="custom-option" data-val="PM">PM</div>
+            </div>
           </div>
-          <!-- Phép toán -->
-          <div style="display: flex; align-items: center; gap: 4px; justify-content: center;">
-            <select id="custom-operator" style="width: 60px; font-size: 11px;">
+        </div>
+        <div class="digital-clock-hint">Nhấn vào số để gõ trực tiếp · Kéo vòng tròn để chọn</div>
+
+        <div class="circular-picker-container" style="position: relative;">
+          <svg width="190" height="190" viewBox="0 0 190 190" class="circular-picker-svg">
+
+            <defs>
+              <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#222136" stop-opacity="0.9" />
+                <stop offset="100%" stop-color="#0f0e17" stop-opacity="0" />
+              </radialGradient>
+              <filter id="glow-h">
+                <feGaussianBlur stdDeviation="2.5" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              <filter id="glow-m">
+                <feGaussianBlur stdDeviation="2.5" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+            <circle cx="95" cy="95" r="90" fill="url(#bgGrad)" />
+            <circle class="base-circle" cx="95" cy="95" r="89"></circle>
+
+
+            <g class="ring-group" id="hour-ring-group">
+
+              <g id="hour-ticks"></g>
+              <circle class="ring-path" cx="95" cy="95" r="82"></circle>
+              <circle class="active-progress" cx="95" cy="95" r="82" id="hour-progress"></circle>
+              <text class="picker-number" x="95" y="28">12</text>
+              <text class="picker-number" x="158" y="99">3</text>
+              <text class="picker-number" x="95" y="168">6</text>
+              <text class="picker-number" x="32" y="99">9</text>
+              <circle class="drag-handle" cx="95" cy="13" r="8" id="hour-handle"></circle>
+
+              <text class="picker-ring-label" x="95" y="87" style="fill:var(--accent);opacity:0.5;">GIỜ</text>
+            </g>
+
+
+            <g class="ring-group" id="minute-ring-group">
+
+              <g id="minute-ticks"></g>
+              <circle class="ring-path" cx="95" cy="95" r="56"></circle>
+              <circle class="active-progress minute-prog" cx="95" cy="95" r="56" id="minute-progress"></circle>
+              <text class="picker-number sm" x="95" y="52">00</text>
+              <text class="picker-number sm" x="138" y="98">15</text>
+              <text class="picker-number sm" x="95" y="144">30</text>
+              <text class="picker-number sm" x="52" y="98">45</text>
+              <circle class="drag-handle minute-handle" cx="95" cy="39" r="7" id="minute-handle"></circle>
+
+              <text class="picker-ring-label" x="95" y="103" style="fill:var(--accent2);opacity:0.5;">PHÚT</text>
+            </g>
+
+
+            <circle cx="95" cy="95" r="3" fill="var(--border)" opacity="0.6" />
+          </svg>
+        </div>
+
+        <button class="btn-ctrl btn-sm" id="btn-apply-stop-realtime"
+          style="height: 26px; font-size: 11px; padding: 0 16px; width: auto; margin-top: 4px; align-self: flex-end;">Lưu</button>
+      </div>
+
+      <div id="group-stop-chapters" class="auto-stop-input-group"
+        style="display: none; width: 100%; justify-content: flex-end; gap: 6px; margin-top: 0;">
+        <input type="number" id="input-stop-chapters" class="auto-stop-input" value="1" min="1" style="width: 60px;">
+        <span class="auto-stop-unit" style="margin-right: 4px;">chương</span>
+        <button class="btn-ctrl btn-sm" id="btn-apply-stop-chapters"
+          style="height: 26px; width: 44px; font-size: 11px;">Lưu</button>
+      </div>
+
+      <div id="group-stop-custom" class="auto-stop-input-group"
+        style="display: none; flex-direction: column; gap: 10px; width: 100%; background: rgba(0, 0, 0, 0.25); box-shadow: inset 0 2px 5px rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid var(--border); margin-top: 0;">
+        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <div class="custom-select-container custom-select-sm" style="width: 72px;">
+              <div class="custom-select-trigger"><span id="text-left-type">-Chọn-</span></div>
+              <div class="custom-select-dropdown" id="dropdown-left-type"></div>
+              <select id="custom-left-type" style="display: none;">
+                <option value="">-Chọn-</option>
+                <option value="time">H.Giờ</option>
+                <option value="realtime">G.Thực</option>
+                <option value="chapters">Chương</option>
+              </select>
+            </div>
+            <div id="custom-left-input" style="display: flex; gap: 2px; align-items: center;"></div>
+          </div>
+
+          <div class="custom-select-container custom-select-sm" id="custom-operator-container" style="width: 65px;">
+            <div class="custom-select-trigger"><span id="text-operator">HOẶC</span></div>
+            <div class="custom-select-dropdown" id="dropdown-operator"></div>
+            <select id="custom-operator" style="display: none;">
               <option value="or">HOẶC</option>
               <option value="and">VÀ</option>
             </select>
           </div>
-          <!-- Điều kiện phải -->
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
           <div style="display: flex; align-items: center; gap: 4px;">
-            <select id="custom-right-type" class="custom-cond-select">
-              <option value="">-- Chọn --</option>
-              <option value="time">Hẹn giờ</option>
-              <option value="realtime">Giờ thực</option>
-              <option value="chapters">Số chương</option>
-            </select>
-            <div id="custom-right-input" style="display: flex; gap: 4px;"></div>
+            <div class="custom-select-container custom-select-sm" style="width: 72px;">
+              <div class="custom-select-trigger"><span id="text-right-type">-Chọn-</span></div>
+              <div class="custom-select-dropdown" id="dropdown-right-type"></div>
+              <select id="custom-right-type" style="display: none;">
+                <option value="">-Chọn-</option>
+                <option value="time">H.Giờ</option>
+                <option value="realtime">G.Thực</option>
+                <option value="chapters">Chương</option>
+              </select>
+            </div>
+            <div id="custom-right-input" style="display: flex; gap: 2px; align-items: center;"></div>
           </div>
           <button class="btn-ctrl btn-sm" id="btn-apply-stop-custom"
-            style="align-self: flex-end; height: 22px; font-size: 10px;">Lưu tùy chỉnh</button>
+            style="height: 24px; font-size: 11px; padding: 0 12px; width: auto; background: rgba(232, 160, 69, 0.1); color: var(--accent); border-color: var(--accent);">Lưu</button>
         </div>
       </div>
+
     </div>
     <div class="setting-row">
       <span class="setting-label">Giọng Web Speech</span>
@@ -1641,7 +2031,7 @@
       </div>
     </div>
   </div>
-  <script src="popup.js"></script>
+  <script src="popup_v0.2.js"></script>
 </body>
 
 </html>

@@ -20,11 +20,15 @@ let mahengio_ngu = null;
 let batphimtat = true;
 let doctentruyen = true;
 let doctenchuong = true;
+let customStopConfig = null;
+let timerFired = false;
+let chaptersFired = false;
 let doandaluu = 0;
 let thoigiandatroichinhxac = 0;
 let tickcuoicung = Date.now();
 let mahengio_nhaydoan = null;
 let luotphat_id = 0;
+
 function lamtranhvanban(vanban) {
     if (!vanban) return '';
     return vanban
@@ -33,6 +37,7 @@ function lamtranhvanban(vanban) {
         .replace(/@Thực hiện bởi Sáng Tác Việt.*/gi, '')
         .trim();
 }
+
 setInterval(() => {
     const baygio = Date.now();
     if (dangphat && !dangtamdung) {
@@ -41,6 +46,7 @@ setInterval(() => {
     }
     tickcuoicung = baygio;
 }, 1000);
+
 function taicacgiong() {
     return new Promise(resolve => {
         cacgionghienuy = tonghopam.getVoices();
@@ -56,6 +62,7 @@ function taicacgiong() {
     });
 }
 taicacgiong();
+
 async function layvathuanhbia() {
     const p = window.location.pathname.split('/').filter(Boolean);
     if (p.length < 4 || p[0] !== 'truyen') return null;
@@ -83,6 +90,7 @@ async function layvathuanhbia() {
         });
     });
 }
+
 function themphongcach() {
     if (!document.getElementById('tts-styles')) {
         const kieu = document.createElement('style');
@@ -91,6 +99,7 @@ function themphongcach() {
         document.head.appendChild(kieu);
     }
 }
+
 function chuanbinoidung() {
     themphongcach();
     let cacnutdoan = [];
@@ -158,6 +167,7 @@ function chuanbinoidung() {
     });
     return cacnutdoan;
 }
+
 function chiadoanvanban(vanban, dodaitoida) {
     const cacdoan = [];
     const caccau = vanban.split(/(?<=[.!?。])\s+/);
@@ -193,6 +203,7 @@ function chiadoanvanban(vanban, dodaitoida) {
     if (hientai) cacdoan.push(hientai);
     return cacdoan.filter(c => c.trim().length > 0) || [vanban];
 }
+
 function taocacdoanmaydoc(cacnutdoan, dodaitoida) {
     let cacdoanmaydoc = [];
     for (const nut of cacnutdoan) {
@@ -201,6 +212,7 @@ function taocacdoanmaydoc(cacnutdoan, dodaitoida) {
     }
     return cacdoanmaydoc;
 }
+
 function capnhatnoibat(chiso, mangcacdoan) {
     document.querySelectorAll('.tts-reading').forEach(el => el.classList.remove('tts-reading'));
     if (chiso >= 0 && chiso < mangcacdoan.length && mangcacdoan[chiso].el) {
@@ -215,21 +227,36 @@ function capnhatnoibat(chiso, mangcacdoan) {
     }
     luutrangthaitienhat();
 }
-async function layamthanhtuapi(vanban, congcudoc) {
+
+async function layamthanhtuapi(vanban, congcudoc, retries = 3) {
     if (congcudoc === 'fpt') {
         const cacgiong_fpt = ['banmai', 'leminh', 'thuminh', 'myan', 'giahuy', 'lannhi', 'linhsan'];
         const giongdachon = cacgiong_fpt[chisogionghientai] || 'banmai';
         let tocdo_fpt = '0';
         if (tocdohientai > 1) tocdo_fpt = String(Math.min(3, Math.round((tocdohientai - 1) * 2)));
         else if (tocdohientai < 1) tocdo_fpt = String(Math.max(-3, Math.round((tocdohientai - 1) * 2)));
-        const phanhoi = await fetch('https://api.fpt.ai/hmi/tts/v5', {
-            method: 'POST',
-            headers: { 'api-key': khoa_api.fpt_key, 'speed': tocdo_fpt, 'voice': giongdachon },
-            body: vanban
-        });
-        if (!phanhoi.ok) throw new Error('FPT API Error');
-        const dulieu = await phanhoi.json();
-        return dulieu.audiourl;
+
+        try {
+            const phanhoi = await fetch('https://api.fpt.ai/hmi/tts/v5', {
+                method: 'POST',
+                headers: { 'api-key': khoa_api.fpt_key, 'speed': tocdo_fpt, 'voice': giongdachon },
+                body: vanban
+            });
+            if (phanhoi.status === 429 && retries > 0) {
+                console.log(`FPT 429: Đang chờ 2 giây trước khi thử lại... (Lần thử lại còn: ${retries})`);
+                await new Promise(r => setTimeout(r, 2000));
+                return layamthanhtuapi(vanban, congcudoc, retries - 1);
+            }
+            if (!phanhoi.ok) throw new Error(`FPT API Error: ${phanhoi.status}`);
+            const dulieu = await phanhoi.json();
+            return dulieu.async || dulieu.audiourl;
+        } catch (e) {
+            if (retries > 0) {
+                await new Promise(r => setTimeout(r, 1000));
+                return layamthanhtuapi(vanban, congcudoc, retries - 1);
+            }
+            throw e;
+        }
     }
     else if (congcudoc === 'azure') {
         const cacgiong_azure = ['vi-VN-HoaiMyNeural', 'vi-VN-NamMinhNeural'];
@@ -252,6 +279,7 @@ async function layamthanhtuapi(vanban, congcudoc) {
     }
     return null;
 }
+
 async function phatdoanamthanh() {
     if (!dangphat || dangtamdung) return;
     if (chisoamthanh >= cacdoanamthanh.length) {
@@ -266,7 +294,6 @@ async function phatdoanamthanh() {
     const doan = cacdoanamthanh[chisoamthanh];
     capnhatnoibat(chisoamthanh, cacdoanamthanh);
 
-    // Ghi nhớ ID lượt phát hiện tại để chống chồng chéo
     let id_hientai = luotphat_id;
 
     if (!doan.url) {
@@ -276,7 +303,7 @@ async function phatdoanamthanh() {
             document.body.style.cursor = 'default';
         } catch (err) {
             document.body.style.cursor = 'default';
-            if (id_hientai === luotphat_id) { // Chỉ bỏ qua nếu user không bấm chuyển đoạn
+            if (id_hientai === luotphat_id) {
                 chisoamthanh++;
                 setTimeout(phatdoanamthanh, 100);
             }
@@ -284,17 +311,19 @@ async function phatdoanamthanh() {
         }
     }
 
-    // NẾU USER ĐÃ BẤM CHUYỂN ĐOẠN TRONG LÚC CHỜ MẠNG -> HỦY BỎ NGAY LẬP TỨC
     if (id_hientai !== luotphat_id) return;
+
+    const amthanh = new Audio(doan.url);
+    amthanhhientai = amthanh;
+    amthanh.volume = amluonghientai;
+    amthanh.playbackRate = tocdohientai;
 
     if (chisoamthanh + 1 < cacdoanamthanh.length && !cacdoanamthanh[chisoamthanh + 1].url) {
         layamthanhtuapi(cacdoanamthanh[chisoamthanh + 1].text, maydoc)
             .then(url => { cacdoanamthanh[chisoamthanh + 1].url = url; })
             .catch(() => { });
     }
-    const amthanh = new Audio(doan.url);
-    amthanhhientai = amthanh;
-    amthanh.volume = amluonghientai;
+
     amthanh.onended = () => {
         if (doan.url && doan.url.startsWith('blob:')) { URL.revokeObjectURL(doan.url); doan.url = null; }
         if (amthanhhientai !== amthanh) return;
@@ -317,6 +346,7 @@ async function phatdoanamthanh() {
         setTimeout(phatdoanamthanh, 300);
     });
 }
+
 function dungamthanh() {
     if (amthanhhientai) { amthanhhientai.pause(); amthanhhientai.src = ''; amthanhhientai = null; }
     cacdoanamthanh.forEach(c => { if (c.url && c.url.startsWith('blob:')) URL.revokeObjectURL(c.url); });
@@ -324,7 +354,9 @@ function dungamthanh() {
     chisoamthanh = 0;
     document.querySelectorAll('.tts-reading').forEach(el => el.classList.remove('tts-reading'));
 }
+
 function huyphatngonantoan() { if (tonghopam.paused) tonghopam.resume(); tonghopam.cancel(); }
+
 function dungtrinhdocweb() {
     huyphatngonantoan();
     phatngonhientai = null;
@@ -332,19 +364,20 @@ function dungtrinhdocweb() {
     chisodoan_ws = 0;
     document.querySelectorAll('.tts-reading').forEach(el => el.classList.remove('tts-reading'));
 }
+
 async function phatdoanweb() {
     if (!dangphat || dangtamdung) return;
     if (chisodoan_ws >= cacdoan_ws.length) { dangphat = false; xulyketthucchuong(); return; }
     huyphatngonantoan();
     capnhatnoibat(chisodoan_ws, cacdoan_ws);
 
-    let id_hientai = luotphat_id; // Chống chồng chéo
+    let id_hientai = luotphat_id;
 
     if (cacgionghienuy.length === 0) {
         await taicacgiong();
     }
 
-    if (id_hientai !== luotphat_id) return; // Thoát nếu user đã bấm nút khác
+    if (id_hientai !== luotphat_id) return;
 
     const doan = cacdoan_ws[chisodoan_ws];
     const phatngon = new SpeechSynthesisUtterance(doan.text);
@@ -368,6 +401,7 @@ async function phatdoanweb() {
     phatngon.onerror = (e) => { if (e.error === 'interrupted' || e.error === 'canceled') return; if (dangphat && !dangtamdung) { chisodoan_ws++; phatdoanweb(); } };
     tonghopam.speak(phatngon);
 }
+
 function kiemtramahoa() {
     if (document.getElementById('stv-obfuscation-warning')) return true;
     const cackhung = document.querySelectorAll('.contentbox');
@@ -385,6 +419,7 @@ function kiemtramahoa() {
     }
     return false;
 }
+
 function chuanbi_ngam() {
     const congcu = maydoc === 'auto' || maydoc === 'google' ? 'web' : maydoc;
     if (congcu === 'web' && cacdoan_ws.length > 0) return true;
@@ -412,7 +447,7 @@ function chuanbi_ngam() {
         } else { chisodoan_ws = 0; }
         capnhatnoibat(chisodoan_ws, cacdoan_ws);
     } else {
-        cacdoanamthanh = taocacdoanmaydoc(cacnutdoan, congcu === 'fpt' ? 500 : 1000).map(c => ({ ...c, url: null }));
+        cacdoanamthanh = taocacdoanmaydoc(cacnutdoan, congcu === 'fpt' ? 2000 : 1000).map(c => ({ ...c, url: null }));
         if (doandaluu > 0) {
             chisoamthanh = Math.min(doandaluu, Math.max(0, cacdoanamthanh.length - 1));
             doandaluu = 0;
@@ -423,6 +458,7 @@ function chuanbi_ngam() {
     }
     return true;
 }
+
 function batdaudoc() {
     if (!chuanbi_ngam()) { dangphat = false; return; }
     dangphat = true; dangtamdung = false;
@@ -430,6 +466,7 @@ function batdaudoc() {
     if (congcu === 'web') phatdoanweb();
     else phatdoanamthanh();
 }
+
 function chuyendoiphat(tuychon = {}) {
     if (tuychon.speed !== undefined) tocdohientai = tuychon.speed;
     if (tuychon.volume !== undefined) amluonghientai = tuychon.volume;
@@ -456,11 +493,13 @@ function chuyendoiphat(tuychon = {}) {
     }
     return true;
 }
+
 function dungtatca() {
     dungtrinhdocweb(); dungamthanh();
     dangphat = false; dangtamdung = false;
     giaydatroi = 0; thoigiandatroichinhxac = 0;
 }
+
 function doclaichuong(tuychon = {}) {
     dungtatca();
     if (tuychon.speed !== undefined) tocdohientai = tuychon.speed;
@@ -468,6 +507,7 @@ function doclaichuong(tuychon = {}) {
     if (tuychon.voiceIndex !== undefined) chisogionghientai = tuychon.voiceIndex;
     setTimeout(batdaudoc, 150);
 }
+
 function xulyketthucchuong() {
     if (document.getElementById('stv-obfuscation-warning') || kiemtramahoa()) {
         dungtatca();
@@ -478,8 +518,19 @@ function xulyketthucchuong() {
         const conlai = data.stopAfterChapters;
         if (conlai !== undefined && conlai !== null && conlai > 0) {
             if (conlai <= 1) {
-                dungtatca();
                 chrome.storage.local.remove('stopAfterChapters');
+                if (customStopConfig?.operator === 'and') {
+                    chaptersFired = true;
+                    if (!timerFired) {
+                        hienthithongbao('📚 Đã đủ số chương, đang chờ đủ thời gian...');
+                        setTimeout(() => bamchuongsau(true), 1200);
+                        return;
+                    }
+                    customStopConfig = null; timerFired = false;
+                    chrome.storage.local.remove(['customStopConfig', 'sleepTargetTimestamp']);
+                    if (mahengio_ngu) { clearTimeout(mahengio_ngu); mahengio_ngu = null; }
+                }
+                dungtatca();
                 hienthithongbao('🎯 Đã dừng sau khi hoàn thành số chương hẹn trước!');
             } else {
                 chrome.storage.local.set({ stopAfterChapters: conlai - 1 }, () => setTimeout(() => bamchuongsau(true), 1200));
@@ -487,6 +538,7 @@ function xulyketthucchuong() {
         } else setTimeout(() => bamchuongsau(true), 1200);
     });
 }
+
 function bamchuongsau(laTudong = false) {
     dungtatca();
     if (laTudong) chrome.storage.local.set({ autoStartOnLoad: true, savedSpeed: tocdohientai, savedVolume: amluonghientai, savedVoiceIndex: chisogionghientai, savedEngine: maydoc });
@@ -504,6 +556,7 @@ function bamchuongsau(laTudong = false) {
     }
     hienthithongbao('⚠ Không tìm thấy nút chuyển chương. Có thể đã hết truyện.');
 }
+
 function bamchuongtruoc() {
     dungtatca();
     chrome.storage.local.remove('autoStartOnLoad');
@@ -542,6 +595,7 @@ function bamchuongtruoc() {
     }
     hienthithongbao('⚠ Không tìm thấy nút chuyển chương trước.');
 }
+
 function hienthithongbao(thongdiep) {
     let thongbao = document.getElementById('stv-tts-toast');
     if (!thongbao) {
@@ -554,6 +608,7 @@ function hienthithongbao(thongdiep) {
     clearTimeout(thongbao.timeout);
     thongbao.timeout = setTimeout(() => { thongbao.style.opacity = '0'; }, 2000);
 }
+
 function dambaocacdoan() {
     const congcu = maydoc === 'auto' || maydoc === 'google' ? 'web' : maydoc;
     if (congcu === 'web' && cacdoan_ws.length > 0) return;
@@ -571,16 +626,15 @@ function dambaocacdoan() {
         cacdoan_ws = taocacdoanmaydoc(cacnutdoan, 300);
         if (doandaluu > 0) { chisodoan_ws = Math.min(doandaluu, Math.max(0, cacdoan_ws.length - 1)); doandaluu = 0; }
     } else {
-        cacdoanamthanh = taocacdoanmaydoc(cacnutdoan, congcu === 'fpt' ? 500 : 1000).map(c => ({ ...c, url: null }));
+        cacdoanamthanh = taocacdoanmaydoc(cacnutdoan, congcu === 'fpt' ? 2000 : 1000).map(c => ({ ...c, url: null }));
         if (doandaluu > 0) { chisoamthanh = Math.min(doandaluu, Math.max(0, cacdoanamthanh.length - 1)); doandaluu = 0; }
     }
 }
 
-// Thêm hàm gom click này ngay phía trên dòng chrome.runtime.onMessage.addListener
 function xulynhaydoan(hanhdong, giatri) {
     dambaocacdoan();
     const congcu = maydoc === 'auto' ? 'web' : maydoc;
-    luotphat_id++; // Cập nhật ID để hủy sạch các lệnh đang xử lý cũ
+    luotphat_id++;
 
     if (congcu === 'web') {
         if (hanhdong === 'sau' && chisodoan_ws < cacdoan_ws.length - 1) chisodoan_ws++;
@@ -598,14 +652,12 @@ function xulynhaydoan(hanhdong, giatri) {
 
     if (dangphat && !dangtamdung) {
         if (mahengio_nhaydoan) clearTimeout(mahengio_nhaydoan);
-        // Chờ bạn ngừng bấm 250 mili-giây thì mới kích hoạt đọc
         mahengio_nhaydoan = setTimeout(() => {
             if (congcu === 'web') phatdoanweb();
             else phatdoanamthanh();
         }, 250);
     }
 }
-
 
 chrome.runtime.onMessage.addListener((yeucau, _nguoigui, phanhoi) => {
     const congcu = maydoc === 'auto' ? 'web' : maydoc;
@@ -626,19 +678,81 @@ chrome.runtime.onMessage.addListener((yeucau, _nguoigui, phanhoi) => {
         case 'setAuto': tudongchuyenchuong = yeucau.value; trave(); break;
         case 'setSpeed': tocdohientai = yeucau.value; if (congcu === 'web' && dangphat && !dangtamdung) { phatngonhientai = null; huyphatngonantoan(); phatdoanweb(); } trave(); break;
         case 'setVolume': amluonghientai = yeucau.value; if (amthanhhientai) amthanhhientai.volume = amluonghientai; trave(); break;
-        case 'setVoice': chisogionghientai = yeucau.value; if (dangphat || dangtamdung) doclaichuong({ voiceIndex: chisogionghientai }); trave(); break;
-        case 'setEngine': maydoc = yeucau.value || 'auto'; chrome.storage.local.set({ maydoc }); trave(); break;
+        case 'setEngine':
+            const engineCu = maydoc === 'auto' ? 'web' : maydoc;
+            maydoc = yeucau.value || 'auto';
+            chrome.storage.local.set({ maydoc });
+            const engineMoi = maydoc === 'auto' ? 'web' : maydoc;
+
+            if (engineCu !== engineMoi) {
+
+                if (engineMoi === 'web') cacdoan_ws = [];
+                else cacdoanamthanh = [];
+
+                if (dangphat || dangtamdung) {
+                    huyphatngonantoan();
+                    if (amthanhhientai) { amthanhhientai.pause(); amthanhhientai = null; }
+                    chuanbi_ngam();
+                }
+            }
+            trave(); break;
+
+        case 'setVoice':
+            chisogionghientai = yeucau.value;
+            if (dangphat || dangtamdung) {
+                const dangPhatCu = dangphat;
+
+
+                huyphatngonantoan();
+                if (amthanhhientai) { amthanhhientai.pause(); amthanhhientai = null; }
+
+
+                cacdoanamthanh.forEach(c => { if (c.url && c.url.startsWith('blob:')) URL.revokeObjectURL(c.url); c.url = null; });
+
+                if (dangPhatCu) {
+                    luotphat_id++;
+                    const congcu = maydoc === 'auto' ? 'web' : maydoc;
+                    if (congcu === 'web') phatdoanweb();
+                    else phatdoanamthanh();
+                } else {
+                    dangtamdung = true;
+                    const congcu = maydoc === 'auto' ? 'web' : maydoc;
+                    capnhatnoibat(congcu === 'web' ? chisodoan_ws : chisoamthanh, congcu === 'web' ? cacdoan_ws : cacdoanamthanh);
+                }
+            }
+            trave(); break;
         case 'setApiKeys': Object.assign(khoa_api, yeucau); chrome.storage.local.set(yeucau); trave(); break;
         case 'setSleepTimer':
             if (mahengio_ngu) clearTimeout(mahengio_ngu);
+            timerFired = false;
             if (yeucau.minutes > 0) {
-                chrome.storage.local.set({ sleepTargetTimestamp: Date.now() + (yeucau.minutes * 60 * 1000) });
-                mahengio_ngu = setTimeout(() => { dungtatca(); chrome.storage.local.remove('sleepTargetTimestamp'); }, yeucau.minutes * 60 * 1000);
+                const ms_ngu = yeucau.minutes * 60 * 1000;
+                chrome.storage.local.set({ sleepTargetTimestamp: Date.now() + ms_ngu });
+                mahengio_ngu = setTimeout(() => {
+                    chrome.storage.local.remove('sleepTargetTimestamp');
+                    if (customStopConfig?.operator === 'and') {
+                        timerFired = true;
+                        if (!chaptersFired) {
+                            hienthithongbao('⏰ Đã đủ thời gian, đang chờ đủ số chương...');
+                            return;
+                        }
+                        customStopConfig = null; chaptersFired = false;
+                        chrome.storage.local.remove(['customStopConfig', 'stopAfterChapters']);
+                    }
+                    dungtatca();
+                }, ms_ngu);
             } else chrome.storage.local.remove('sleepTargetTimestamp');
             trave(); break;
         case 'setStopChapters':
+            chaptersFired = false;
             if (yeucau.count > 0) chrome.storage.local.set({ stopAfterChapters: yeucau.count });
             else chrome.storage.local.remove('stopAfterChapters');
+            trave(); break;
+        case 'setCustomStop':
+            customStopConfig = yeucau.config || null;
+            timerFired = false; chaptersFired = false;
+            if (customStopConfig) chrome.storage.local.set({ customStopConfig });
+            else chrome.storage.local.remove('customStopConfig');
             trave(); break;
         case 'getInfo':
             (async () => {
@@ -672,11 +786,12 @@ chrome.runtime.onMessage.addListener((yeucau, _nguoigui, phanhoi) => {
     }
     return false;
 });
+
 chrome.storage.local.get([
     'autoStartOnLoad', 'savedSpeed', 'savedVolume', 'savedVoiceIndex',
     'savedEngine', 'maydoc', 'fpt_key', 'azure_key', 'azure_region',
     'tudongchuyenchuong', 'sleepTargetTimestamp',
-    'batphimtat', 'doctentruyen', 'doctenchuong', 'readingList'
+    'batphimtat', 'doctentruyen', 'doctenchuong', 'readingList', 'customStopConfig'
 ], data => {
     let tentruyen = document.getElementById('booknameholder')?.innerText.trim() || document.getElementById('book_name2')?.innerText.trim() || document.querySelector('h1')?.innerText.trim() || '';
     let danh_sach = data.readingList || [];
@@ -693,6 +808,7 @@ chrome.storage.local.get([
     batphimtat = data.batphimtat !== undefined ? data.batphimtat : true;
     doctentruyen = data.doctentruyen !== undefined ? data.doctentruyen : true;
     doctenchuong = data.doctenchuong !== undefined ? data.doctenchuong : true;
+    if (data.customStopConfig) customStopConfig = data.customStopConfig;
     if (data.sleepTargetTimestamp) {
         const conlai = data.sleepTargetTimestamp - Date.now();
         if (conlai > 0) mahengio_ngu = setTimeout(() => { dungtatca(); chrome.storage.local.remove('sleepTargetTimestamp'); }, conlai);
@@ -710,6 +826,7 @@ chrome.storage.local.get([
     }
     setTimeout(kiemtramahoa, 1500);
 });
+
 chrome.storage.onChanged.addListener((thay_doi, vung_chon) => {
     if (vung_chon === 'local') {
         if (thay_doi.batphimtat) batphimtat = thay_doi.batphimtat.newValue;
@@ -728,6 +845,7 @@ chrome.storage.onChanged.addListener((thay_doi, vung_chon) => {
         }
     }
 });
+
 document.addEventListener('keydown', e => {
     if (!batphimtat) return;
     if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName) || e.target.isContentEditable || e.isComposing) return;
@@ -739,6 +857,7 @@ document.addEventListener('keydown', e => {
         case 'escape': e.preventDefault(); dungtatca(); break;
     }
 });
+
 function luutrangthaitienhat() {
     const congcu = maydoc === 'auto' || maydoc === 'google' ? 'web' : maydoc;
     const cur = (congcu === 'web' ? chisodoan_ws : chisoamthanh) + 1;

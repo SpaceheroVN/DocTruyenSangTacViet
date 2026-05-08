@@ -24,7 +24,7 @@
     "128": "icons/icon128.png"
   },
   "action": {
-    "default_popup": "popup.html",
+    "default_popup": "popup_v0.1.html",
     "default_title": "Đọc Truyện STV",
     "default_icon": {
       "16":  "icons/icon16.png",
@@ -39,7 +39,7 @@
         "*://sangtacviet.com/truyen/*",
         "*://www.sangtacviet.com/truyen/*"
       ],
-      "js": ["content.js"],
+      "js": ["content_v0.1.js"],
       "run_at": "document_idle"
     }
   ]

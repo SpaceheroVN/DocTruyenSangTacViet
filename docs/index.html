@@ -1,0 +1,1850 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Auto Đọc STV — Tiện ích đọc truyện tự động</title>
+  <link rel="icon" type="image/png" href="icons/icon128.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Baloo+2:ital,wght@0,800;1,800&family=Dancing+Script:wght@700&family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Sora:wght@400;600;700;800&display=swap"
+    rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+  <style>
+    :root {
+      --bg: #05050A;
+      --surface: rgba(17, 16, 28, 0.6);
+      --surface2: rgba(25, 24, 40, 0.7);
+      --surface3: rgba(32, 31, 50, 0.8);
+      --border: rgba(255, 255, 255, 0.08);
+      --border2: rgba(255, 255, 255, 0.15);
+      --accent: #F5A524;
+      --accent-dim: #D4820B;
+      --accent2: #F31260;
+      --text: #FFFFFF;
+      --text-sub: #A1A1AA;
+      --text-muted: #71717A;
+      --green: #17C964;
+      --danger: #F31260;
+      --r: 14px;
+      --r-lg: 24px;
+    }
+
+    ::selection {
+      background: rgba(245, 165, 36, 0.3);
+      color: #fff;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Be Vietnam Pro', sans-serif;
+      font-size: 14px;
+      line-height: 1.65;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    img {
+      -webkit-user-drag: none;
+      pointer-events: none;
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--surface3);
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--border2);
+    }
+
+    body::before,
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::before {
+      background:
+        radial-gradient(ellipse 70% 60% at 50% 0%, rgba(41, 121, 255, 0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 50% 100%, rgba(0, 230, 118, 0.03) 0%, transparent 60%);
+    }
+
+    body::after {
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: radial-gradient(ellipse at 50% 30%, black 0%, transparent 80%);
+      -webkit-mask-image: radial-gradient(ellipse at 50% 30%, black 0%, transparent 80%);
+    }
+
+    #eq-canvas {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 45vh;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(5, 5, 10, 0.6);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 12px 20px 0;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .logo-container {
+      height: 38px;
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 10px rgba(245, 165, 36, 0.2));
+    }
+
+    .logo-container img,
+    .logo-container svg {
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .header-title {
+      flex: 1;
+      min-width: 0;
+      margin-left: -5px;
+    }
+
+    .header-title h1 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.3px;
+      line-height: 1.2;
+    }
+
+    .header-title p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 0;
+      line-height: 1.2;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .btn-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-sub);
+      text-decoration: none;
+      cursor: pointer;
+      transition: all .25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-icon:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+      color: var(--text);
+      background: var(--surface2);
+      transform: translateY(-1px);
+    }
+
+    .header-github {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      text-decoration: none;
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-radius: 10px;
+      padding: 6px 14px;
+      transition: all .25s;
+      flex-shrink: 0;
+    }
+
+    .header-github:hover {
+      background: #27272a;
+      border-color: #3f3f46;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    }
+
+    .header-tabs {
+      display: flex;
+      padding: 0 16px;
+      gap: 4px;
+      margin-top: 8px;
+      max-width: 900px;
+      margin: 8px auto 0;
+    }
+
+    .htab {
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: all .3s ease;
+      text-decoration: none;
+      position: relative;
+    }
+
+    .htab::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--accent);
+      transform: scaleX(0);
+      transition: transform .3s ease;
+      border-radius: 2px 2px 0 0;
+    }
+
+    .htab.active {
+      color: var(--text);
+    }
+
+    .htab.active::after {
+      transform: scaleX(1);
+    }
+
+    .htab:hover:not(.active) {
+      color: var(--text-sub);
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 6px 6px 0 0;
+    }
+
+    .tab-content {
+      display: none;
+      opacity: 0;
+      animation: fadeIn .4s ease forwards;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(5px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .hero {
+      position: relative;
+      z-index: 1;
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 50px 20px 0;
+    }
+
+    .hero-inner {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0) 100%), var(--surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 40px 32px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .hero-inner::before {
+      content: '';
+      position: absolute;
+      top: -100px;
+      right: -100px;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(41, 121, 255, 0.15) 0%, transparent 60%);
+      pointer-events: none;
+      filter: blur(30px);
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: rgba(245, 165, 36, 0.1);
+      border: 1px solid rgba(245, 165, 36, 0.2);
+      border-radius: 99px;
+      padding: 4px 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 15px rgba(245, 165, 36, 0.1);
+    }
+
+    .hero-badge span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent);
+      animation: pulseDot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes pulseDot {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 0.4;
+        transform: scale(0.8);
+      }
+    }
+
+    .hero-title {
+      font-family: 'Sora', sans-serif;
+      font-size: clamp(28px, 6vw, 42px);
+      font-weight: 800;
+      line-height: 1.15;
+      color: var(--text);
+      margin-bottom: 16px;
+      letter-spacing: -1px;
+    }
+
+    .hero-title em {
+      font-style: normal;
+      background: linear-gradient(135deg, #F5A524 0%, #F31260 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero-desc {
+      font-size: 15px;
+      color: var(--text-sub);
+      line-height: 1.6;
+      max-width: 540px;
+      margin-bottom: 28px;
+    }
+
+    .hero-features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 32px;
+    }
+
+    .hero-feat {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-sub);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 12px;
+      transition: all .2s;
+    }
+
+    .hero-feat:hover {
+      background: var(--surface3);
+      border-color: rgba(245, 165, 36, 0.3);
+      color: var(--text);
+      transform: translateY(-1px);
+    }
+
+    .hero-feat svg,
+    .hero-feat img {
+      color: var(--accent);
+      flex-shrink: 0;
+      pointer-events: none;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Be Vietnam Pro', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: #000;
+      background: linear-gradient(135deg, #F5A524, #F5D524);
+      border: none;
+      border-radius: 12px;
+      padding: 12px 24px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all .3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      overflow: hidden;
+      z-index: 1;
+      will-change: transform;
+    }
+
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, #F5D524, #F5A524);
+      opacity: 0;
+      transition: opacity .3s;
+      z-index: -1;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(245, 165, 36, 0.4);
+    }
+
+    .btn-primary:hover::before {
+      opacity: 1;
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-preview {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Be Vietnam Pro', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 11px 20px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all .3s;
+    }
+
+    .btn-preview:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-preview svg {
+      transition: transform .3s;
+    }
+
+    .btn-preview:hover svg {
+      transform: scale(1.1);
+      color: var(--accent);
+    }
+
+    .stats-strip {
+      display: flex;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-top: 32px;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .stat-item {
+      flex: 1;
+      text-align: center;
+      padding: 16px 12px;
+      border-right: 1px solid var(--border);
+    }
+
+    .stat-item:last-child {
+      border-right: none;
+    }
+
+    .stat-num {
+      font-family: 'Sora', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .stat-num span {
+      background: linear-gradient(135deg, #F5A524, #F31260);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 40px 0 24px;
+    }
+
+    .section-title {
+      font-family: 'Sora', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .section-line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--border2), transparent);
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 20px 80px;
+    }
+
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 80px 0;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .8s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .error-box {
+      background: rgba(243, 18, 96, 0.1);
+      border: 1px solid rgba(243, 18, 96, 0.2);
+      border-radius: var(--r);
+      padding: 24px;
+      text-align: center;
+      color: #ff85a1;
+      font-size: 14px;
+    }
+
+    .release-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      margin-bottom: 16px;
+      overflow: hidden;
+      transition: border-color .3s, transform .3s, box-shadow .3s, background .3s;
+      animation: slideUp .4s ease backwards;
+      will-change: transform;
+    }
+
+    .release-card:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+      background: rgba(30, 28, 48, 0.7);
+    }
+
+    .release-card.latest {
+      border-color: rgba(245, 165, 36, 0.3);
+      box-shadow: 0 0 0 1px rgba(245, 165, 36, 0.1), 0 10px 30px rgba(0, 0, 0, 0.3);
+      background: linear-gradient(180deg, rgba(245, 165, 36, 0.05) 0%, transparent 100%), var(--surface);
+    }
+
+    .release-card.latest:hover {
+      border-color: rgba(245, 165, 36, 0.6);
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .release-card:nth-child(1) {
+      animation-delay: .05s
+    }
+
+    .release-card:nth-child(2) {
+      animation-delay: .1s
+    }
+
+    .release-card:nth-child(3) {
+      animation-delay: .15s
+    }
+
+    .release-card:nth-child(n+4) {
+      animation-delay: .2s
+    }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 20px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: background .2s;
+    }
+
+    .card-head:active {
+      background: rgba(255, 255, 255, .03);
+    }
+
+    .version-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--border2);
+      flex-shrink: 0;
+      transition: all .3s;
+    }
+
+    .release-card.latest .version-dot {
+      background: var(--accent);
+      box-shadow: 0 0 12px rgba(245, 165, 36, 0.8), inset 0 0 4px rgba(255, 255, 255, 0.5);
+    }
+
+    .release-card.open:not(.latest) .version-dot {
+      background: var(--text-sub);
+    }
+
+    .card-head-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .card-version-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .badge-latest {
+      background: rgba(23, 201, 100, 0.15);
+      color: var(--green);
+      border: 1px solid rgba(23, 201, 100, 0.3);
+    }
+
+    .badge-first {
+      background: rgba(243, 18, 96, 0.15);
+      color: var(--accent2);
+      border: 1px solid rgba(243, 18, 96, 0.3);
+    }
+
+    .card-date {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .tag-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-sub);
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 8px;
+      margin-top: 8px;
+    }
+
+    .tag-pill svg {
+      width: 10px;
+      height: 10px;
+    }
+
+    .chevron {
+      color: var(--text-muted);
+      transition: transform .3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      flex-shrink: 0;
+    }
+
+    .release-card.open .chevron {
+      transform: rotate(180deg);
+      color: var(--text);
+    }
+
+    .card-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .release-card.open .card-body {
+      max-height: 1500px;
+    }
+
+    .card-body-inner {
+      padding: 0 20px 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .download-strip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 0;
+      flex-wrap: wrap;
+    }
+
+    .btn-dl {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #000;
+      background: linear-gradient(135deg, #F5A524, #F5D524);
+      border-radius: 8px;
+      padding: 8px 16px;
+      text-decoration: none;
+      box-shadow: 0 4px 15px rgba(245, 165, 36, 0.25);
+      transition: all .2s;
+    }
+
+    .btn-dl:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(245, 165, 36, 0.4);
+    }
+
+    .btn-src {
+      display: inline-flex;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-sub);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 14px;
+      text-decoration: none;
+      transition: all .2s;
+    }
+
+    .btn-src:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: var(--text);
+    }
+
+    .md-content {
+      font-size: 14px;
+      color: var(--text-sub);
+      line-height: 1.7;
+    }
+
+    .md-content h1,
+    .md-content h2,
+    .md-content h3 {
+      color: var(--text);
+      font-weight: 700;
+      margin: 20px 0 10px;
+      font-size: 15px;
+    }
+
+    .md-content ul,
+    .md-content ol {
+      padding-left: 20px;
+      margin: 10px 0;
+    }
+
+    .md-content li {
+      margin: 6px 0;
+    }
+
+    .md-content li::marker {
+      color: var(--accent);
+    }
+
+    .md-content a {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: border-color .2s;
+    }
+
+    .md-content a:hover {
+      border-bottom-color: var(--accent);
+    }
+
+    .md-content code {
+      background: rgba(243, 18, 96, 0.1);
+      color: #ff85a1;
+      border-radius: 6px;
+      padding: 2px 6px;
+      font-size: 12px;
+      font-family: monospace;
+    }
+
+    .md-content pre {
+      background: #000;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      overflow-x: auto;
+      font-size: 13px;
+      margin: 12px 0;
+    }
+
+    .md-content table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 13px;
+      margin: 16px 0;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .md-content th,
+    .md-content td {
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      padding: 10px 14px;
+      text-align: left;
+      word-break: break-word;
+    }
+
+    .md-content th:last-child,
+    .md-content td:last-child {
+      border-right: none;
+    }
+
+    .md-content tr:last-child td {
+      border-bottom: none;
+    }
+
+    .md-content th {
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .md-content tr:nth-child(even) td {
+      background: rgba(255, 255, 255, 0.01);
+    }
+
+    .md-content hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 24px 0;
+    }
+
+    .md-content p {
+      margin-bottom: 12px;
+    }
+
+    .md-content p:last-child {
+      margin-bottom: 0;
+    }
+
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 30px 20px;
+      font-size: 12px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+    }
+
+    footer a {
+      color: var(--text-sub);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color .2s;
+    }
+
+    footer a:hover {
+      color: var(--text);
+    }
+
+    .version-select {
+      appearance: none;
+      -webkit-appearance: none;
+      background-color: var(--surface2);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23A1A1AA' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      background-size: 14px;
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 4px 28px 4px 12px;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .version-select:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+      background-color: var(--surface3);
+    }
+
+    .version-select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(245, 165, 36, 0.2);
+    }
+
+    .version-select option {
+      background-color: var(--bg);
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .4s ease;
+    }
+
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      transform: translateY(30px) scale(0.95);
+      transition: all .4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .modal-backdrop.open .modal {
+      transform: translateY(0) scale(1);
+    }
+
+    .modal-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-label::before,
+    .modal-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      width: 50px;
+    }
+
+    .browser-shell {
+      background: #0a0910;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+      box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
+      max-width: 400px;
+      width: 100%;
+    }
+
+    .browser-bar {
+      background: #18181b;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .browser-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .browser-dot:nth-child(1) {
+      background: #ff5f57;
+      box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.3);
+    }
+
+    .browser-dot:nth-child(2) {
+      background: #febc2e;
+      box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.3);
+    }
+
+    .browser-dot:nth-child(3) {
+      background: #28c840;
+      box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.3);
+    }
+
+    .browser-addr {
+      flex: 1;
+      background: #09090b;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+    }
+
+    .popup-frame {
+      width: 320px;
+      height: 520px;
+      border: none;
+      display: block;
+      background: #0f0e17;
+      margin: 0 auto;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: -16px;
+      right: -16px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      line-height: 1;
+      transition: all .2s;
+      z-index: 1;
+      backdrop-filter: blur(10px);
+    }
+
+    .modal-close:hover {
+      background: rgba(243, 18, 96, 0.8);
+      border-color: transparent;
+      transform: scale(1.1) rotate(90deg);
+    }
+
+    .modal-version-note {
+      font-size: 12px;
+      color: var(--text-sub);
+      text-align: center;
+    }
+
+    .modal-version-note strong {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    @supports (padding: max(0px)) {
+      main {
+        padding-left: max(20px, env(safe-area-inset-left));
+        padding-right: max(20px, env(safe-area-inset-right));
+      }
+
+      .hero {
+        padding-left: max(20px, env(safe-area-inset-left));
+        padding-right: max(20px, env(safe-area-inset-right));
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <canvas id="eq-canvas"></canvas>
+
+  <header class="header">
+    <svg style="display: none;" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#e8a045" />
+          <stop offset="100%" stop-color="#c45c8a" />
+        </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="1.5" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+      <symbol id="icon-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12h14M12 5l7 7-7 7" />
+      </symbol>
+      <symbol id="icon-bookmark-hero" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
+      </symbol>
+      <symbol id="icon-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 12 15 18 9" />
+      </symbol>
+      <symbol id="icon-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+        <polyline points="7 10 12 15 17 10" />
+        <line x1="12" y1="15" x2="12" y2="3" />
+      </symbol>
+      <symbol id="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+        <circle cx="12" cy="12" r="3" />
+      </symbol>
+      <symbol id="icon-fallback-cover" viewBox="0 0 24 24" fill="none" stroke="#7a7896" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3.6 3.6A2 2 0 0 1 5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-.59 1.41" />
+        <path d="M3 8.7V19a2 2 0 0 0 2 2h10.3" />
+        <path d="m2 2 20 20" />
+        <path d="M13 13a3 3 0 1 0 0-6H9v2" />
+        <path d="M9 17v-2.3" />
+      </symbol>
+      <symbol id="icon-github" viewBox="0 0 24 24" fill="currentColor">
+        <path
+          d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0 0 22 12.017C22 6.484 17.522 2 12 2z" />
+      </symbol>
+      <symbol id="icon-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" />
+        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+      </symbol>
+      <symbol id="icon-logo" viewBox="0 0 160 52">
+        <text x="4" y="38" font-family="'Baloo 2', cursive" font-size="46" font-weight="800" font-style="italic"
+          fill="url(#g1)" filter="url(#glow)">STV</text>
+        <text x="6" y="50" font-family="'Dancing Script', cursive" font-size="13" font-weight="700" fill="#ffffff"
+          stroke="#5CAAFC" stroke-width="0.4" letter-spacing="0.5">sangtacviet.com</text>
+      </symbol>
+      <symbol id="icon-play-hero" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="5 3 19 12 5 21 5 3" />
+      </symbol>
+      <symbol id="icon-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+        <line x1="7" y1="7" x2="7.01" y2="7" />
+      </symbol>
+      <symbol id="icon-volume-hero" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+      </symbol>
+    </svg>
+
+    <div class="header-top">
+      <div class="logo-container">
+        <img src="icons/logo.svg" width="120" height="52" alt="STV Logo">
+      </div>
+      <div class="header-title">
+        <h1>Auto Đọc STV</h1>
+        <p>SpaceheroVN / DocTruyenSangTacViet</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn-icon" id="btn-preview-header" title="Xem trước giao diện extension"
+          aria-label="Preview extension">
+          <svg width="15" height="15">
+            <use href="#icon-eye"></use>
+          </svg>
+        </button>
+        <a class="header-github" href="https://github.com/SpaceheroVN/DocTruyenSangTacViet" target="_blank">
+          <svg width="13" height="13">
+            <use href="#icon-github"></use>
+          </svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+    <div class="header-tabs">
+      <a class="htab active" data-target="tab-about">Giới thiệu</a>
+      <a class="htab" data-target="tab-releases">Releases</a>
+      <a class="htab" data-target="tab-tags">Tags</a>
+    </div>
+  </header>
+
+  <div id="tab-about" class="tab-content active">
+    <section class="hero">
+      <div class="hero-inner">
+        <div class="hero-badge">
+          <span></span>
+          Chrome Extension
+        </div>
+        <h2 class="hero-title">Nghe truyện tự động<br>trên <em>SangTacViet</em></h2>
+        <p class="hero-desc">
+          Tiện ích mở rộng giúp bạn nghe truyện chữ hoàn toàn tự động — tự đọc từng đoạn, tự sang chương, hỗ trợ nhiều
+          giọng đọc và lưu danh sách yêu thích.
+        </p>
+        <div class="hero-features">
+          <div class="hero-feat">
+            <svg width="12" height="12">
+              <use href="#icon-play-hero"></use>
+            </svg>
+            Tự đọc từng đoạn
+          </div>
+          <div class="hero-feat">
+            <svg width="12" height="12">
+              <use href="#icon-arrow-right"></use>
+            </svg>
+            Tự sang chương
+          </div>
+          <div class="hero-feat">
+            <svg width="12" height="12">
+              <use href="#icon-volume-hero"></use>
+            </svg>
+            Web TTS · FPT.AI · Azure
+          </div>
+          <div class="hero-feat">
+            <svg width="12" height="12">
+              <use href="#icon-bookmark-hero"></use>
+            </svg>
+            Lưu danh sách
+          </div>
+          <div class="hero-feat">
+            <svg width="12" height="12">
+              <use href="#icon-lock"></use>
+            </svg>
+            Hoàn toàn miễn phí
+          </div>
+        </div>
+        <div class="hero-actions">
+          <a class="btn-primary" id="btn-download-hero"
+            href="https://github.com/SpaceheroVN/DocTruyenSangTacViet/releases/latest">
+            <svg width="14" height="14" style="pointer-events:none;filter:brightness(0);">
+              <use href="#icon-download"></use>
+            </svg>
+            Tải phiên bản mới nhất
+          </a>
+          <button class="btn-preview" id="btn-preview-hero">
+            <svg width="15" height="15">
+              <use href="#icon-eye"></use>
+            </svg>
+            Xem giao diện
+          </button>
+        </div>
+
+        <div class="stats-strip" id="stats-strip" style="display:none">
+          <div class="stat-item">
+            <div class="stat-num" id="stat-releases">—</div>
+            <div class="stat-label">Phiên bản</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num"><span>✔</span></div>
+            <div class="stat-label">Miễn phí</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num"><span>3</span></div>
+            <div class="stat-label">Nguồn giọng</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div id="tab-releases" class="tab-content">
+    <main>
+      <div class="section-header">
+        <span class="section-title">Lịch sử phiên bản</span>
+        <div class="section-line"></div>
+      </div>
+      <div id="releases-list">
+        <div class="loading" id="loading">
+          <div class="spinner"></div>
+          <span>Đang tải danh sách phiên bản...</span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="tab-tags" class="tab-content">
+    <main>
+      <div class="section-header">
+        <span class="section-title">Danh sách Tags</span>
+        <div class="section-line"></div>
+      </div>
+      <div id="tags-list">
+        <div class="loading" id="loading-tags">
+          <div class="spinner"></div>
+          <span>Đang tải danh sách tags...</span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <footer>
+    <p>Tự động cập nhật từ <a href="https://github.com/SpaceheroVN/DocTruyenSangTacViet/releases" target="_blank">GitHub
+        Releases</a> · © 2026 SpaceheroVN</p>
+  </footer>
+
+  <div class="modal-backdrop" id="modal-backdrop" role="dialog" aria-modal="true"
+    aria-label="Preview giao diện extension">
+    <div class="modal" id="modal">
+      <button class="modal-close" id="modal-close" aria-label="Đóng">✕</button>
+      <div class="modal-label">Giao diện Extension</div>
+      <div class="browser-shell">
+        <div class="browser-bar">
+          <div class="browser-dot"></div>
+          <div class="browser-dot"></div>
+          <div class="browser-dot"></div>
+          <div class="browser-addr">
+            <svg width="9" height="9" style="pointer-events:none;">
+              <use href="#icon-lock"></use>
+            </svg>
+            chrome-extension://auto-doc-stv/popup.html
+          </div>
+        </div>
+        <iframe class="popup-frame" id="popup-frame" title="Preview extension popup" loading="lazy"></iframe>
+      </div>
+      <div class="modal-version-note">
+        Đang xem:
+        <select id="preview-version-select" class="version-select">
+          <option value="v0.2">v0.2</option>
+          <option value="v0.1">v0.1</option>
+        </select>
+        — giao diện thực tế
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const REPO = 'SpaceheroVN/DocTruyenSangTacViet';
+    const URLPHATHANH = `https://api.github.com/repos/${REPO}/releases`;
+    const URLTAG = `https://api.github.com/repos/${REPO}/tags`;
+
+    function dinhDangNgay(chuoiIso) {
+      return new Date(chuoiIso).toLocaleDateString('vi-VN', { day: '2-digit', month: 'long', year: 'numeric' });
+    }
+
+    function thoatHtml(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function layUrlTai(tenTag, danhSachAsset) {
+      const fileRar = danhSachAsset.find(a => a.name.endsWith('.rar'));
+      return fileRar
+        ? { url: fileRar.browser_download_url, ten: fileRar.name, dungLuong: Math.round(fileRar.size / 1024) + ' KB' }
+        : { url: `https://github.com/${REPO}/releases/download/${tenTag}/DocTruyenSTV.rar`, ten: 'DocTruyenSTV.rar', dungLuong: '' };
+    }
+
+    function taoThe(phatHanh, chiSo) {
+      const laMoiNhat = chiSo === 0;
+      const tenTag = phatHanh.tag_name;
+      const ten = phatHanh.name || tenTag;
+      const ngay = dinhDangNgay(phatHanh.published_at);
+      const thongTinTai = layUrlTai(tenTag, phatHanh.assets || []);
+      const noiDung = phatHanh.body || '';
+
+      const the = document.createElement('div');
+      the.className = 'release-card' + (laMoiNhat ? ' latest open' : '');
+
+      const badgeDau = !laMoiNhat ? `<span class="badge badge-first">Phiên bản đầu</span>` : '';
+
+      the.innerHTML = `
+    <div class="card-head" role="button" aria-expanded="${laMoiNhat}">
+      <div class="version-dot"></div>
+      <div class="card-head-info">
+        <div class="card-version-row">
+          <span class="card-title">${thoatHtml(ten)}</span>
+          ${laMoiNhat ? '<span class="badge badge-latest">Latest</span>' : badgeDau}
+        </div>
+        <div class="card-date">${ngay}</div>
+        <div class="tag-pill">
+          <svg width="9" height="9"><use href="#icon-tag"></use></svg>
+          ${thoatHtml(tenTag)}
+        </div>
+      </div>
+      <svg class="chevron" width="16" height="16"><use href="#icon-chevron-down"></use></svg>
+    </div>
+    <div class="card-body">
+      <div class="card-body-inner">
+        <div class="download-strip">
+          <a class="btn-dl" href="${thoatHtml(thongTinTai.url)}" target="_blank">
+            <svg width="13" height="13"><use href="#icon-download"></use></svg>
+            ${thoatHtml(thongTinTai.ten)}${thongTinTai.dungLuong ? ' <span style="opacity:.55;font-weight:400;font-size:11px">· ' + thongTinTai.dungLuong + '</span>' : ''}
+          </a>
+          <a class="btn-src" href="https://github.com/${REPO}/archive/refs/tags/${thoatHtml(tenTag)}.zip" target="_blank">zip</a>
+          <a class="btn-src" href="https://github.com/${REPO}/archive/refs/tags/${thoatHtml(tenTag)}.tar.gz" target="_blank">tar.gz</a>
+        </div>
+        <div class="md-content">${marked.parse(noiDung)}</div>
+      </div>
+    </div>
+  `;
+
+      the.querySelector('.card-head').addEventListener('click', () => {
+        const dangMo = the.classList.toggle('open');
+        the.querySelector('.card-head').setAttribute('aria-expanded', String(dangMo));
+      });
+
+      return the;
+    }
+
+    async function taiPhatHanh() {
+      const danhSach = document.getElementById('releases-list');
+      try {
+        const ketQua = await fetch(URLPHATHANH, { headers: { 'Accept': 'application/vnd.github+json' } });
+        if (!ketQua.ok) throw new Error(`GitHub API trả về ${ketQua.status}`);
+        const danhSachPH = await ketQua.json();
+
+        danhSach.innerHTML = '';
+        if (!danhSachPH.length) {
+          danhSach.innerHTML = '<div class="error-box">Chưa có phiên bản nào được phát hành.</div>';
+          return;
+        }
+
+        const thanhThongKe = document.getElementById('stats-strip');
+        document.getElementById('stat-releases').innerHTML = `<span>${danhSachPH.length}</span>`;
+        thanhThongKe.style.display = 'flex';
+
+        const phienBanMoiNhat = danhSachPH[0];
+        const thongTinTaiMoiNhat = layUrlTai(phienBanMoiNhat.tag_name, phienBanMoiNhat.assets || []);
+        const nutTaiHero = document.getElementById('btn-download-hero');
+        if (nutTaiHero && thongTinTaiMoiNhat.url) {
+          nutTaiHero.href = thongTinTaiMoiNhat.url;
+        }
+
+        danhSachPH.forEach((r, i) => {
+          const the = taoThe(r, i);
+          if (i === danhSachPH.length - 1) {
+            const hang = the.querySelector('.card-version-row');
+            if (!hang.querySelector('.badge')) {
+              const nhanHieu = document.createElement('span');
+              nhanHieu.className = 'badge badge-first';
+              nhanHieu.textContent = 'Phiên bản đầu';
+              hang.appendChild(nhanHieu);
+            }
+          }
+          danhSach.appendChild(the);
+        });
+      } catch (loi) {
+        danhSach.innerHTML = `
+      <div class="error-box">
+        <p style="margin-bottom:8px;font-weight:600;">Không thể tải dữ liệu từ GitHub</p>
+        <p style="font-size:12px;opacity:.75;">${thoatHtml(loi.message)}</p>
+        <p style="font-size:12px;margin-top:10px;opacity:.7;">
+          Xem trực tiếp tại
+          <a href="https://github.com/${REPO}/releases" target="_blank"
+            style="color:var(--accent);text-decoration:none;">github.com/${REPO}/releases</a>
+        </p>
+      </div>`;
+      }
+    }
+
+    async function taiTag() {
+      const danhSach = document.getElementById('tags-list');
+      try {
+        const ketQua = await fetch(URLTAG, { headers: { 'Accept': 'application/vnd.github+json' } });
+        if (!ketQua.ok) throw new Error(`GitHub API trả về ${ketQua.status}`);
+        const danhSachTag = await ketQua.json();
+
+        danhSach.innerHTML = '';
+        if (!danhSachTag.length) {
+          danhSach.innerHTML = '<div class="error-box">Chưa có tag nào.</div>';
+          return;
+        }
+
+        danhSachTag.forEach(tagItem => {
+          const the = document.createElement('div');
+          the.className = 'release-card';
+          the.innerHTML = `
+        <div class="card-head" style="cursor: default;">
+          <div class="version-dot" style="background: var(--text-sub);"></div>
+          <div class="card-head-info">
+            <div class="card-version-row">
+              <span class="card-title">${thoatHtml(tagItem.name)}</span>
+            </div>
+          </div>
+          <div class="download-strip" style="padding: 0;">
+            <a class="btn-src" href="${thoatHtml(tagItem.zipball_url)}" target="_blank" style="margin-right: 6px;">zip</a>
+            <a class="btn-src" href="${thoatHtml(tagItem.tarball_url)}" target="_blank">tar.gz</a>
+          </div>
+        </div>
+      `;
+          danhSach.appendChild(the);
+        });
+      } catch (loi) {
+        danhSach.innerHTML = `
+      <div class="error-box">
+        <p style="margin-bottom:8px;font-weight:600;">Không thể tải dữ liệu từ GitHub</p>
+        <p style="font-size:12px;opacity:.75;">${thoatHtml(loi.message)}</p>
+      </div>`;
+      }
+    }
+
+    let daTaiPhatHanh = false;
+    let daTaiTag = false;
+
+    document.querySelectorAll('.htab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.htab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        const tabDich = tab.getAttribute('data-target');
+        document.getElementById(tabDich).classList.add('active');
+
+        if (tabDich === 'tab-releases' && !daTaiPhatHanh) {
+          daTaiPhatHanh = true;
+          taiPhatHanh();
+        }
+        if (tabDich === 'tab-tags' && !daTaiTag) {
+          daTaiTag = true;
+          taiTag();
+        }
+      });
+    });
+
+    const nenModal = document.getElementById('modal-backdrop');
+    const khungPreview = document.getElementById('popup-frame');
+    const chonPhienBan = document.getElementById('preview-version-select');
+    let phienBanDaTai = null;
+    let maChromeGia = null;
+
+    async function layMaChromeGia() {
+      if (maChromeGia) return maChromeGia;
+      try {
+        const ketQua = await fetch('mau.js');
+        if (!ketQua.ok) throw new Error('Not found');
+        maChromeGia = await ketQua.text();
+      } catch (e) {
+        maChromeGia = 'window.chrome={runtime:{getManifest:()=>({version:"Preview"}),onMessage:{addListener:()=>{}}},tabs:{query:(q,cb)=>cb([]),sendMessage:(id,msg,cb)=>cb({})},storage:{local:{_data:{},get(k,cb){cb({})},set(i,cb){if(cb)cb()},remove(k,cb){if(cb)cb()},clear(cb){if(cb)cb()}}}};';
+      }
+      return maChromeGia;
+    }
+
+    async function taiXemTruoc(phienBan) {
+      if (phienBanDaTai === phienBan) return;
+      phienBanDaTai = phienBan;
+      try {
+        const [ketQuaPopup, maGia] = await Promise.all([
+          fetch(`../versions/DocTruyenSTV_${phienBan}/popup.html`),
+          layMaChromeGia()
+        ]);
+        if (!ketQuaPopup.ok) throw new Error('Not found');
+        let noiDungHtml = await ketQuaPopup.text();
+        const theScriptGia = '<scr' + 'ipt>' + maGia + '</scr' + 'ipt>';
+        noiDungHtml = noiDungHtml.replace('<head>', '<head><base href="../versions/DocTruyenSTV_' + phienBan + '/">' + theScriptGia);
+        khungPreview.srcdoc = noiDungHtml;
+      } catch (loi) {
+        console.error(loi);
+        khungPreview.srcdoc = '<div style="color:#A1A1AA;text-align:center;padding:40px;font-family:sans-serif;font-size:14px;">Không tìm thấy phiên bản này.</div>';
+      }
+    }
+
+    function moModal() {
+      taiXemTruoc(chonPhienBan.value);
+      nenModal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function dongModal() {
+      nenModal.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    chonPhienBan.addEventListener('change', (e) => {
+      phienBanDaTai = null;
+      taiXemTruoc(e.target.value);
+    });
+
+    document.getElementById('btn-preview-hero').addEventListener('click', moModal);
+    document.getElementById('btn-preview-header').addEventListener('click', moModal);
+    document.getElementById('modal-close').addEventListener('click', dongModal);
+    nenModal.addEventListener('click', e => { if (e.target === nenModal) dongModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') dongModal(); });
+
+    setTimeout(() => {
+      if (!daTaiPhatHanh) {
+        daTaiPhatHanh = true;
+        taiPhatHanh();
+      }
+    }, 500);
+
+    (function () {
+      const canvas = document.getElementById('eq-canvas');
+      const ctx = canvas.getContext('2d');
+
+      const RONG_COT = 3;
+      const KHOANG_CACH = 5;
+      const BUOC = RONG_COT + KHOANG_CACH;
+      const CAO_MIN = 3;
+      const TI_LE_MAX = 0.38;
+
+      let danhSachCot = [];
+      let RONG, CAO, soCot;
+
+      const BANG_MAU = [
+        [92, 200, 255],
+        [100, 140, 255],
+        [80, 110, 255],
+        [130, 80, 255],
+        [180, 80, 255],
+        [220, 100, 255],
+        [92, 200, 255],
+      ];
+
+      function noiSuyMau(mauA, mauB, tyLe) {
+        return mauA.map((gia, i) => Math.round(gia + (mauB[i] - gia) * tyLe));
+      }
+
+      function tinhMauCot(i, tongSo) {
+        const t = (i / Math.max(tongSo - 1, 1)) * (BANG_MAU.length - 1);
+        const thap = Math.floor(t), cao = Math.min(thap + 1, BANG_MAU.length - 1);
+        return noiSuyMau(BANG_MAU[thap], BANG_MAU[cao], t - thap);
+      }
+
+      function khoiTao() {
+        RONG = canvas.width = window.innerWidth;
+        CAO = canvas.height = window.innerHeight * 0.42;
+        soCot = Math.floor(RONG / BUOC);
+        danhSachCot = Array.from({ length: soCot }, (_, i) => ({
+          hienTai: CAO_MIN + Math.random() * CAO * 0.15,
+          mucTieu: CAO_MIN + Math.random() * CAO * TI_LE_MAX * 0.6,
+          tocDo: 0.04 + Math.random() * 0.06,
+          giuTimer: Math.floor(Math.random() * 50),
+          mau: tinhMauCot(i, soCot),
+        }));
+      }
+
+      function veCot(x, chieuCao, mau, doMoCanh) {
+        const yDinh = CAO - chieuCao;
+        const banKinh = Math.min(2, chieuCao / 2);
+        const doMoNen = doMoCanh * 0.55;
+
+        const degrade = ctx.createLinearGradient(0, yDinh, 0, CAO);
+        degrade.addColorStop(0, `rgba(${mau[0]},${mau[1]},${mau[2]},${doMoNen})`);
+        degrade.addColorStop(0.55, `rgba(${mau[0]},${mau[1]},${mau[2]},${doMoNen * 0.55})`);
+        degrade.addColorStop(1, `rgba(${mau[0]},${mau[1]},${mau[2]},0)`);
+        ctx.fillStyle = degrade;
+
+        ctx.beginPath();
+        ctx.moveTo(x + banKinh, yDinh);
+        ctx.lineTo(x + RONG_COT - banKinh, yDinh);
+        ctx.quadraticCurveTo(x + RONG_COT, yDinh, x + RONG_COT, yDinh + banKinh);
+        ctx.lineTo(x + RONG_COT, CAO);
+        ctx.lineTo(x, CAO);
+        ctx.lineTo(x, yDinh + banKinh);
+        ctx.quadraticCurveTo(x, yDinh, x + banKinh, yDinh);
+        ctx.fill();
+
+        const caoNhap = Math.min(chieuCao * 0.18, 6);
+        const doMoNeon = doMoCanh * 0.9;
+        const neonMu = ctx.createLinearGradient(0, yDinh, 0, yDinh + caoNhap);
+        neonMu.addColorStop(0, `rgba(${mau[0]},${mau[1]},${mau[2]},${doMoNeon})`);
+        neonMu.addColorStop(1, `rgba(${mau[0]},${mau[1]},${mau[2]},0)`);
+        ctx.fillStyle = neonMu;
+        ctx.fillRect(x, yDinh, RONG_COT, caoNhap);
+      }
+
+      let dangChay = true;
+      let tKhungTruoc = 0;
+
+      function capNhatVaVe(thoiGian) {
+        if (!dangChay) return;
+        if (thoiGian - tKhungTruoc < 33) {
+          requestAnimationFrame(capNhatVaVe);
+          return;
+        }
+        tKhungTruoc = thoiGian;
+
+        ctx.clearRect(0, 0, RONG, CAO);
+        const CAO_MAX = CAO * TI_LE_MAX;
+
+        danhSachCot.forEach((cot, i) => {
+          if (cot.giuTimer > 0) {
+            cot.giuTimer--;
+          } else {
+            cot.hienTai += (cot.mucTieu - cot.hienTai) * cot.tocDo;
+            if (Math.abs(cot.hienTai - cot.mucTieu) < 1.2) {
+              const laBung = Math.random() < 0.22;
+              cot.mucTieu = laBung
+                ? CAO_MIN + Math.random() * CAO_MAX
+                : CAO_MIN + Math.random() * CAO_MAX * 0.3;
+              cot.giuTimer = Math.floor(Math.random() * 35);
+              cot.tocDo = 0.035 + Math.random() * 0.065;
+            }
+          }
+
+          const x = i * BUOC;
+          const chieuCao = Math.max(CAO_MIN, Math.min(cot.hienTai, CAO_MAX));
+          const doMoCanh = Math.pow(Math.sin((i / soCot) * Math.PI), 0.6);
+          veCot(x, chieuCao, cot.mau, doMoCanh);
+        });
+
+        requestAnimationFrame(capNhatVaVe);
+      }
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          dangChay = false;
+        } else {
+          dangChay = true;
+          requestAnimationFrame(capNhatVaVe);
+        }
+      });
+
+      khoiTao();
+      window.addEventListener('resize', khoiTao);
+      requestAnimationFrame(capNhatVaVe);
+    })();
+
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('copy', e => e.preventDefault());
+    document.addEventListener('cut', e => e.preventDefault());
+    document.addEventListener('selectstart', e => e.preventDefault());
+    document.addEventListener('dragstart', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+      if (e.key === 'F12') { e.preventDefault(); return; }
+      if (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) { e.preventDefault(); return; }
+      if (e.ctrlKey && e.key.toUpperCase() === 'U') { e.preventDefault(); return; }
+      if (e.ctrlKey && e.key.toUpperCase() === 'S') { e.preventDefault(); return; }
+      if (e.ctrlKey && e.key.toUpperCase() === 'C') { e.preventDefault(); return; }
+      if (e.ctrlKey && e.key.toUpperCase() === 'A') { e.preventDefault(); return; }
+      if (e.ctrlKey && e.key.toUpperCase() === 'P') { e.preventDefault(); return; }
+    });
+  </script>
+</body>
+
+</html>

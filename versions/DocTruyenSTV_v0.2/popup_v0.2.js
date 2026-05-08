@@ -7,6 +7,7 @@ const SVG_BOOKMARK = `<path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1
 const SVG_BOOKMARK_CHK = `<path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/><polyline points="9 10 12 13 15 7"/>`;
 const SVG_SAVE = `<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>`;
 const SVG_CHECK = `<polyline points="20 6 9 17 4 12"/>`;
+const svgCpt = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 3px; color: var(--warning);"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
 
 let mahengio_dongho = null;
 let giaydongho = 0;
@@ -146,7 +147,7 @@ function capnhathuyhieu(congcu) {
 }
 
 async function capnhattrangthai() {
-    const phanhoi = await guilenh('getStatus'); // Đồng bộ command getStatus
+    const phanhoi = await guilenh('getStatus');
     if (!phanhoi || phanhoi.noTab) {
         document.getElementById('book-empty-state').style.display = 'block';
         document.getElementById('book-meta').style.display = 'none';
@@ -381,6 +382,7 @@ document.getElementById('engine-select').addEventListener('change', async (e) =>
     const placeholder_map = { fpt: 'Nhập FPT.AI API Key...', azure: 'Nhập Azure Subscription Key...' };
     if (placeholder_map[congcu]) input_key.placeholder = placeholder_map[congcu];
 
+
     await guilenh('setEngine', { value: congcu });
     chrome.storage.local.set({ ttsEngine: congcu });
     capnhathuyhieu(congcu);
@@ -391,25 +393,38 @@ document.getElementById('engine-select').addEventListener('change', async (e) =>
 
     if (congcu === 'web' || congcu === 'auto') {
         taicacgiong();
-    } else if (congcu === 'fpt') {
-        o_chon_giong.innerHTML = `
-            <option value="0">Ban Mai (Nữ Miền Bắc)</option>
-            <option value="1">Lê Minh (Nam Miền Bắc)</option>
-            <option value="2">Thu Minh (Nữ Miền Bắc)</option>
-            <option value="3">Mỹ An (Nữ Miền Trung)</option>
-            <option value="4">Gia Huy (Nam Miền Trung)</option>
-            <option value="5">Lan Nhi (Nữ Miền Nam)</option>
-            <option value="6">Linh San (Nữ Miền Nam)</option>
-        `;
+    } else {
+        if (congcu === 'fpt') {
+            o_chon_giong.innerHTML = `
+                <option value="0">Ban Mai (Nữ Bắc)</option>
+                <option value="1">Lê Minh (Nam Bắc)</option>
+                <option value="2">Thu Minh (Nữ Bắc)</option>
+                <option value="3">Mỹ An (Nữ Trung)</option>
+                <option value="4">Gia Huy (Nam Trung)</option>
+                <option value="5">Lan Nhi (Nữ Nam)</option>
+                <option value="6">Linh San (Nữ Nam)</option>
+            `;
+        } else if (congcu === 'azure') {
+            o_chon_giong.innerHTML = `
+                <option value="0">Hoài My (Nữ)</option>
+                <option value="1">Nam Minh (Nam)</option>
+            `;
+        }
         if (goiy_giong) goiy_giong.style.display = 'none';
+
+
+        o_chon_giong.selectedIndex = 0;
+        const chonGiong = parseInt(o_chon_giong.value) || 0;
+
+
+        document.getElementById('info-voice').textContent = o_chon_giong.options[0].textContent;
+
+
         hienthiochontuychinh();
-    } else if (congcu === 'azure') {
-        o_chon_giong.innerHTML = `
-            <option value="0">Hoài My (Nữ)</option>
-            <option value="1">Nam Minh (Nam)</option>
-        `;
-        if (goiy_giong) goiy_giong.style.display = 'none';
-        hienthiochontuychinh();
+
+
+        chrome.storage.local.set({ voiceIndex: chonGiong });
+        guilenh('setVoice', { value: chonGiong });
     }
 
     if (can_key) {
@@ -587,15 +602,31 @@ document.getElementById('btn-clear-all').addEventListener('click', () => {
             document.getElementById('vol-slider').value = 1;
             document.getElementById('vol-val').textContent = '100%';
 
-            document.getElementById('engine-select').value = 'web';
+            const engineSelect = document.getElementById('engine-select');
+            engineSelect.value = 'web';
+            engineSelect.dispatchEvent(new Event('change'));
+
             document.getElementById('api-settings-box').style.display = 'none';
             document.getElementById('api-key-input').value = '';
             document.getElementById('api-region-input').value = '';
 
-            document.getElementById('voice-select').innerHTML = '<option value="-1">Giọng mặc định</option>';
-            document.getElementById('select-auto-stop').value = 'off';
-            document.getElementById('group-stop-time').style.display = 'none';
-            document.getElementById('group-stop-chapters').style.display = 'none';
+            const voiceSelect = document.getElementById('voice-select');
+            voiceSelect.innerHTML = '<option value="-1">Giọng mặc định</option>';
+            voiceSelect.dispatchEvent(new Event('change'));
+
+            const autoStopSelect = document.getElementById('select-auto-stop');
+            autoStopSelect.value = 'off';
+            autoStopSelect.dispatchEvent(new Event('change'));
+
+            antatcanhom_tudongdung();
+            const vanban_autostop = document.getElementById('custom-autostop-text');
+            if (vanban_autostop) vanban_autostop.textContent = 'Không có';
+
+            const _resetNow = new Date();
+            gio_val_vt = _resetNow.getHours();
+            phut_val_vt = _resetNow.getMinutes();
+            capnhat_gia_tri_vt('hour', gio_val_vt);
+            capnhat_gia_tri_vt('minute', phut_val_vt);
 
             capnhathuyhieu('web');
             guilenh('stopPlay');
@@ -686,38 +717,181 @@ document.getElementById('btn-test-api').addEventListener('click', async () => {
 const chon_tudongdung = document.getElementById('select-auto-stop');
 const nhom_thoigiandung = document.getElementById('group-stop-time');
 const nhom_sochuongdung = document.getElementById('group-stop-chapters');
+const nhom_thoigianthuc = document.getElementById('group-stop-realtime');
+const nhom_tuychinhrieng = document.getElementById('group-stop-custom');
+
+function antatcanhom_tudongdung() {
+    [nhom_thoigiandung, nhom_sochuongdung, nhom_thoigianthuc, nhom_tuychinhrieng].forEach(n => { if (n) n.style.display = 'none'; });
+}
+
 chon_tudongdung.addEventListener('change', e => {
     const v = e.target.value;
-    nhom_thoigiandung.style.display = v === 'time' ? 'flex' : 'none';
-    nhom_sochuongdung.style.display = v === 'chapters' ? 'flex' : 'none';
-    if (v === 'off') {
+    antatcanhom_tudongdung();
+    if (v === 'time' && nhom_thoigiandung) nhom_thoigiandung.style.display = 'flex';
+    else if (v === 'chapters' && nhom_sochuongdung) nhom_sochuongdung.style.display = 'flex';
+    else if (v === 'realtime' && nhom_thoigianthuc) {
+        nhom_thoigianthuc.style.display = 'flex';
+        chrome.storage.local.get('stopRealtimeTarget', d => {
+            if (!d.stopRealtimeTarget) {
+                const _nowSwitch = new Date();
+                gio_val_vt = _nowSwitch.getHours();
+                phut_val_vt = _nowSwitch.getMinutes();
+                capnhat_gia_tri_vt('hour', gio_val_vt);
+                capnhat_gia_tri_vt('minute', phut_val_vt);
+            }
+        });
+    }
+    else if (v === 'custom' && nhom_tuychinhrieng) nhom_tuychinhrieng.style.display = 'flex';
+    else if (v === 'off') {
         guilenh('setSleepTimer', { minutes: 0 });
         guilenh('setStopChapters', { count: 0 });
-        chrome.storage.local.remove(['stopTime', 'stopChapters', 'sleepTargetTimestamp']);
+        guilenh('setCustomStop', { config: null });
+        chrome.storage.local.remove(['stopTime', 'stopChapters', 'sleepTargetTimestamp', 'stopRealtimeTarget', 'customStopConfig', 'stopAfterChapters']);
         hienthithongbao('Đã tắt tự động dừng', 'info');
     }
 });
 
 document.getElementById('btn-apply-stop-time').addEventListener('click', () => {
-    const phut = parseInt(document.getElementById('input-stop-time').value);
-    if (isNaN(phut) || phut <= 0) return;
-    guilenh('setSleepTimer', { minutes: phut });
-    chrome.storage.local.set({ stopTime: phut });
-    hienthithongbao(`Sẽ dừng sau ${phut} phút`, 'success');
+    const gio = parseInt(document.getElementById('input-stop-hours').value) || 0;
+    const phut = parseInt(document.getElementById('input-stop-minutes').value) || 0;
+    const tongphut = gio * 60 + phut;
+    if (tongphut <= 0) { hienthithongbao('Vui lòng nhập thời gian lớn hơn 0', 'warning'); return; }
+
+    chrome.storage.local.remove(['stopRealtimeTarget', 'stopAfterChapters', 'customStopConfig'], () => {
+        guilenh('setSleepTimer', { minutes: tongphut });
+        guilenh('setStopChapters', { count: 0 });
+        chrome.storage.local.set({ stopTime: tongphut });
+        const mota = gio > 0 ? `${gio}g${phut > 0 ? ` ${phut}p` : ''}` : `${phut} phút`;
+        hienthithongbao(`Sẽ dừng sau ${mota}`, 'success');
+    });
+});
+
+let isAddSign = true;
+const btnToggleSign = document.getElementById('btn-toggle-sign');
+
+if (btnToggleSign) {
+    btnToggleSign.addEventListener('click', () => {
+        isAddSign = !isAddSign;
+        btnToggleSign.textContent = isAddSign ? '+' : '-';
+        btnToggleSign.style.color = isAddSign ? 'var(--accent)' : 'var(--danger)';
+        btnToggleSign.style.borderColor = isAddSign ? 'var(--accent)' : 'var(--danger)';
+    });
+}
+
+document.querySelectorAll('.preset-time').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const luongThoiGian = parseInt(btn.dataset.min) || 0;
+        let gio = parseInt(document.getElementById('input-stop-hours').value) || 0;
+        let phut = parseInt(document.getElementById('input-stop-minutes').value) || 0;
+
+        let tongPhut = gio * 60 + phut;
+
+        if (isAddSign) {
+            tongPhut += luongThoiGian;
+        } else {
+            tongPhut -= luongThoiGian;
+            if (tongPhut < 0) tongPhut = 0;
+        }
+
+        gio = Math.floor(tongPhut / 60);
+        phut = tongPhut % 60;
+
+        document.getElementById('input-stop-hours').value = gio;
+        document.getElementById('input-stop-minutes').value = phut;
+    });
+});
+
+document.getElementById('btn-apply-stop-realtime').addEventListener('click', () => {
+    const h24 = gio_val_vt;
+    const m = phut_val_vt;
+    const giotruc = `${String(h24).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    const baygio = new Date(), muctieu = new Date();
+    muctieu.setHours(h24, m, 0, 0);
+    if (muctieu <= baygio) muctieu.setDate(muctieu.getDate() + 1);
+    const tongphut = Math.ceil((muctieu - baygio) / 60000);
+
+    chrome.storage.local.remove(['stopTime', 'stopAfterChapters', 'customStopConfig'], () => {
+        guilenh('setSleepTimer', { minutes: tongphut });
+        guilenh('setStopChapters', { count: 0 });
+        chrome.storage.local.set({ stopRealtimeTarget: giotruc, stopTime: tongphut });
+        hienthithongbao(`Sẽ dừng lúc ${giotruc}`, 'success');
+    });
 });
 
 document.getElementById('btn-apply-stop-chapters').addEventListener('click', () => {
     const so_chuong = parseInt(document.getElementById('input-stop-chapters').value);
     if (isNaN(so_chuong) || so_chuong <= 0) return;
-    guilenh('setStopChapters', { count: so_chuong });
-    chrome.storage.local.set({ stopAfterChapters: so_chuong });
-    hienthithongbao(`Sẽ dừng sau ${so_chuong} chương nữa`, 'success');
+
+    chrome.storage.local.remove(['stopTime', 'stopRealtimeTarget', 'customStopConfig'], () => {
+        guilenh('setSleepTimer', { minutes: 0 });
+        guilenh('setStopChapters', { count: so_chuong });
+        chrome.storage.local.set({ stopAfterChapters: so_chuong });
+        hienthithongbao(`Sẽ dừng sau ${so_chuong} chương nữa`, 'success');
+    });
+});
+
+function taoinput_dieukien(container_id, kieu) {
+    const container = document.getElementById(container_id);
+    if (!container) return;
+    container.innerHTML = '';
+    if (kieu === 'time') {
+        container.innerHTML = `<input type="number" value="0" min="0" style="width:34px;" class="auto-stop-input cc-hours"><span class="auto-stop-unit">giờ</span><input type="number" value="30" min="0" max="59" style="width:34px;" class="auto-stop-input cc-minutes"><span class="auto-stop-unit">phút</span>`;
+    } else if (kieu === 'realtime') {
+        container.innerHTML = `<span class="auto-stop-unit">Dùng giao diện vòng tròn ở trên</span>`;
+    } else if (kieu === 'chapters') {
+        container.innerHTML = `<input type="number" value="1" min="1" style="width:46px;" class="auto-stop-input cc-chapters"><span class="auto-stop-unit">chương</span>`;
+    }
+}
+
+document.getElementById('custom-left-type').addEventListener('change', e => taoinput_dieukien('custom-left-input', e.target.value));
+document.getElementById('custom-right-type').addEventListener('change', e => taoinput_dieukien('custom-right-input', e.target.value));
+
+function docgiatri_dieukien(prefix) {
+    const kieu = document.getElementById(`custom-${prefix}-type`).value;
+    const container = document.getElementById(`custom-${prefix}-input`);
+    if (!kieu || !container) return null;
+    if (kieu === 'time') {
+        const gio = parseInt(container.querySelector('.cc-hours')?.value) || 0;
+        const phut = parseInt(container.querySelector('.cc-minutes')?.value) || 0;
+        const total = gio * 60 + phut;
+        return total > 0 ? { type: 'time', minutes: total } : null;
+    } else if (kieu === 'realtime') {
+        return null;
+    } else if (kieu === 'chapters') {
+        const c = parseInt(container.querySelector('.cc-chapters')?.value);
+        return c > 0 ? { type: 'chapters', count: c } : null;
+    }
+    return null;
+}
+
+document.getElementById('btn-apply-stop-custom').addEventListener('click', () => {
+    const trai = docgiatri_dieukien('left');
+    const phai = docgiatri_dieukien('right');
+    const op = document.getElementById('custom-operator').value;
+    if (!trai && !phai) { hienthithongbao('Vui lòng chọn ít nhất một điều kiện', 'warning'); return; }
+    const config = { operator: op, left: trai, right: phai };
+    chrome.storage.local.remove(['stopTime', 'stopRealtimeTarget', 'stopAfterChapters'], () => {
+        guilenh('setCustomStop', { config });
+        const cac_dk = [trai, phai].filter(Boolean);
+        const dk_time = cac_dk.find(c => c.type === 'time' || c.type === 'realtime');
+        const dk_chuong = cac_dk.find(c => c.type === 'chapters');
+        if (dk_time) guilenh('setSleepTimer', { minutes: dk_time.minutes });
+        else guilenh('setSleepTimer', { minutes: 0 });
+        if (dk_chuong) guilenh('setStopChapters', { count: dk_chuong.count });
+        else guilenh('setStopChapters', { count: 0 });
+        const mota = cac_dk.map(c => {
+            if (c.type === 'time') { const g = Math.floor(c.minutes / 60), p = c.minutes % 60; return g > 0 ? `${g}g${p > 0 ? ` ${p}p` : ''}` : `${p}p`; }
+            if (c.type === 'realtime') return `lúc ${c.displayTime}`;
+            if (c.type === 'chapters') return `${c.count} chương`;
+            return '';
+        }).join(op === 'and' ? ' VÀ ' : ' HOẶC ');
+        hienthithongbao(`Sẽ dừng: ${mota}`, 'success');
+        chrome.storage.local.set({ customStopConfig: config });
+    });
 });
 
 const coverImg = document.getElementById('cover-img');
 coverImg.onerror = () => { coverImg.onerror = null; coverImg.src = FALLBACK_COVER; };
-
-// --- BẮT ĐẦU COPY TỪ ĐÂY THAY THẾ CHO PHẦN CUỐI CỦA POPUP.JS ---
 
 async function khoitaopopup() {
     document.getElementById('version-badge').textContent = 'v' + chrome.runtime.getManifest().version;
@@ -726,7 +900,7 @@ async function khoitaopopup() {
 
     if (!co_the_stv) {
         chrome.storage.local.remove('last_active_state');
-        document.getElementById('status-text').textContent = '⚠ Mở trang STV trước';
+        document.getElementById('status-text').innerHTML = `${svgCpt} Mở trang STV trước`;
         document.getElementById('current-title').textContent = 'Chưa mở trang sangtacviet.com';
         document.getElementById('current-chap').textContent = '—';
         document.getElementById('cover-img').style.display = 'none';
@@ -754,7 +928,6 @@ async function khoitaopopup() {
         });
     }
 
-    // ĐÃ FIX: Đồng bộ đúng tên biến tiếng Việt với content.js
     chrome.storage.local.get([
         'speed', 'volume', 'voiceIndex', 'maydoc',
         'batphimtat', 'doctentruyen', 'doctenchuong'
@@ -770,16 +943,36 @@ async function khoitaopopup() {
         if (d.doctentruyen !== undefined) document.getElementById('chk-read-book').checked = d.doctentruyen;
         if (d.doctenchuong !== undefined) document.getElementById('chk-read-chap').checked = d.doctenchuong;
 
-        chrome.storage.local.get(['stopTime', 'stopAfterChapters', 'sleepTargetTimestamp'], data => {
-            if (data.sleepTargetTimestamp || data.stopTime) {
+        chrome.storage.local.get(['stopTime', 'stopAfterChapters', 'sleepTargetTimestamp', 'stopRealtimeTarget', 'customStopConfig'], data => {
+            antatcanhom_tudongdung();
+            if (data.customStopConfig) {
+                chon_tudongdung.value = 'custom';
+                if (nhom_tuychinhrieng) nhom_tuychinhrieng.style.display = 'flex';
+            } else if (data.stopRealtimeTarget) {
+                chon_tudongdung.value = 'realtime';
+                if (nhom_thoigianthuc) {
+                    nhom_thoigianthuc.style.display = 'flex';
+                    const [h, m] = data.stopRealtimeTarget.split(':');
+                    if (typeof capnhat_gia_tri_vt === 'function') {
+                        capnhat_gia_tri_vt('hour', parseInt(h));
+                        capnhat_gia_tri_vt('minute', parseInt(m));
+                    }
+                }
+            } else if (data.sleepTargetTimestamp || data.stopTime) {
                 chon_tudongdung.value = 'time';
-                nhom_thoigiandung.style.display = 'flex';
-                if (data.stopTime) document.getElementById('input-stop-time').value = data.stopTime;
+                if (nhom_thoigiandung) nhom_thoigiandung.style.display = 'flex';
+                if (data.stopTime) {
+                    const h = Math.floor(data.stopTime / 60), m = data.stopTime % 60;
+                    document.getElementById('input-stop-hours').value = h;
+                    document.getElementById('input-stop-minutes').value = m;
+                }
             } else if (data.stopAfterChapters) {
                 chon_tudongdung.value = 'chapters';
-                nhom_sochuongdung.style.display = 'flex';
-                document.getElementById('input-stop-chapters').value = data.stopAfterChapters;
+                if (nhom_sochuongdung) { nhom_sochuongdung.style.display = 'flex'; document.getElementById('input-stop-chapters').value = data.stopAfterChapters; }
             }
+            const opt = chon_tudongdung.options[chon_tudongdung.selectedIndex];
+            const vanban_text = document.getElementById('custom-autostop-text');
+            if (opt && vanban_text) vanban_text.textContent = opt.textContent;
         });
     });
 
@@ -800,7 +993,7 @@ async function khoitaopopup() {
 
     if (!phanhoi || phanhoi.noTab) {
         chrome.storage.local.remove('last_active_state');
-        document.getElementById('status-text').textContent = '⚠ Mở trang STV trước';
+        document.getElementById('status-text').innerHTML = `${svgCpt} Mở trang STV trước`;
         document.getElementById('current-title').textContent = 'Chưa mở trang sangtacviet.com';
         document.getElementById('current-chap').textContent = '—';
         document.getElementById('cover-img').style.display = 'none';
@@ -813,7 +1006,7 @@ async function khoitaopopup() {
     }
 
     if (!phanhoi.bookTitle) {
-        document.getElementById('status-text').textContent = '⚠ Chọn một truyện để đọc';
+        document.getElementById('status-text').innerHTML = `${svgCpt} Chọn một truyện để đọc`;
         document.getElementById('current-title').textContent = 'Đang ở trang chủ / tìm kiếm';
         document.getElementById('current-chap').textContent = '—';
         document.getElementById('current-chap').style.display = 'none';
@@ -973,6 +1166,9 @@ function caidatochontinh(id_chon_goc, id_van_ban, id_khung_chon) {
     cap_nhat();
 }
 
+caidatochontinh('custom-left-type', 'text-left-type', 'dropdown-left-type');
+caidatochontinh('custom-right-type', 'text-right-type', 'dropdown-right-type');
+caidatochontinh('custom-operator', 'text-operator', 'dropdown-operator');
 caidatochontinh('engine-select', 'custom-engine-text', 'custom-engine-dropdown');
 caidatochontinh('select-auto-stop', 'custom-autostop-text', 'custom-autostop-dropdown');
 
@@ -993,7 +1189,6 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// ĐÃ FIX: Ánh xạ chuẩn 100% tên biến tiếng Việt cho Toggles
 ['chk-shortcuts', 'chk-read-book', 'chk-read-chap'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
@@ -1002,4 +1197,271 @@ document.addEventListener('click', (e) => {
             chrome.storage.local.set({ [khoa]: e.target.checked });
         });
     }
+});
+const _now = new Date();
+let gio_val_vt = _now.getHours();
+let phut_val_vt = _now.getMinutes();
+
+function get12h(h24) { const h = h24 % 12; return h === 0 ? 12 : h; }
+function to24h(h12, ampm) {
+    if (ampm === 'AM') return h12 === 12 ? 0 : h12;
+    return h12 === 12 ? 12 : h12 + 12;
+}
+function layAmPmHienTai() {
+    return document.getElementById('ampm-text')?.textContent || 'AM';
+}
+
+function veTickMarks() {
+    const CENTER = 95, HOUR_R = 82, MIN_R = 56;
+    const hourTickGroup = document.getElementById('hour-ticks');
+    if (hourTickGroup) {
+        hourTickGroup.innerHTML = '';
+        for (let i = 0; i < 60; i++) {
+            const deg = i * 6 - 90, rad = deg * Math.PI / 180;
+            const isMajor = i % 5 === 0;
+            const outer = HOUR_R + 5, inner = HOUR_R - (isMajor ? 7 : 4);
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', CENTER + outer * Math.cos(rad));
+            line.setAttribute('y1', CENTER + outer * Math.sin(rad));
+            line.setAttribute('x2', CENTER + inner * Math.cos(rad));
+            line.setAttribute('y2', CENTER + inner * Math.sin(rad));
+            line.setAttribute('class', 'tick-mark' + (isMajor ? ' major' : ''));
+            hourTickGroup.appendChild(line);
+        }
+    }
+    const minTickGroup = document.getElementById('minute-ticks');
+    if (minTickGroup) {
+        minTickGroup.innerHTML = '';
+        for (let i = 0; i < 60; i++) {
+            const deg = i * 6 - 90, rad = deg * Math.PI / 180;
+            const isMajor = i % 15 === 0;
+            const outer = MIN_R + 4, inner = MIN_R - (isMajor ? 6 : 3);
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', CENTER + outer * Math.cos(rad));
+            line.setAttribute('y1', CENTER + outer * Math.sin(rad));
+            line.setAttribute('x2', CENTER + inner * Math.cos(rad));
+            line.setAttribute('y2', CENTER + inner * Math.sin(rad));
+            line.setAttribute('class', 'tick-mark' + (isMajor ? ' major' : ''));
+            minTickGroup.appendChild(line);
+        }
+    }
+}
+
+function capnhat_ampm() {
+    const ampm = gio_val_vt < 12 ? 'AM' : 'PM';
+    const textEl = document.getElementById('ampm-text');
+    if (textEl) textEl.textContent = ampm;
+    document.querySelectorAll('#ampm-dropdown .custom-option').forEach(o => {
+        o.classList.toggle('selected', o.dataset.val === ampm);
+    });
+}
+
+function capnhat_gia_tri_vt(type, val) {
+    const hourHandle = document.getElementById('hour-handle');
+    const minuteHandle = document.getElementById('minute-handle');
+    const digitH = document.getElementById('digit-hours');
+    const digitM = document.getElementById('digit-minutes');
+    const hourProgress = document.getElementById('hour-progress');
+    const minuteProgress = document.getElementById('minute-progress');
+    if (!hourHandle || !minuteHandle) return;
+
+    const CENTER = 95, hourRadius = 82, minuteRadius = 56;
+
+    function set_vi_tri(handle, radius, deg) {
+        const rad = (deg - 90) * (Math.PI / 180);
+        handle.setAttribute('cx', CENTER + radius * Math.cos(rad));
+        handle.setAttribute('cy', CENTER + radius * Math.sin(rad));
+    }
+    function set_tien_trinh(progress, radius, deg) {
+        const c = 2 * Math.PI * radius;
+        progress.style.strokeDasharray = `${c * (deg / 360)}, ${c}`;
+    }
+
+    if (type === 'hour') {
+        gio_val_vt = Math.min(23, Math.max(0, val));
+
+        const isPM = gio_val_vt >= 12;
+
+        const displayHour = isPM
+            ? gio_val_vt
+            : get12h(gio_val_vt);
+
+        if (digitH) {
+            const isPM = gio_val_vt >= 12;
+
+            const displayHour = isPM
+                ? gio_val_vt
+                : get12h(gio_val_vt);
+
+            digitH.textContent = String(displayHour).padStart(2, '0');
+        }
+
+        const deg = (360 / 12) * (get12h(gio_val_vt) % 12);
+
+        set_vi_tri(hourHandle, hourRadius, deg);
+        set_tien_trinh(hourProgress, hourRadius, deg);
+
+        capnhat_ampm();
+    } else {
+        phut_val_vt = Math.min(59, Math.max(0, val));
+        if (digitM) digitM.textContent = String(phut_val_vt).padStart(2, '0');
+        const deg = (360 / 60) * phut_val_vt;
+        set_vi_tri(minuteHandle, minuteRadius, deg);
+        set_tien_trinh(minuteProgress, minuteRadius, deg);
+    }
+}
+
+function caidatClickNhapSo() {
+    const digitH = document.getElementById('digit-hours');
+    const digitM = document.getElementById('digit-minutes');
+    if (!digitH || !digitM) return;
+
+    function batDauNhap(digitEl, type) {
+        digitEl.classList.add('editing');
+        const maxVal = type === 'hour' ? 12 : 59;
+        let buf = '';
+
+        const handler = (e) => {
+            const key = e.key;
+            if (key >= '0' && key <= '9') {
+                buf += key;
+                digitEl.textContent = buf.length === 1 ? '0' + key : buf.slice(-2);
+                if (buf.length >= 2) {
+                    let num = parseInt(buf.slice(-2));
+                    if (type === 'hour') {
+                        num = Math.max(1, Math.min(12, num));
+                        capnhat_gia_tri_vt('hour', to24h(num, layAmPmHienTai()));
+                    } else {
+                        num = Math.min(59, num);
+                        capnhat_gia_tri_vt('minute', num);
+                    }
+                    buf = '';
+                    digitEl.classList.remove('editing');
+                    if (type === 'hour') setTimeout(() => batDauNhap(digitM, 'minute'), 60);
+                    document.removeEventListener('keydown', handler);
+                    document.removeEventListener('mousedown', clickOut);
+                }
+            } else if (key === 'Backspace') {
+                buf = buf.slice(0, -1);
+                if (!buf) digitEl.textContent = type === 'hour'
+                    ? String(get12h(gio_val_vt)).padStart(2, '0')
+                    : String(phut_val_vt).padStart(2, '0');
+            } else if (['Enter', 'Tab', 'Escape'].includes(key)) {
+                const num = buf ? parseInt(buf) : (type === 'hour' ? get12h(gio_val_vt) : phut_val_vt);
+                if (type === 'hour') capnhat_gia_tri_vt('hour', to24h(Math.max(1, Math.min(12, num)), layAmPmHienTai()));
+                else capnhat_gia_tri_vt('minute', Math.min(59, num));
+                buf = '';
+                digitEl.classList.remove('editing');
+                document.removeEventListener('keydown', handler);
+                document.removeEventListener('mousedown', clickOut);
+            }
+        };
+
+        const clickOut = (e) => {
+            if (e.target !== digitEl) {
+                const num = buf ? parseInt(buf) : (type === 'hour' ? get12h(gio_val_vt) : phut_val_vt);
+                if (type === 'hour') capnhat_gia_tri_vt('hour', to24h(Math.max(1, Math.min(12, num)), layAmPmHienTai()));
+                else capnhat_gia_tri_vt('minute', Math.min(59, num));
+                buf = '';
+                digitEl.classList.remove('editing');
+                document.removeEventListener('keydown', handler);
+                document.removeEventListener('mousedown', clickOut);
+            }
+        };
+
+        document.addEventListener('keydown', handler);
+        setTimeout(() => document.addEventListener('mousedown', clickOut), 0);
+    }
+
+    digitH.addEventListener('click', () => batDauNhap(digitH, 'hour'));
+    digitM.addEventListener('click', () => batDauNhap(digitM, 'minute'));
+
+    digitH.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const cur12h = get12h(gio_val_vt);
+        const next12h = ((cur12h - 1 + (e.deltaY < 0 ? 1 : -1) + 12) % 12) + 1;
+        capnhat_gia_tri_vt('hour', to24h(next12h, layAmPmHienTai()));
+    }, { passive: false });
+    digitM.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        capnhat_gia_tri_vt('minute', (phut_val_vt + (e.deltaY < 0 ? 1 : -1) + 60) % 60);
+    }, { passive: false });
+}
+
+function caidatDropdownAmPm() {
+    document.querySelectorAll('#ampm-dropdown .custom-option').forEach(opt => {
+        opt.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const newAmpm = opt.dataset.val;
+            const cur12h = get12h(gio_val_vt);
+            document.querySelectorAll('#ampm-dropdown .custom-option').forEach(o => o.classList.remove('selected'));
+            opt.classList.add('selected');
+            document.getElementById('ampm-text').textContent = newAmpm;
+            document.getElementById('ampm-dropdown').classList.remove('show');
+            const h24 = to24h(cur12h, newAmpm);
+            capnhat_gia_tri_vt('hour', h24);
+            capnhat_ampm();
+        });
+    });
+}
+
+setTimeout(() => {
+    const hourHandle = document.getElementById('hour-handle');
+    const minuteHandle = document.getElementById('minute-handle');
+    if (!hourHandle || !minuteHandle) return;
+
+    veTickMarks();
+    caidatClickNhapSo();
+    caidatDropdownAmPm();
+
+    function layGocTuToaDo(clientX, clientY, svgEl, cx, cy) {
+        const r = svgEl.getBoundingClientRect();
+        const sx = 190 / r.width, sy = 190 / r.height;
+        const mx = (clientX - r.left) * sx, my = (clientY - r.top) * sy;
+        return (Math.atan2(my - cy, mx - cx) * (180 / Math.PI) + 90 + 360) % 360;
+    }
+
+    function khoitao_keo_nut(handle, ringType) {
+        let isDragging = false;
+        const svgEl = handle.ownerSVGElement;
+        const CENTER = 95;
+
+        const onMove = (clientX, clientY) => {
+            const deg = layGocTuToaDo(clientX, clientY, svgEl, CENTER, CENTER);
+            if (ringType === 'hour') {
+                const step = Math.round(deg / (360 / 12));
+                const h12 = step === 0 ? 12 : step;
+                capnhat_gia_tri_vt('hour', to24h(h12, layAmPmHienTai()));
+            } else {
+                capnhat_gia_tri_vt('minute', Math.round(deg / (360 / 60)) % 60);
+            }
+        };
+
+        handle.addEventListener('mousedown', (e) => { isDragging = true; handle.classList.add('dragging'); e.preventDefault(); });
+        window.addEventListener('mousemove', (e) => { if (isDragging) onMove(e.clientX, e.clientY); });
+        window.addEventListener('mouseup', () => { isDragging = false; handle.classList.remove('dragging'); });
+
+        handle.addEventListener('touchstart', (e) => { isDragging = true; handle.classList.add('dragging'); e.preventDefault(); }, { passive: false });
+        window.addEventListener('touchmove', (e) => { if (isDragging) onMove(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
+        window.addEventListener('touchend', () => { isDragging = false; handle.classList.remove('dragging'); });
+    }
+
+    khoitao_keo_nut(hourHandle, 'hour');
+    khoitao_keo_nut(minuteHandle, 'minute');
+
+    capnhat_gia_tri_vt('hour', gio_val_vt);
+    capnhat_gia_tri_vt('minute', phut_val_vt);
+}, 500);
+
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('copy', e => e.preventDefault());
+document.addEventListener('cut', e => e.preventDefault());
+document.addEventListener('dragstart', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+    if (
+        e.key === 'F12' ||
+        (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) ||
+        (e.ctrlKey && e.key.toUpperCase() === 'U') ||
+        (e.ctrlKey && e.key.toUpperCase() === 'S')
+    ) e.preventDefault();
 });
