@@ -799,7 +799,7 @@ chrome.storage.local.get([
 ], data => {
     let tentruyen = document.getElementById('booknameholder')?.innerText.trim() || document.getElementById('book_name2')?.innerText.trim() || document.querySelector('h1')?.innerText.trim() || '';
     let danh_sach = data.readingList || [];
-    let muc = danh_sach.find(i => i.title === tentruyen);
+    let muc = danh_sach.find(i => i.title.trim().toLowerCase() === tentruyen.trim().toLowerCase());
     if (muc && muc.url === window.location.href && muc.chunkIndex > 1) {
         doandaluu = muc.chunkIndex - 1;
     }
@@ -880,7 +880,7 @@ function luutrangthaitienhat() {
     });
     chrome.storage.local.get('readingList', data => {
         let danh_sach = data.readingList || [];
-        let idx = danh_sach.findIndex(i => i.title === tentruyen);
+        let idx = danh_sach.findIndex(i => i.title.trim().toLowerCase() === tentruyen.trim().toLowerCase());
         if (idx !== -1) {
             let cap_nhat = false;
             if (danh_sach[idx].url !== window.location.href) { danh_sach[idx].url = window.location.href; cap_nhat = true; }

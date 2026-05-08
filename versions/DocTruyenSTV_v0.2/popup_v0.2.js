@@ -1,5 +1,15 @@
 'use strict';
 
+chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+    const url = tabs[0]?.url || '';
+    if (url.includes('sangtacviet.com') && !url.includes('/truyen/')) {
+        const controls = document.querySelector('.controls');
+        const statusBar = document.querySelector('.status-bar');
+        if (controls) controls.style.display = 'none';
+        if (statusBar) statusBar.style.display = 'none';
+    }
+});
+
 const FALLBACK_COVER = "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='54' height='78' viewBox='0 0 24 24' fill='none' stroke='%237a7896' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.6 3.6A2 2 0 0 1 5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-.59 1.41'/%3E%3Cpath d='M3 8.7V19a2 2 0 0 0 2 2h10.3'/%3E%3Cpath d='m2 2 20 20'/%3E%3Cpath d='M13 13a3 3 0 1 0 0-6H9v2'/%3E%3Cpath d='M9 17v-2.3'/%3E%3C/svg%3E";
 const SVG_PLAY = `<polygon points="5 3 19 12 5 21 5 3"/>`;
 const SVG_PAUSE = `<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>`;
@@ -515,7 +525,7 @@ function hienthidanhsachdoc(danh_sach) {
         item.addEventListener('click', () => {
             const title = item.dataset.title;
             chrome.storage.local.get('readingList', data => {
-                const entry = (data.readingList || []).find(e => e.title === title);
+                const entry = (data.readingList || []).find(e => e.title.trim().toLowerCase() === title.trim().toLowerCase());
                 if (entry?.url) chrome.tabs.create({ url: entry.url });
                 else hienthithongbao('URL không được lưu cho truyện này', 'warning');
             });
@@ -526,7 +536,7 @@ function hienthidanhsachdoc(danh_sach) {
 function xoakhoidanhsach(title) {
     chrome.storage.local.get('readingList', data => {
         const danh_sach = data.readingList || [];
-        const vitri = danh_sach.findIndex(i => i.title === title);
+        const vitri = danh_sach.findIndex(i => i.title.trim().toLowerCase() === title.trim().toLowerCase());
         if (vitri === -1) return;
         danh_sach.splice(vitri, 1);
         chrome.storage.local.set({ readingList: danh_sach }, () => {
@@ -554,7 +564,7 @@ document.getElementById('btn-save').addEventListener('click', () => {
     if (!dulieutruyenhientai) { hienthithongbao('Không có truyện nào đang mở', 'warning'); return; }
     chrome.storage.local.get('readingList', data => {
         const danh_sach = data.readingList || [];
-        const vitri = danh_sach.findIndex(i => i.title === dulieutruyenhientai.bookTitle);
+        const vitri = danh_sach.findIndex(i => i.title.trim().toLowerCase() === dulieutruyenhientai.bookTitle.trim().toLowerCase());
         if (vitri !== -1) {
             danh_sach.splice(vitri, 1);
             chrome.storage.local.set({ readingList: danh_sach }, () => {
@@ -917,6 +927,9 @@ coverImg.onerror = () => { coverImg.onerror = null; coverImg.src = FALLBACK_COVE
 
 async function khoitaopopup() {
     document.getElementById('version-badge').textContent = 'v' + chrome.runtime.getManifest().version;
+
+    const [the_danghoatdong] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const dang_o_trang_chu = the_danghoatdong && the_danghoatdong.url && the_danghoatdong.url.includes('sangtacviet.com') && !the_danghoatdong.url.includes('/truyen/');
     const cacthe = await chrome.tabs.query({ url: "*://*.sangtacviet.com/*" });
     const co_the_stv = cacthe.length > 0;
 
@@ -932,7 +945,7 @@ async function khoitaopopup() {
         document.querySelector('.status-bar').style.display = 'none';
     } else {
         chrome.storage.local.get(['last_active_state'], d => {
-            if (d.last_active_state) {
+            if (d.last_active_state && !dang_o_trang_chu) {
                 const s = d.last_active_state;
                 document.getElementById('book-empty-state').style.display = 'none';
                 document.getElementById('book-meta').style.display = 'block';
@@ -1103,7 +1116,9 @@ async function khoitaopopup() {
     setTimeout(taicacgiong, 300);
 }
 
-khoitaopopup();
+khoitaopopup().finally(() => {
+    document.body.style.opacity = '1';
+});
 taidanhsachdoc();
 
 document.addEventListener('visibilitychange', () => {

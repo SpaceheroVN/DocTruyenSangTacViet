@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" style="background: #0f0e17;">
 
 <head>
   <meta charset="UTF-8">
@@ -1533,7 +1533,7 @@
   </style>
 </head>
 
-<body>
+<body style="opacity: 0; transition: opacity 0.1s ease-out;">
   <div class="toast" id="toast"></div>
   <div class="header">
     <div class="header-logo tab" data-tab="main" style="cursor: pointer; pointer-events: auto;" title="Về trang chủ">
@@ -1590,9 +1590,10 @@
       <img id="cover-img" alt="Bìa truyện" style="display: none;">
       <div class="book-meta" id="book-meta">
         <div class="book-label">Đang mở</div>
-        <div id="current-title">Đang tải...</div>
-        <div id="current-chap">—</div>
-        <button class="btn-save" id="btn-save">
+        <div id="current-title">Đang kiểm tra trang...</div>
+
+        <div id="current-chap" style="display: none;">—</div>
+        <button class="btn-save" id="btn-save" style="display: none;">
           <svg id="save-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
@@ -1607,7 +1608,7 @@
         </button>
       </div>
     </div>
-    <div class="status-bar">
+    <div class="status-bar" style="display: none;">
       <div class="status-dot" id="status-dot"></div>
       <span id="status-icon"></span>
       <span id="status-text">Sẵn sàng</span>
@@ -1621,7 +1622,7 @@
         <span id="timer-text">00:00</span>
       </div>
     </div>
-    <div class="controls">
+    <div class="controls" style="display: none;">
       <div id="interaction-warning"
         style="display: none; background: rgba(240, 192, 64, 0.15); color: var(--warning); padding: 8px; border-radius: 6px; font-size: 10.5px; text-align: center; margin-bottom: 10px; border: 1px solid rgba(240, 192, 64, 0.3);">
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
