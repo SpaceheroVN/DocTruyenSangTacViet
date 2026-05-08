@@ -1,48 +1,77 @@
-# Auto Đọc STV
+# Auto Đọc STV - Trình đọc truyện Text-to-Speech cho sangtacviet.com
 
-Tiện ích mở rộng (Extension) hỗ trợ chuyển đổi văn bản thành giọng nói (Text-to-Speech) dành riêng cho website sangtacviet.com. Công cụ này giúp người dùng nghe truyện tự động với nhiều tùy chỉnh cá nhân hóa và khả năng xử lý các rào cản kỹ thuật từ phía website.
+<p align="center">
+  <img src="docs/icons/logo.svg" width="240" alt="Logo">
+</p>
 
-## Các tính năng chính
+[![Version](https://img.shields.io/badge/version-0.2-blue.svg)](https://github.com/SpaceheroVN/DocTruyenSangTacViet)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Chrome%20%7C%20Edge-lightgrey.svg)](#)
 
-* **Đa dạng nguồn giọng đọc (TTS Engines):** Tích hợp Web Speech API (mặc định), FPT.AI và Microsoft Azure TTS.
-* **Vượt rào mã hóa:** Tự động phát hiện và cảnh báo các chương truyện bị khóa bằng custom font để tránh lỗi đọc ký tự lạ.
-* **Tự động chuyển chương:** Tự động nhận diện và kích hoạt trình đọc khi sang chương mới.
-* **Lưu tiến độ đọc chi tiết:** Ghi nhớ chính xác vị trí đến từng đoạn văn (chunk) đang đọc dở.
-* **Hẹn giờ dừng tự động:** Cho phép thiết lập dừng đọc sau một khoảng thời gian nhất định hoặc sau một số lượng chương cụ thể.
-* **Hệ thống phím tắt:** Hỗ trợ điều khiển nhanh bằng bàn phím.
+**Auto Đọc STV** là một tiện ích mở rộng mạnh mẽ giúp chuyển đổi văn bản thành giọng nói (Text-to-Speech) được tối ưu hóa riêng cho website [sangtacviet.com](https://sangtacviet.com). Đừng để việc đọc truyện làm mỏi mắt bạn, hãy để chúng tôi "kể" truyện cho bạn nghe!
 
+---
+
+## Tính năng nổi bật
+
+- **Đa dạng nguồn giọng đọc:** Tích hợp các Engine như **Web Speech API**, **FPT.AI** và **Microsoft Azure TTS**.
+- **Vượt rào mã hóa:** Tự động phát hiện và xử lý các chương truyện bị khóa bằng custom font.
+- **Tự động chuyển chương:** Tự động nhận diện và đọc chương tiếp theo khi kết thúc chương hiện tại.
+- **Ghi nhớ tiến độ:** Lưu chính xác vị trí đến từng đoạn văn (chunk).
+- **Hẹn giờ thông minh:** Thiết lập dừng đọc sau một khoảng thời gian hoặc số lượng chương nhất định.
+- **Điều khiển nhanh:** Hệ thống phím tắt linh hoạt để thao tác nhanh chóng.
+
+---
 ## Hướng dẫn cài đặt
 
-1. Tải bộ mã nguồn về máy tính.
-2. Mở trình duyệt và truy cập trang quản lý tiện ích (Chrome: `chrome://extensions/` | Edge: `edge://extensions/`).
-3. Kích hoạt **Developer mode (Chế độ dành cho nhà phát triển)**.
-4. Chọn **Load unpacked (Tải tiện ích đã giải nén)** và tìm đến thư mục chứa mã nguồn.
+1. **Tải về:** [Tải bộ mã nguồn](https://github.com/SpaceheroVN/DocTruyenSangTacViet/archive/refs/heads/main.zip) và giải nén.
+2. **Mở quản lý tiện ích:** Truy cập `chrome://extensions/` (Chrome) hoặc `edge://extensions/` (Edge).
+3. **Chế độ nhà phát triển:** Bật công tắc **Developer mode** ở góc trên bên phải.
+4. **Cài đặt:** Chọn **Load unpacked** (Tải tiện ích đã giải nén) và chọn thư mục vừa giải nén.
+
+---
 
 ## Hướng dẫn sử dụng
 
 ### Điều khiển cơ bản
-* Truy cập chương truyện trên Sáng Tác Việt và nhấn **Nghe** trên giao diện tiện ích.
-* Sử dụng thanh trượt để điều chỉnh **Tốc độ** và **Âm lượng**.
+- Mở một chương truyện bất kỳ trên Sáng Tác Việt.
+- Nhấn biểu tượng tiện ích và chọn **Nghe**.
+- Tùy chỉnh **Tốc độ** và **Âm lượng** theo ý thích.
 
 ### Phím tắt hỗ trợ
-* **K**: Phát / Tạm dừng.
-* **R**: Đọc lại chương hiện tại từ đầu.
-* **Esc**: Dừng hẳn quá trình đọc.
-* **Mũi tên Trái / Phải**: Chuyển chương Trước / Sau.
+
+| Phím tắt | Chức năng |
+| :--- | :--- |
+| **K** | Phát / Tạm dừng |
+| **R** | Đọc lại chương hiện tại từ đầu |
+| **Esc** | Dừng hẳn quá trình đọc |
+| **Mũi tên Trái** | Quay lại chương trước |
+| **Mũi tên Phải** | Chuyển sang chương sau |
+
+---
 
 ## Cấu hình API Key (Tùy chọn)
 
-Để trải nghiệm giọng đọc chất lượng cao, người dùng có thể tự đăng ký API Key cá nhân:
-* **FPT.AI:** Miễn phí 100.000 ký tự mỗi tháng.
-* **Microsoft Azure:** Miễn phí 500.000 ký tự mỗi tháng với gói F0.
+Để sử dụng các giọng đọc chất lượng cao (FPT.AI, Azure), bạn cần cấu hình API Key cá nhân trong phần cài đặt:
+- **FPT.AI:** Miễn phí 100.000 ký tự/tháng.
+- **Microsoft Azure:** Miễn phí 500.000 ký tự/tháng (Gói F0).
 
-Hướng dẫn chi tiết quy trình lấy mã Key có thể xem tại tệp `guide.html` đi kèm.
-
-## Trình quản lý tiến độ (Bookmark)
-
-Tiện ích cung cấp hệ thống quản lý truyện thông minh tại tab **Danh sách đọc**:
-* Tự động cập nhật URL, tên chương và vị trí đoạn văn đang đọc vào bookmark.
-* Cho phép người dùng tiếp tục nghe ngay tại vị trí đã dừng trước đó khi mở lại truyện.
+> [!TIP]
+> Xem hướng dẫn chi tiết cách lấy API Key tại tệp `guide_v0.2.html` trong thư mục tiện ích.
 
 ---
-**Phiên bản hiện tại:** 0.2
+
+## Trình quản lý Bookmark
+
+Tiện ích tích hợp tab **Danh sách đọc** giúp bạn quản lý kho truyện cá nhân:
+- Tự động lưu tên truyện, chương và vị trí đang đọc.
+- Đồng bộ hóa tiến độ nghe trên mọi chương truyện.
+
+---
+
+## Giấy phép
+
+Dự án này được phát hành dưới giấy phép **MIT**. Xem tệp [LICENSE](LICENSE) để biết thêm chi tiết.
+
+---
+**Phiên bản hiện tại:** `0.2` - Phát triển bởi [SpaceheroVN](https://github.com/SpaceheroVN)

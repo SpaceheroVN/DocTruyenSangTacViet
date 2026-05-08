@@ -351,6 +351,7 @@ async function taicacgiong() {
         const opt = o_chon_giong.options[o_chon_giong.selectedIndex];
         if (opt) {
             document.getElementById('info-voice').textContent = opt.textContent;
+            chrome.storage.local.set({ lastVoiceName: opt.textContent });
             if (d.voiceIndex != muctieu && muctieu !== -1) {
                 chrome.storage.local.set({ voiceIndex: muctieu });
                 guilenh('setVoice', { value: muctieu });
@@ -363,10 +364,13 @@ async function taicacgiong() {
 document.getElementById('voice-select').addEventListener('change', e => {
     const val = e.target.value;
     const idx = isNaN(val) ? val : parseInt(val);
-    guilenh('setVoice', { value: idx });
-    chrome.storage.local.set({ voiceIndex: idx });
     const opt = e.target.options[e.target.selectedIndex];
-    document.getElementById('info-voice').textContent = opt?.textContent || 'Mặc định';
+    const text = opt?.textContent || 'Mặc định';
+
+    guilenh('setVoice', { value: idx });
+    chrome.storage.local.set({ voiceIndex: idx, lastVoiceName: text });
+
+    document.getElementById('info-voice').textContent = text;
 });
 
 document.getElementById('engine-select').addEventListener('change', async (e) => {
@@ -381,7 +385,6 @@ document.getElementById('engine-select').addEventListener('change', async (e) =>
 
     const placeholder_map = { fpt: 'Nhập FPT.AI API Key...', azure: 'Nhập Azure Subscription Key...' };
     if (placeholder_map[congcu]) input_key.placeholder = placeholder_map[congcu];
-
 
     await guilenh('setEngine', { value: congcu });
     chrome.storage.local.set({ ttsEngine: congcu });
@@ -412,16 +415,12 @@ document.getElementById('engine-select').addEventListener('change', async (e) =>
         }
         if (goiy_giong) goiy_giong.style.display = 'none';
 
-
         o_chon_giong.selectedIndex = 0;
         const chonGiong = parseInt(o_chon_giong.value) || 0;
 
-
         document.getElementById('info-voice').textContent = o_chon_giong.options[0].textContent;
 
-
         hienthiochontuychinh();
-
 
         chrome.storage.local.set({ voiceIndex: chonGiong });
         guilenh('setVoice', { value: chonGiong });
@@ -493,7 +492,9 @@ function hienthidanhsachdoc(danh_sach) {
                 </div>
                 ${m.url ? '<div class="list-date" style="font-size:9px;color:#555;margin-top:1px">Nhấn để tiếp tục đọc</div>' : ''}
             </div>
-            <button class="btn-remove" data-title="${thoathtml(m.title)}" title="Xoá khỏi danh sách">✕</button>
+            <button class="btn-remove" data-title="${thoathtml(m.title)}" title="Xoá khỏi danh sách">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
         </div>
     `).join('');
 
@@ -618,7 +619,6 @@ document.getElementById('btn-clear-all').addEventListener('click', () => {
             autoStopSelect.value = 'off';
             autoStopSelect.dispatchEvent(new Event('change'));
 
-            antatcanhom_tudongdung();
             const vanban_autostop = document.getElementById('custom-autostop-text');
             if (vanban_autostop) vanban_autostop.textContent = 'Không có';
 
@@ -627,6 +627,8 @@ document.getElementById('btn-clear-all').addEventListener('click', () => {
             phut_val_vt = _resetNow.getMinutes();
             capnhat_gia_tri_vt('hour', gio_val_vt);
             capnhat_gia_tri_vt('minute', phut_val_vt);
+
+            antatcanhom_tudongdung();
 
             capnhathuyhieu('web');
             guilenh('stopPlay');
@@ -837,7 +839,7 @@ function taoinput_dieukien(container_id, kieu) {
     if (kieu === 'time') {
         container.innerHTML = `<input type="number" value="0" min="0" style="width:34px;" class="auto-stop-input cc-hours"><span class="auto-stop-unit">giờ</span><input type="number" value="30" min="0" max="59" style="width:34px;" class="auto-stop-input cc-minutes"><span class="auto-stop-unit">phút</span>`;
     } else if (kieu === 'realtime') {
-        container.innerHTML = `<span class="auto-stop-unit">Dùng giao diện vòng tròn ở trên</span>`;
+        container.innerHTML = `<input type="time" id="select-realtime-picker" class="auto-stop-input cc-time" style="width:70px; padding: 2px 4px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--accent); outline: none;">`;
     } else if (kieu === 'chapters') {
         container.innerHTML = `<input type="number" value="1" min="1" style="width:46px;" class="auto-stop-input cc-chapters"><span class="auto-stop-unit">chương</span>`;
     }
@@ -850,13 +852,23 @@ function docgiatri_dieukien(prefix) {
     const kieu = document.getElementById(`custom-${prefix}-type`).value;
     const container = document.getElementById(`custom-${prefix}-input`);
     if (!kieu || !container) return null;
+
     if (kieu === 'time') {
         const gio = parseInt(container.querySelector('.cc-hours')?.value) || 0;
         const phut = parseInt(container.querySelector('.cc-minutes')?.value) || 0;
         const total = gio * 60 + phut;
         return total > 0 ? { type: 'time', minutes: total } : null;
     } else if (kieu === 'realtime') {
-        return null;
+        const val = container.querySelector('.cc-time')?.value;
+        if (!val) return null;
+
+        const [h, m] = val.split(':').map(Number);
+        const target = new Date();
+        target.setHours(h, m, 0, 0);
+        if (target <= new Date()) target.setDate(target.getDate() + 1);
+
+        const totalMins = Math.ceil((target - new Date()) / 60000);
+        return { type: 'realtime', displayTime: val, minutes: totalMins };
     } else if (kieu === 'chapters') {
         const c = parseInt(container.querySelector('.cc-chapters')?.value);
         return c > 0 ? { type: 'chapters', count: c } : null;
@@ -868,23 +880,33 @@ document.getElementById('btn-apply-stop-custom').addEventListener('click', () =>
     const trai = docgiatri_dieukien('left');
     const phai = docgiatri_dieukien('right');
     const op = document.getElementById('custom-operator').value;
-    if (!trai && !phai) { hienthithongbao('Vui lòng chọn ít nhất một điều kiện', 'warning'); return; }
+
+    if (!trai && !phai) { hienthithongbao('Vui lòng chọn ít nhất một điều kiện hợp lệ', 'warning'); return; }
+
+    if (trai && phai && trai.type === phai.type) {
+        hienthithongbao('Vui lòng chọn 2 điều kiện khác loại nhau', 'warning');
+        return;
+    }
+
     const config = { operator: op, left: trai, right: phai };
     chrome.storage.local.remove(['stopTime', 'stopRealtimeTarget', 'stopAfterChapters'], () => {
         guilenh('setCustomStop', { config });
         const cac_dk = [trai, phai].filter(Boolean);
         const dk_time = cac_dk.find(c => c.type === 'time' || c.type === 'realtime');
         const dk_chuong = cac_dk.find(c => c.type === 'chapters');
+
         if (dk_time) guilenh('setSleepTimer', { minutes: dk_time.minutes });
         else guilenh('setSleepTimer', { minutes: 0 });
         if (dk_chuong) guilenh('setStopChapters', { count: dk_chuong.count });
         else guilenh('setStopChapters', { count: 0 });
+
         const mota = cac_dk.map(c => {
             if (c.type === 'time') { const g = Math.floor(c.minutes / 60), p = c.minutes % 60; return g > 0 ? `${g}g${p > 0 ? ` ${p}p` : ''}` : `${p}p`; }
             if (c.type === 'realtime') return `lúc ${c.displayTime}`;
             if (c.type === 'chapters') return `${c.count} chương`;
             return '';
         }).join(op === 'and' ? ' VÀ ' : ' HOẶC ');
+
         hienthithongbao(`Sẽ dừng: ${mota}`, 'success');
         chrome.storage.local.set({ customStopConfig: config });
     });
@@ -930,8 +952,15 @@ async function khoitaopopup() {
 
     chrome.storage.local.get([
         'speed', 'volume', 'voiceIndex', 'maydoc',
-        'batphimtat', 'doctentruyen', 'doctenchuong'
+        'batphimtat', 'doctentruyen', 'doctenchuong', 'lastVoiceName'
     ], d => {
+        if (d.lastVoiceName) {
+            const voiceTextEl = document.getElementById('custom-voice-text');
+            if (voiceTextEl) voiceTextEl.textContent = d.lastVoiceName;
+            const infoVoiceEl = document.getElementById('info-voice');
+            if (infoVoiceEl) infoVoiceEl.textContent = d.lastVoiceName;
+        }
+
         if (d.speed !== undefined) { thanh_truot_toc_do.value = d.speed; van_ban_toc_do.textContent = `${parseFloat(d.speed).toFixed(1)}×`; }
         if (d.volume !== undefined) { thanh_truot_am_luong.value = d.volume; van_ban_am_luong.textContent = `${Math.round(d.volume * 100)}%`; }
         const o_chon_may_doc = document.getElementById('engine-select');

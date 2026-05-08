@@ -96,7 +96,7 @@
 
     .header {
       background: linear-gradient(135deg, #1a1929 0%, #12111e 100%);
-      padding: 10px 14px;
+      padding: 10px 14px 10px 18px;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
@@ -805,6 +805,7 @@
       padding: 10px 14px;
       flex: 1;
       overflow-y: auto;
+      scrollbar-gutter: stable;
       border-top: 1px solid var(--border);
     }
 
@@ -1207,16 +1208,22 @@
       font-family: inherit;
       outline: none;
       cursor: pointer;
+      color-scheme: dark;
     }
 
     input[type="time"]::-webkit-calendar-picker-indicator {
       cursor: pointer;
-      opacity: 0.7;
+      opacity: 0.8;
       transition: 0.2s;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23e8a045' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpolyline points='12 6 12 12 16 14'/%3E%3C/svg%3E");
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
     }
 
     input[type="time"]::-webkit-calendar-picker-indicator:hover {
       opacity: 1;
+      transform: scale(1.1);
     }
 
     .custom-cond-select,
@@ -1530,8 +1537,12 @@
   <div class="toast" id="toast"></div>
   <div class="header">
     <div class="header-logo tab" data-tab="main" style="cursor: pointer; pointer-events: auto;" title="Về trang chủ">
-      <svg xmlns="http://www.w3.org/2000/svg" width="120" height="52" viewBox="0 0 120 52" aria-label="Auto Đọc STV">
+      <svg xmlns="http://www.w3.org/2000/svg" width="78" height="52" viewBox="0 0 120 80"
+        preserveAspectRatio="xMinYMid meet">
         <defs>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&amp;family=Dancing+Script:wght@700&amp;display=swap');
+          </style>
           <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stop-color="#e8a045" />
             <stop offset="100%" stop-color="#c45c8a" />
@@ -1544,10 +1555,11 @@
             </feMerge>
           </filter>
         </defs>
-        <text x="4" y="38" font-family="'Baloo 2', cursive" font-size="46" font-weight="800" font-style="italic"
-          fill="url(#g1)" filter="url(#glow)">STV</text>
-        <text x="6" y="50" font-family="'Dancing Script', cursive" font-size="13" font-weight="700" fill="#ffffff"
-          stroke="#5CAAFC" stroke-width="0.4" letter-spacing="0.5">sangtacviet.com</text>
+        <text x="60" y="50" text-anchor="middle" font-family="'Baloo 2', cursive" font-size="57" font-weight="800"
+          font-style="italic" fill="url(#g1)" filter="url(#glow)">STV</text>
+        <text x="60" y="70" text-anchor="middle" font-family="'Dancing Script', cursive" font-size="20"
+          font-weight="700" fill="#ffffff" stroke="#5CAAFC" stroke-width="0.4"
+          letter-spacing="0.5">sangtacviet.com</text>
       </svg>
     </div>
     <div class="header-actions">
@@ -1722,13 +1734,15 @@
       </div>
       <div class="options-row" style="display: flex; align-items: center; gap: 8px;">
         <div class="custom-select-container drop-up" style="flex: 1; min-width: 0;">
-          <div class="custom-select-trigger" id="custom-voice-trigger" style="padding: 6px 28px 6px 10px !important; font-size: 10.5px !important; border-radius: 8px !important;">
-            <span id="custom-voice-text">Đang tải giọng...</span>
+          <div class="custom-select-trigger" id="custom-voice-trigger"
+            style="padding: 6px 28px 6px 10px !important; font-size: 10.5px !important; border-radius: 8px !important;">
+            <span id="custom-voice-text">Đang tải ...</span>
           </div>
           <div class="custom-select-dropdown" id="custom-voice-dropdown"></div>
           <select class="voice-select" id="voice-select" style="display: none;"></select>
         </div>
-        <div class="toggle-group" style="flex-shrink: 0; background: var(--surface2); padding: 4px 8px; border-radius: 8px; border: 1px solid var(--border); display: flex; align-items: center; gap: 6px;">
+        <div class="toggle-group"
+          style="flex-shrink: 0; background: var(--surface2); padding: 4px 8px; border-radius: 8px; border: 1px solid var(--border); display: flex; align-items: center; gap: 6px;">
           <label class="toggle toggle-mini">
             <input type="checkbox" id="chk-autonext" checked>
             <span class="toggle-slider"></span>

@@ -4,117 +4,318 @@
 <head>
   <meta charset="UTF-8">
   <title>Hướng dẫn lấy API Key - Auto Đọc STV</title>
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&display=swap"
+  <link rel="icon" href="icons/icon128.png" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap"
     rel="stylesheet">
   <style>
+    :root {
+      --bg: #0f0e17;
+      --surface: #1a1929;
+      --surface2: #222136;
+      --border: #2e2c45;
+      --accent: #e8a045;
+      --accent2: #c45c8a;
+      --text: #e8e6f0;
+      --text-muted: #7a7896;
+      --success: #4caf86;
+      --danger: #e05c6e;
+      --warning: #f0c040;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
-      background-color: #0f0e17;
-      color: #e8e6f0;
+      background-color: var(--bg);
+      color: var(--text);
       font-family: 'Be Vietnam Pro', sans-serif;
       line-height: 1.6;
-      max-width: 800px;
-      margin: 0 auto;
+      display: flex;
+      justify-content: center;
       padding: 40px 20px;
     }
 
+    .container {
+      max-width: 800px;
+      width: 100%;
+    }
+
+    .header-guide {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
     h1 {
-      color: #e8a045;
+      color: var(--text);
       text-align: center;
-      margin-bottom: 10px;
+      font-size: 28px;
+      margin: 0;
+    }
+
+    h1 span {
+      color: var(--accent);
     }
 
     .subtitle {
       text-align: center;
-      color: #7a7896;
+      color: var(--text-muted);
+      margin-top: 8px;
+      margin-bottom: 30px;
+      font-size: 15px;
+    }
+
+    .alert {
+      background: rgba(240, 192, 64, 0.1);
+      border: 1px solid rgba(240, 192, 64, 0.3);
+      border-left: 4px solid var(--warning);
+      padding: 16px 20px;
+      border-radius: 8px;
       margin-bottom: 40px;
-      font-size: 14px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
     }
 
-    h2 {
-      color: #c45c8a;
-      border-bottom: 1px solid #2e2c45;
-      padding-bottom: 10px;
-      margin-top: 40px;
+    .alert-icon {
+      color: var(--warning);
+      flex-shrink: 0;
+      margin-top: 2px;
     }
 
-    .step {
-      background: #1a1929;
-      border: 1px solid #2e2c45;
-      padding: 20px;
-      border-radius: 10px;
+    .alert-content strong {
+      color: var(--warning);
+      display: block;
+      margin-bottom: 4px;
+      font-size: 15px;
+    }
+
+    .alert-content p {
+      font-size: 13.5px;
+      color: #d1d0da;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .card:hover {
+      border-color: rgba(232, 160, 69, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
       margin-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 15px;
     }
 
-    .step-title {
+    .card-title {
+      color: var(--text);
+      font-size: 20px;
       font-weight: 600;
-      color: #4caf86;
-      margin-bottom: 10px;
-      font-size: 16px;
+    }
+
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 99px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge.recommend {
+      background: rgba(76, 175, 134, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(76, 175, 134, 0.3);
+    }
+
+    .badge.warning {
+      background: rgba(224, 92, 110, 0.15);
+      color: var(--danger);
+      border: 1px solid rgba(224, 92, 110, 0.3);
+    }
+
+    .card-desc {
+      color: var(--text-muted);
+      margin-bottom: 25px;
+      font-size: 14.5px;
+    }
+
+    .steps-list {
+      list-style: none;
+      counter-reset: step-counter;
+    }
+
+    .steps-list li {
+      position: relative;
+      padding-left: 45px;
+      margin-bottom: 20px;
+      font-size: 14.5px;
+    }
+
+    .steps-list li::before {
+      counter-increment: step-counter;
+      content: counter(step-counter);
+      position: absolute;
+      left: 0;
+      top: -2px;
+      width: 28px;
+      height: 28px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 13px;
     }
 
     a {
-      color: #e8a045;
+      color: var(--accent);
       text-decoration: none;
       font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border-bottom: 1px dashed rgba(232, 160, 69, 0.4);
+      transition: all 0.2s;
     }
 
     a:hover {
-      text-decoration: underline;
+      color: #ffb85c;
+      border-bottom: 1px solid #ffb85c;
     }
 
     code {
-      background: #222136;
-      padding: 4px 8px;
+      background: var(--surface2);
+      padding: 3px 6px;
       border-radius: 4px;
-      color: #f0c040;
+      color: var(--accent2);
       font-family: monospace;
+      font-size: 13px;
+      border: 1px solid var(--border);
+    }
+
+    .note {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 6px;
+      padding: 12px 15px;
+      margin-top: 10px;
+      font-size: 13.5px;
+      color: var(--text-muted);
+      border: 1px dashed var(--border);
+      line-height: 1.8;
     }
   </style>
 </head>
 
 <body>
 
-  <h1>Hướng dẫn lấy API Key (Miễn phí) <br> (Có thể có lỗi trong quá trình sử dụng)</h1>
-  <div class="subtitle">Sử dụng API Key giúp giọng đọc mượt mà, ngắt nghỉ như người thật và không bị lỗi vặt.</div>
+  <div class="container">
+    <div class="header-guide">
+      <h1>Hướng dẫn lấy <span>API Key</span> (Miễn phí)</h1>
+      <div class="subtitle">Sử dụng API Key giúp giọng đọc tự nhiên, ngắt nghỉ như người thật và tốc độ load nhanh hơn.
+      </div>
+    </div>
 
-  <h2>1. Dành cho FPT.AI (Khuyên dùng)</h2>
-  <div class="step">
-    <p>FPT cung cấp <strong>100.000 ký tự miễn phí mỗi tháng</strong>, đủ để bạn đọc vài chục chương truyện. Hệ thống đã
-      được tiện ích tích hợp tự động, bạn chỉ cần lấy Key dán vào là chạy.</p>
+    <div class="alert">
+      <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+        <line x1="12" y1="9" x2="12" y2="13" />
+        <line x1="12" y1="17" x2="12.01" y2="17" />
+      </svg>
+      <div class="alert-content">
+        <strong>Lưu ý về sự cố trong quá trình sử dụng</strong>
+        <p>Vì đây là dịch vụ miễn phí lấy từ bên thứ 3, đôi lúc hệ thống máy chủ của FPT hoặc Azure có thể bị quá tải
+          (lỗi Request / Quota) hoặc mạng của bạn bị chập chờn khiến giọng đọc bị khựng, dừng đột ngột, nhảy đoạn đọc.
+          <br><br>Tiện ích đã có sẵn cơ chế tự động thử tải lại (Auto-retry), nhưng nếu lỗi vẫn tiếp diễn, bạn chỉ cần
+          <strong>Tạm dừng khoảng 1-2 phút</strong> rồi bấm phát lại, hoặc chuyển tạm sang "Web Speech API" để đọc tiếp
+          nhé.
+        </p>
+      </div>
+    </div>
 
-    <div class="step-title" style="margin-top: 20px;">Các bước thao tác cực nhanh trên Console FPT.AI:</div>
-    <ol style="padding-left: 20px; color: #e8e6f0;">
-      <li style="margin-bottom: 8px;">Truy cập <a href="https://console.fpt.ai" target="_blank">Console FPT.AI</a> và
-        tạo tài khoản / đăng nhập.</li>
-      <li style="margin-bottom: 8px;">Tại màn hình chính, tìm thẻ <strong>Text to Speech</strong> và <strong>bấm gạt
-          công tắc</strong> ở góc phải cho nó chuyển sang màu xanh.</li>
-      <li style="margin-bottom: 8px;">Hệ thống sẽ hiện bảng hỏi xác nhận bật API, sau đó yêu cầu bạn <strong>điền tên
-          khóa</strong> (Key name, VD: <code>STV</code>). Điền xong bấm nút tạo.</li>
-      <li style="margin-bottom: 8px;">Khóa sẽ được tự động tạo. Bạn chỉ cần nhìn sang menu bên trái, bấm vào mục
-        <strong>API Keys</strong>.
-      </li>
-      <li style="margin-bottom: 8px;">Bấm vào biểu tượng <strong>Copy</strong> (hình 2 tờ giấy) cạnh mã Key bạn vừa tạo.
-      </li>
-      <li>Mở tiện ích Auto Đọc STV > Tab <strong>Cài đặt</strong> > Chọn nhóm FPT.AI > Dán mã vào ô > Bấm <strong>Lưu
-          API Key</strong>.</li>
-    </ol>
-  </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">1. Dành cho FPT.AI</div>
+        <span class="badge recommend">Khuyên dùng</span>
+      </div>
+      <div class="card-desc">
+        FPT cung cấp <strong>100.000 ký tự miễn phí mỗi tháng</strong> (Đủ để bạn đọc vài chục chương truyện). Giọng đọc
+        rất mượt, chuẩn tiếng Việt và hệ thống duyệt tự động ngay lập tức.
+      </div>
 
-  <h2>2. Dành cho Microsoft Azure TTS</h2>
-  <div class="step">
-    <p>Giọng Azure được đánh giá là tự nhiên nhất thế giới. Microsoft tặng gói F0 miễn phí <strong>500.000 ký
-        tự/tháng</strong>. Tuy nhiên, quá trình đăng ký yêu cầu thẻ VISA/Mastercard để xác minh chống spam.</p>
-    <ol style="padding-left: 20px; color: #e8e6f0; margin-top: 15px;">
-      <li style="margin-bottom: 8px;">Truy cập <a href="https://portal.azure.com" target="_blank">Portal Azure</a> để
-        đăng ký tài khoản.</li>
-      <li style="margin-bottom: 8px;">Tìm dịch vụ <strong>Speech Services</strong> và tạo mới một tài nguyên (Resource).
-      </li>
-      <li style="margin-bottom: 8px;">Chọn Pricing tier là <strong>Free F0</strong>.</li>
-      <li style="margin-bottom: 8px;">Sau khi tạo xong, vào mục <strong>Keys and Endpoint</strong>.</li>
-      <li>Copy <strong>KEY 1</strong> (dán vào ô API Key) và <strong>Location/Region</strong> (VD:
-        <code>southeastasia</code> - dán vào ô Region của tiện ích).
-      </li>
-    </ol>
+      <ol class="steps-list">
+        <li>Truy cập <a href="https://console.fpt.ai" target="_blank">Console FPT.AI</a> và tiến hành đăng ký tài khoản
+          (hoặc đăng nhập bằng Google).</li>
+        <li>Hệ thống sẽ yêu cầu bạn <strong>Tạo một Dự án (Project)</strong> mới. Bạn cứ điền bừa một tên (Ví dụ:
+          <code>Đọc Truyện</code>) rồi ấn tạo.
+        </li>
+        <li>Tại màn hình chính của dự án, cuộn xuống tìm thẻ <strong>Text to Speech</strong> và <strong>Bấm gạt công
+            tắc</strong> ở góc phải cho thẻ sáng màu xanh lên.</li>
+        <li>Một bảng xác nhận hiện ra yêu cầu bạn điền <strong>Tên Khóa (Key name)</strong>. Hãy nhập <code>STV</code>
+          hoặc bất cứ tên gì, sau đó bấm <strong>Tạo</strong>.</li>
+        <li>Nhìn sang cột menu bên trái màn hình, nhấp vào mục <strong>API Keys</strong>.</li>
+        <li>Tìm dãy mã vừa được tạo, bấm vào <strong>Biểu tượng Copy</strong> (Hình 2 tờ giấy xếp đè lên nhau) ở ngay
+          bên cạnh.</li>
+        <li>Mở lại tiện ích <strong>Auto Đọc STV</strong> > Chuyển sang Tab <strong>Cài đặt</strong> > Chọn Nguồn giọng
+          đọc là <strong>FPT.AI</strong> > Dán dãy mã vừa copy vào ô trống và bấm <strong>Lưu API Key</strong>.</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">2. Dành cho Microsoft Azure TTS</div>
+        <span class="badge warning">Cần thẻ VISA</span>
+      </div>
+      <div class="card-desc">
+        Giọng Azure (đặc biệt là giọng <i>Hoài My</i>) được đánh giá là tự nhiên nhất thế giới. Microsoft hào phóng tặng
+        gói F0 miễn phí lên tới <strong>500.000 ký tự/tháng</strong>. Tuy nhiên, rào cản là bạn bắt buộc phải có thẻ
+        VISA/Mastercard để xác minh danh tính chống spam.
+      </div>
+
+      <ol class="steps-list">
+        <li>Truy cập <a href="https://portal.azure.com" target="_blank">Portal Azure</a> để đăng ký tài khoản Microsoft
+          Azure (Hệ thống sẽ yêu cầu thêm thẻ, nhưng sẽ không trừ tiền nếu bạn làm đúng bước 3).</li>
+        <li>Sau khi vào màn hình chính, gõ vào thanh tìm kiếm trên cùng cụm từ <strong>Speech Services</strong> và nhấp
+          vào kết quả.</li>
+        <li>Bấm nút <strong>Create (Tạo mới)</strong> một tài nguyên. Lưu ý các thông số quan trọng sau:
+          <div class="note">
+            <div style="margin-bottom: 8px;">- <strong>Region:</strong> Nên chọn <code>Southeast Asia</code> (Đông Nam
+              Á) để tốc độ tải nhanh nhất.</div>
+            <div>- <strong>Pricing tier (Gói cước):</strong> Bắt buộc phải chọn <strong
+                style="color: var(--success); background: rgba(76, 175, 134, 0.15); padding: 3px 8px; border-radius: 4px; font-size: 14.5px;">Free
+                F0 (Miễn phí)</strong>. Nếu chọn nhầm sang <span
+                style="color: var(--danger); font-weight: 600;">Standard S0</span> sẽ bị trừ tiền!</div>
+          </div>
+        </li>
+        <li>Nhấn Create và đợi khoảng 1-2 phút để Microsoft khởi tạo máy chủ. Sau khi xong, bấm <strong>Go to
+            resource</strong>.</li>
+        <li>Nhìn sang cột menu bên trái, tìm và nhấp vào mục <strong>Keys and Endpoint</strong>.</li>
+        <li>Bạn sẽ thấy 2 mục cần copy:
+          <br>- Copy <strong>KEY 1</strong> và dán vào ô <i>Nhập API Key</i> trong tiện ích.
+          <br>- Copy <strong>Location/Region</strong> (VD: <code>southeastasia</code>) và dán vào ô <i>Region</i> trong
+          tiện ích.
+        </li>
+      </ol>
+    </div>
   </div>
 
 </body>

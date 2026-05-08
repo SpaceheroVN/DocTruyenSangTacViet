@@ -233,8 +233,6 @@ async function layamthanhtuapi(vanban, congcudoc, retries = 3) {
         const cacgiong_fpt = ['banmai', 'leminh', 'thuminh', 'myan', 'giahuy', 'lannhi', 'linhsan'];
         const giongdachon = cacgiong_fpt[chisogionghientai] || 'banmai';
         let tocdo_fpt = '0';
-        if (tocdohientai > 1) tocdo_fpt = String(Math.min(3, Math.round((tocdohientai - 1) * 2)));
-        else if (tocdohientai < 1) tocdo_fpt = String(Math.max(-3, Math.round((tocdohientai - 1) * 2)));
 
         try {
             const phanhoi = await fetch('https://api.fpt.ai/hmi/tts/v5', {
@@ -242,12 +240,14 @@ async function layamthanhtuapi(vanban, congcudoc, retries = 3) {
                 headers: { 'api-key': khoa_api.fpt_key, 'speed': tocdo_fpt, 'voice': giongdachon },
                 body: vanban
             });
+
             if (phanhoi.status === 429 && retries > 0) {
                 console.log(`FPT 429: Đang chờ 2 giây trước khi thử lại... (Lần thử lại còn: ${retries})`);
                 await new Promise(r => setTimeout(r, 2000));
                 return layamthanhtuapi(vanban, congcudoc, retries - 1);
             }
             if (!phanhoi.ok) throw new Error(`FPT API Error: ${phanhoi.status}`);
+
             const dulieu = await phanhoi.json();
             return dulieu.async || dulieu.audiourl;
         } catch (e) {
@@ -263,7 +263,8 @@ async function layamthanhtuapi(vanban, congcudoc, retries = 3) {
         const giongdachon = cacgiong_azure[chisogionghientai] || 'vi-VN-HoaiMyNeural';
         const vung = khoa_api.azure_region || 'southeastasia';
         const thoatxml = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        const ssml = `<speak version='1.0' xml:lang='vi-VN'><voice xml:lang='vi-VN' name='${giongdachon}'><prosody rate="${tocdohientai >= 1 ? '+' + Math.round((tocdohientai - 1) * 100) + '%' : '-' + Math.round((1 - tocdohientai) * 100) + '%'}">${thoatxml(vanban)}</prosody></voice></speak>`;
+        const ssml = `<speak version='1.0' xml:lang='vi-VN'><voice xml:lang='vi-VN' name='${giongdachon}'><prosody rate="0%">${thoatxml(vanban)}</prosody></voice></speak>`;
+
         const phanhoi = await fetch(`https://${vung}.tts.speech.microsoft.com/cognitiveservices/v1`, {
             method: 'POST',
             headers: {
@@ -273,6 +274,7 @@ async function layamthanhtuapi(vanban, congcudoc, retries = 3) {
             },
             body: ssml
         });
+
         if (!phanhoi.ok) throw new Error('Azure API Error');
         const cucmau = await phanhoi.blob();
         return URL.createObjectURL(cucmau);
@@ -522,7 +524,7 @@ function xulyketthucchuong() {
                 if (customStopConfig?.operator === 'and') {
                     chaptersFired = true;
                     if (!timerFired) {
-                        hienthithongbao('📚 Đã đủ số chương, đang chờ đủ thời gian...');
+                        hienthithongbao('<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg><span>Đã đủ số chương, đang chờ đủ thời gian...</span>');
                         setTimeout(() => bamchuongsau(true), 1200);
                         return;
                     }
@@ -531,7 +533,7 @@ function xulyketthucchuong() {
                     if (mahengio_ngu) { clearTimeout(mahengio_ngu); mahengio_ngu = null; }
                 }
                 dungtatca();
-                hienthithongbao('🎯 Đã dừng sau khi hoàn thành số chương hẹn trước!');
+                hienthithongbao('<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg><span>Đã dừng sau khi hoàn thành số chương hẹn trước!</span>');
             } else {
                 chrome.storage.local.set({ stopAfterChapters: conlai - 1 }, () => setTimeout(() => bamchuongsau(true), 1200));
             }
@@ -541,7 +543,7 @@ function xulyketthucchuong() {
 
 function bamchuongsau(laTudong = false) {
     dungtatca();
-    if (laTudong) chrome.storage.local.set({ autoStartOnLoad: true, savedSpeed: tocdohientai, savedVolume: amluonghientai, savedVoiceIndex: chisogionghientai, savedEngine: maydoc });
+    if (laTudong) chrome.storage.local.set({ autoStartOnLoad: true, speed: tocdohientai, volume: amluonghientai, voiceIndex: chisogionghientai, savedEngine: maydoc });
     else chrome.storage.local.remove('autoStartOnLoad');
     const banchon = ['#navnexttop', '#navnextbot', '#navnext', '#nav_next', '#btnnext', '#btn_next', '.btn-next-chapter', 'a.next', '.chapter-next a', '[data-nav="next"]'];
     for (const chon of banchon) {
@@ -554,7 +556,7 @@ function bamchuongsau(laTudong = false) {
         const vanban = (el.innerText || '').toLowerCase().trim();
         if (tukhoatieptheo.some(kw => vanban.includes(kw)) && vanban.length < 25) { el.click(); return; }
     }
-    hienthithongbao('⚠ Không tìm thấy nút chuyển chương. Có thể đã hết truyện.');
+    hienthithongbao('<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Không tìm thấy nút chuyển chương. Có thể đã hết truyện.</span>');
 }
 
 function bamchuongtruoc() {
@@ -589,11 +591,11 @@ function bamchuongtruoc() {
             }
         }
         if (duongdan && (duongdan.endsWith('/0/') || duongdan.endsWith('/0') || (duongdanchinh && duongdan === duongdanchinh))) {
-            hienthithongbao('⚠ Đây là chương thấp nhất rồi!'); return;
+            hienthithongbao('<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Đây là chương thấp nhất rồi!</span>'); return;
         }
         timthay.click(); return;
     }
-    hienthithongbao('⚠ Không tìm thấy nút chuyển chương trước.');
+    hienthithongbao('<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Không tìm thấy nút chuyển chương trước.</span>');
 }
 
 function hienthithongbao(thongdiep) {
@@ -601,10 +603,10 @@ function hienthithongbao(thongdiep) {
     if (!thongbao) {
         thongbao = document.createElement('div');
         thongbao.id = 'stv-tts-toast';
-        thongbao.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--accent, #e8a045);color:#fff;padding:8px 16px;border-radius:20px;z-index:999999;font-size:14px;font-family:sans-serif;pointer-events:none;transition:opacity 0.3s;box-shadow:0 4px 10px rgba(0,0,0,0.3);';
+        thongbao.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--accent, #e8a045);color:#fff;padding:8px 16px;border-radius:20px;z-index:999999;font-size:14px;font-family:sans-serif;pointer-events:none;transition:opacity 0.3s;box-shadow:0 4px 10px rgba(0,0,0,0.3);display:flex;align-items:center;gap:6px;';
         document.body.appendChild(thongbao);
     }
-    thongbao.textContent = thongdiep; thongbao.style.opacity = '1';
+    thongbao.innerHTML = thongdiep; thongbao.style.opacity = '1';
     clearTimeout(thongbao.timeout);
     thongbao.timeout = setTimeout(() => { thongbao.style.opacity = '0'; }, 2000);
 }
@@ -676,7 +678,11 @@ chrome.runtime.onMessage.addListener((yeucau, _nguoigui, phanhoi) => {
         case 'jumpToChunk':
         case 'nhaydoan': xulynhaydoan('nhay', yeucau.value); trave(); break;
         case 'setAuto': tudongchuyenchuong = yeucau.value; trave(); break;
-        case 'setSpeed': tocdohientai = yeucau.value; if (congcu === 'web' && dangphat && !dangtamdung) { phatngonhientai = null; huyphatngonantoan(); phatdoanweb(); } trave(); break;
+        case 'setSpeed':
+            tocdohientai = yeucau.value;
+            if (congcu === 'web' && dangphat && !dangtamdung) { phatngonhientai = null; huyphatngonantoan(); phatdoanweb(); }
+            if (amthanhhientai) amthanhhientai.playbackRate = tocdohientai;
+            trave(); break;
         case 'setVolume': amluonghientai = yeucau.value; if (amthanhhientai) amthanhhientai.volume = amluonghientai; trave(); break;
         case 'setEngine':
             const engineCu = maydoc === 'auto' ? 'web' : maydoc;
@@ -685,7 +691,6 @@ chrome.runtime.onMessage.addListener((yeucau, _nguoigui, phanhoi) => {
             const engineMoi = maydoc === 'auto' ? 'web' : maydoc;
 
             if (engineCu !== engineMoi) {
-
                 if (engineMoi === 'web') cacdoan_ws = [];
                 else cacdoanamthanh = [];
 
@@ -698,15 +703,14 @@ chrome.runtime.onMessage.addListener((yeucau, _nguoigui, phanhoi) => {
             trave(); break;
 
         case 'setVoice':
+            if (chisogionghientai == yeucau.value) {
+                trave(); break;
+            }
             chisogionghientai = yeucau.value;
             if (dangphat || dangtamdung) {
                 const dangPhatCu = dangphat;
-
-
                 huyphatngonantoan();
                 if (amthanhhientai) { amthanhhientai.pause(); amthanhhientai = null; }
-
-
                 cacdoanamthanh.forEach(c => { if (c.url && c.url.startsWith('blob:')) URL.revokeObjectURL(c.url); c.url = null; });
 
                 if (dangPhatCu) {
@@ -733,7 +737,7 @@ chrome.runtime.onMessage.addListener((yeucau, _nguoigui, phanhoi) => {
                     if (customStopConfig?.operator === 'and') {
                         timerFired = true;
                         if (!chaptersFired) {
-                            hienthithongbao('⏰ Đã đủ thời gian, đang chờ đủ số chương...');
+                            hienthithongbao('<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Đã đủ thời gian, đang chờ đủ số chương...</span>');
                             return;
                         }
                         customStopConfig = null; chaptersFired = false;
@@ -788,7 +792,7 @@ chrome.runtime.onMessage.addListener((yeucau, _nguoigui, phanhoi) => {
 });
 
 chrome.storage.local.get([
-    'autoStartOnLoad', 'savedSpeed', 'savedVolume', 'savedVoiceIndex',
+    'autoStartOnLoad', 'speed', 'volume', 'voiceIndex',
     'savedEngine', 'maydoc', 'fpt_key', 'azure_key', 'azure_region',
     'tudongchuyenchuong', 'sleepTargetTimestamp',
     'batphimtat', 'doctentruyen', 'doctenchuong', 'readingList', 'customStopConfig'
@@ -801,9 +805,11 @@ chrome.storage.local.get([
     }
     Object.assign(khoa_api, data);
     maydoc = data.savedEngine || data.maydoc || 'auto';
-    if (data.savedSpeed !== undefined) tocdohientai = data.savedSpeed;
-    if (data.savedVolume !== undefined) amluonghientai = data.savedVolume;
-    if (data.savedVoiceIndex !== undefined) chisogionghientai = data.savedVoiceIndex;
+
+    if (data.speed !== undefined) tocdohientai = data.speed;
+    if (data.volume !== undefined) amluonghientai = data.volume;
+    if (data.voiceIndex !== undefined) chisogionghientai = data.voiceIndex;
+
     tudongchuyenchuong = data.tudongchuyenchuong !== undefined ? data.tudongchuyenchuong : true;
     batphimtat = data.batphimtat !== undefined ? data.batphimtat : true;
     doctentruyen = data.doctentruyen !== undefined ? data.doctentruyen : true;
