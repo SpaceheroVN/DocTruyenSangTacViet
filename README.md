@@ -15,7 +15,7 @@
 ## Tính năng nổi bật
 
 - **Đa dạng nguồn giọng đọc:** Tích hợp các Engine như **Web Speech API**, **FPT.AI** và **Microsoft Azure TTS**.
-- **Vượt rào mã hóa:** Tự động phát hiện và xử lý các chương truyện bị khóa bằng custom font.
+- **Vượt rào mã hóa:** Tự động phát hiện và xử lý các chương truyện bị khóa (chặn đọc, hiện tại là thế, thiếu kinh phí ,=, ).
 - **Tự động chuyển chương:** Tự động nhận diện và đọc chương tiếp theo khi kết thúc chương hiện tại.
 - **Ghi nhớ tiến độ:** Lưu chính xác vị trí đến từng đoạn văn (chunk).
 - **Hẹn giờ thông minh:** Thiết lập dừng đọc sau một khoảng thời gian hoặc số lượng chương nhất định.
