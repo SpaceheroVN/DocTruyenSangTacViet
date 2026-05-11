@@ -218,6 +218,11 @@ chrome.runtime.onMessage.addListener((yeucau) => {
         datlaidongho();
         capnhattienhat(null);
     }
+    if (yeucau.action === 'engineFallback') {
+        const tenEngine = yeucau.from === 'fpt' ? 'FPT.AI' : 'Azure';
+        hienthithongbao(`${tenEngine} lỗi! Đã tự chuyển sang Web Speech`, 'warning');
+        capnhathuyhieu('web');
+    }
 });
 
 document.getElementById('btn-play').addEventListener('click', async () => {
@@ -418,7 +423,10 @@ document.getElementById('engine-select').addEventListener('change', async (e) =>
     if (placeholder_map[congcu]) input_key.placeholder = placeholder_map[congcu];
 
     await guilenh('setEngine', { value: congcu });
-    chrome.storage.sync.set({ maydoc: congcu });
+
+    if (!['fpt', 'azure'].includes(congcu)) {
+        chrome.storage.sync.set({ maydoc: congcu });
+    }
     capnhathuyhieu(congcu);
 
     const o_chon_giong = document.getElementById('voice-select');
@@ -473,9 +481,55 @@ document.querySelectorAll('.tab').forEach(tab => {
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
         if (isAlreadyActive && tab.dataset.tab !== 'main') {
             document.getElementById('panel-main').classList.add('active');
+
+            chrome.storage.sync.get('maydoc', d => {
+                const engineDaLuu = d.maydoc || 'web';
+                const engineSelect = document.getElementById('engine-select');
+                if (engineSelect.value !== engineDaLuu) {
+                    engineSelect.value = engineDaLuu;
+                    engineSelect.dispatchEvent(new Event('change'));
+                }
+                capnhathuyhieu(engineDaLuu);
+            });
         } else {
             tab.classList.add('active');
             if (targetPanel) targetPanel.classList.add('active');
+
+
+            if (tab.dataset.tab === 'settings') {
+                chrome.storage.sync.get('maydoc', d => {
+                    const engineSelect = document.getElementById('engine-select');
+                    const engineDaLuu = d.maydoc || 'web';
+                    if (engineSelect.value !== engineDaLuu) {
+                        engineSelect.value = engineDaLuu;
+                        engineSelect.dispatchEvent(new Event('change'));
+                    } else {
+
+                        const can_key = ['fpt', 'azure'].includes(engineDaLuu);
+                        if (can_key) {
+                            chrome.storage.local.get([`${engineDaLuu}_key`, 'azure_region'], d2 => {
+                                document.getElementById('api-key-input').value = d2[`${engineDaLuu}_key`] || '';
+                                if (engineDaLuu === 'azure') {
+                                    document.getElementById('api-region-input').value = d2.azure_region || '';
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+
+
+            if (tab.dataset.tab === 'main') {
+                chrome.storage.sync.get('maydoc', d => {
+                    const engineDaLuu = d.maydoc || 'web';
+                    const engineSelect = document.getElementById('engine-select');
+                    if (engineSelect.value !== engineDaLuu) {
+                        engineSelect.value = engineDaLuu;
+                        engineSelect.dispatchEvent(new Event('change'));
+                    }
+                    capnhathuyhieu(engineDaLuu);
+                });
+            }
         }
     });
 });
@@ -693,18 +747,78 @@ document.getElementById('btn-save-api').addEventListener('click', async () => {
     const region = document.getElementById('api-region-input').value.trim();
     if (!key) { hienthithongbao('Vui lòng nhập API Key', 'warning'); return; }
 
-    const du_lieu = { [`${congcu}_key`]: key };
-    if (congcu === 'azure') du_lieu['azure_region'] = region;
+    const icon = document.getElementById('btn-save-api-icon');
+    const textLabel = document.getElementById('btn-save-api-text');
+    const nut = document.getElementById('btn-save-api');
 
-    chrome.storage.local.set(du_lieu, () => {
-        const icon = document.getElementById('btn-save-api-icon');
-        const textLabel = document.getElementById('btn-save-api-text');
+    const luuKey = () => {
+        const du_lieu = { [`${congcu}_key`]: key };
+        if (congcu === 'azure') du_lieu['azure_region'] = region || 'southeastasia';
+        chrome.storage.local.set(du_lieu, () => {
+            guilenh('setApiKeys', du_lieu);
+        });
+    };
+
+    nut.disabled = true;
+    icon.innerHTML = `<line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/>`;
+    textLabel.textContent = 'Đang kiểm tra...';
+
+    try {
+        let thanhcong = false;
+        if (congcu === 'fpt') {
+            const r = await fetch('https://api.fpt.ai/hmi/tts/v5', {
+                method: 'POST', headers: { 'api-key': key }, body: 'Kiểm tra'
+            });
+            thanhcong = r.ok;
+        } else if (congcu === 'azure') {
+            const regionVal = region || 'southeastasia';
+            const r = await fetch(`https://${regionVal}.tts.speech.microsoft.com/cognitiveservices/v1`, {
+                method: 'POST',
+                headers: {
+                    'Ocp-Apim-Subscription-Key': key,
+                    'Content-Type': 'application/ssml+xml',
+                    'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3'
+                },
+                body: `<speak version='1.0' xml:lang='vi-VN'><voice xml:lang='vi-VN' name='vi-VN-HoaiMyNeural'>Kiểm tra</voice></speak>`
+            });
+            thanhcong = r.ok;
+        }
+
+        if (thanhcong) {
+            luuKey();
+            chrome.storage.sync.set({ maydoc: congcu });
+            icon.innerHTML = SVG_CHECK;
+            textLabel.textContent = 'Đã lưu!';
+            hienthithongbao('API Key hợp lệ, đã lưu!', 'success');
+            setTimeout(() => { icon.innerHTML = SVG_SAVE; textLabel.textContent = 'Lưu API Key'; }, 2000);
+        } else {
+            document.getElementById('api-key-input').value = '';
+            icon.innerHTML = SVG_SAVE;
+            textLabel.textContent = 'Lưu API Key';
+            hienthithongbao('API Key không hợp lệ! Đã trở về nguồn đọc cũ.', 'warning');
+            chrome.storage.sync.get('maydoc', d => {
+                const engineCu = d.maydoc || 'web';
+                const engineSelect = document.getElementById('engine-select');
+                if (engineSelect.value !== engineCu) {
+                    engineSelect.value = engineCu;
+                    engineSelect.dispatchEvent(new Event('change'));
+                } else {
+                    guilenh('setEngine', { value: engineCu });
+                    capnhathuyhieu(engineCu);
+                }
+            });
+        }
+    } catch (e) {
+
+        luuKey();
+        chrome.storage.sync.set({ maydoc: congcu });
         icon.innerHTML = SVG_CHECK;
         textLabel.textContent = 'Đã lưu!';
+        hienthithongbao('Không thể xác minh (lỗi mạng), đã lưu key.', 'info');
         setTimeout(() => { icon.innerHTML = SVG_SAVE; textLabel.textContent = 'Lưu API Key'; }, 2000);
-        guilenh('setApiKeys', du_lieu);
-        hienthithongbao('Đã lưu cấu hình API', 'success');
-    });
+    } finally {
+        nut.disabled = false;
+    }
 });
 
 document.getElementById('btn-test-api').addEventListener('click', async () => {
