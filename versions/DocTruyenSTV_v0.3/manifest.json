@@ -1,0 +1,46 @@
+{
+  "manifest_version": 3,
+  "name": "Đọc Truyện STV",
+  "version": "0.3",
+  "description": "Tự động đọc truyện trên Sáng Tác Việt. Hỗ trợ Web Speech, FPT.AI, Azure.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "*://sangtacviet.com/*",
+    "*://www.sangtacviet.com/*",
+    "https://api.fpt.ai/*",
+    "https://*.tts.speech.microsoft.com/*"
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup_v0.3.html",
+    "default_title": "Đọc Truyện STV",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://sangtacviet.com/*",
+        "*://www.sangtacviet.com/*"
+      ],
+      "js": [
+        "content_v0.3.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
