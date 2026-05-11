@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi" style="background: #0f0e17;">
 
 <head>
@@ -33,13 +33,13 @@
     }
 
     html {
-      width: 320px;
+      width: 350px;
       max-height: 600px;
       overflow: hidden;
     }
 
     body {
-      width: 320px;
+      width: 350px;
       max-height: 600px;
       background: var(--bg);
       color: var(--text);
@@ -48,6 +48,8 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      opacity: 0;
+      transition: opacity 0.12s ease;
     }
 
     .toast {
@@ -1224,7 +1226,6 @@
       pointer-events: none;
     }
 
-
     svg .drag-handle,
     svg .ring-group {
       pointer-events: all;
@@ -1332,7 +1333,6 @@
       border-color: var(--accent) !important;
       text-align: center !important;
     }
-
 
     .digital-clock-display {
       display: flex;
@@ -1510,12 +1510,12 @@
     }
 
     .drag-handle:hover {
-      r: 9.5px;
+      r: 11.5px;
     }
 
     .drag-handle.dragging {
       cursor: grabbing;
-      r: 10px;
+      r: 12px;
     }
 
     .picker-number {
@@ -1940,7 +1940,7 @@
               </button>
             </div>
             <div style="margin-top: 10px; text-align: center;">
-              <a href="guide_v0.2.html" target="_blank"
+              <a href="guide_v0.3.html" target="_blank"
                 style="color: var(--accent); text-decoration: none; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -2106,7 +2106,7 @@
                   <text class="picker-number" x="158" y="99">3</text>
                   <text class="picker-number" x="95" y="168">6</text>
                   <text class="picker-number" x="32" y="99">9</text>
-                  <circle class="drag-handle" cx="95" cy="13" r="8" id="hour-handle"></circle>
+                  <circle class="drag-handle" cx="95" cy="13" r="10" id="hour-handle"></circle>
                   <text class="picker-ring-label" x="95" y="87" style="fill:var(--accent);opacity:0.5;">GIỜ</text>
                 </g>
 
@@ -2118,7 +2118,7 @@
                   <text class="picker-number sm" x="138" y="98">15</text>
                   <text class="picker-number sm" x="95" y="144">30</text>
                   <text class="picker-number sm" x="52" y="98">45</text>
-                  <circle class="drag-handle minute-handle" cx="95" cy="39" r="7" id="minute-handle"></circle>
+                  <circle class="drag-handle minute-handle" cx="95" cy="39" r="9" id="minute-handle"></circle>
                   <text class="picker-ring-label" x="95" y="103" style="fill:var(--accent2);opacity:0.5;">PHÚT</text>
                 </g>
                 <circle cx="95" cy="95" r="3" fill="var(--border)" opacity="0.6" />

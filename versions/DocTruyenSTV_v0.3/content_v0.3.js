@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 function breakAntiTheft() {
     const style = document.createElement('style');
@@ -45,6 +45,8 @@ let luotphat_id = 0;
 let caidatdatai = false;
 let soLanLoiLienTuc = 0;
 const NGUONG_FALLBACK = 2;
+let isMiniPlayerMinimized = false;
+let miniPlayerMode = 'chapter';
 
 function lamtranhvanban(vanban) {
     if (!vanban) return '';
@@ -84,7 +86,10 @@ function taicacgiong() {
             cacgionghienuy = tonghopam.getVoices();
             resolve(cacgionghienuy);
         }, { once: true });
-        setTimeout(() => resolve(tonghopam.getVoices()), 1000);
+        setTimeout(() => {
+            cacgionghienuy = tonghopam.getVoices();
+            resolve(cacgionghienuy);
+        }, 1000);
     });
 }
 taicacgiong();
@@ -252,9 +257,24 @@ function capnhatnoibat(chiso, mangcacdoan) {
         }
     }
     luutrangthaitienhat_debounce();
+    capnhatMiniPlayer();
 }
 
-async function layamthanhtuapi(vanban, congcudoc, retries = 3) {
+function taoKeyCache(text) {
+
+    const clean = text.replace(/\s+/g, '');
+    return clean.substring(0, 40) + '_' + clean.substring(clean.length - 40);
+}
+
+function blobToBase64(blob) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+    });
+}
+
+async function layamthanhtuapi_raw(vanban, congcudoc, retries = 3) {
     if (congcudoc === 'fpt') {
         const cacgiong_fpt = ['banmai', 'leminh', 'thuminh', 'myan', 'giahuy', 'lannhi', 'linhsan'];
         const giongdachon = cacgiong_fpt[chisogionghientai] || 'banmai';
@@ -268,9 +288,8 @@ async function layamthanhtuapi(vanban, congcudoc, retries = 3) {
             });
 
             if (phanhoi.status === 429 && retries > 0) {
-                console.log(`FPT 429: Đang chờ 2 giây trước khi thử lại... (Lần thử lại còn: ${retries})`);
                 await new Promise(r => setTimeout(r, 2000));
-                return layamthanhtuapi(vanban, congcudoc, retries - 1);
+                return layamthanhtuapi_raw(vanban, congcudoc, retries - 1);
             }
             if (!phanhoi.ok) throw new Error(`FPT API Error: ${phanhoi.status}`);
 
@@ -279,7 +298,7 @@ async function layamthanhtuapi(vanban, congcudoc, retries = 3) {
         } catch (e) {
             if (retries > 0) {
                 await new Promise(r => setTimeout(r, 1000));
-                return layamthanhtuapi(vanban, congcudoc, retries - 1);
+                return layamthanhtuapi_raw(vanban, congcudoc, retries - 1);
             }
             throw e;
         }
@@ -303,13 +322,115 @@ async function layamthanhtuapi(vanban, congcudoc, retries = 3) {
 
         if (phanhoi.status === 429 && retries > 0) {
             await new Promise(r => setTimeout(r, 3000));
-            return layamthanhtuapi(vanban, congcudoc, retries - 1);
+            return layamthanhtuapi_raw(vanban, congcudoc, retries - 1);
         }
         if (!phanhoi.ok) throw new Error(`Azure API Error: ${phanhoi.status}`);
         const cucmau = await phanhoi.blob();
         return URL.createObjectURL(cucmau);
     }
     return null;
+}
+
+async function layamthanhtuapi(vanban, congcudoc, retries = 3) {
+    const cacheKey = taoKeyCache(vanban);
+
+    const cacheObj = await new Promise(resolve => chrome.storage.local.get('ttsPrefetchCache', resolve));
+    if (cacheObj && cacheObj.ttsPrefetchCache && cacheObj.ttsPrefetchCache[cacheKey]) {
+        const data = cacheObj.ttsPrefetchCache[cacheKey];
+
+        delete cacheObj.ttsPrefetchCache[cacheKey];
+        chrome.storage.local.set({ ttsPrefetchCache: cacheObj.ttsPrefetchCache });
+
+        if (data.startsWith('data:audio')) {
+            const res = await fetch(data);
+            const blob = await res.blob();
+            return URL.createObjectURL(blob);
+        }
+        return data;
+    }
+
+    return layamthanhtuapi_raw(vanban, congcudoc, retries);
+}
+
+async function tienTaiChuongTiepTheo() {
+    if (!tudongchuyenchuong || maydoc === 'web' || maydoc === 'auto') return;
+
+    let timthay = null;
+    const banchon = ['#navnexttop', '#navnextbot', '#navnext', '#nav_next', '#btnnext', '#btn_next', '.btn-next-chapter', 'a.next', '.chapter-next a', '[data-nav="next"]'];
+    for (const chon of banchon) {
+        const el = document.querySelector(chon);
+        if (el && el.getAttribute('href') && !el.getAttribute('href').endsWith('/0/')) {
+            timthay = el.getAttribute('href');
+            break;
+        }
+    }
+    if (!timthay) return;
+
+    try {
+
+        const res = await fetch(timthay);
+        const html = await res.text();
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+
+        let cacDoanText = [];
+        const themText = (txt) => {
+            txt = lamtranhvanban(txt);
+            if (txt.length > 0) {
+                const chunks = chiadoanvanban(txt, maydoc === 'fpt' ? 2000 : 1000);
+                cacDoanText.push(...chunks);
+            }
+        };
+
+        if (doctentruyen) {
+            let nut = doc.getElementById('booknameholder') || doc.getElementById('book_name2');
+            if (nut) themText(nut.textContent);
+        }
+        if (doctenchuong) {
+            let nut = doc.getElementById('bookchapnameholder');
+            if (nut) themText(nut.textContent);
+        }
+
+        const cackhung = doc.querySelectorAll('.contentbox');
+        cackhung.forEach(khung => {
+            let clone = khung.cloneNode(true);
+            clone.innerHTML = clone.innerHTML.replace(/<br\s*[\/]?>/gi, "\n").replace(/<\/p>/gi, "\n").replace(/<\/div>/gi, "\n");
+            themText(clone.textContent);
+        });
+
+        if (cacDoanText.length === 0) return;
+
+        let cacheData = {};
+        const cacheObj = await new Promise(resolve => chrome.storage.local.get('ttsPrefetchCache', resolve));
+        if (cacheObj && cacheObj.ttsPrefetchCache) {
+            cacheData = cacheObj.ttsPrefetchCache;
+
+            let keys = Object.keys(cacheData);
+            if (keys.length > 6) keys.slice(0, keys.length - 6).forEach(k => delete cacheData[k]);
+        }
+
+        for (let i = 0; i < Math.min(2, cacDoanText.length); i++) {
+            const text = cacDoanText[i];
+            const key = taoKeyCache(text);
+
+            if (cacheData[key]) continue;
+
+            let urlOrBlob = await layamthanhtuapi_raw(text, maydoc);
+
+            if (urlOrBlob instanceof Blob) {
+                cacheData[key] = await blobToBase64(urlOrBlob);
+            } else if (urlOrBlob && urlOrBlob.startsWith('blob:')) {
+                const b = await fetch(urlOrBlob).then(r => r.blob());
+                cacheData[key] = await blobToBase64(b);
+            } else if (urlOrBlob) {
+                cacheData[key] = urlOrBlob;
+            }
+        }
+
+        chrome.storage.local.set({ ttsPrefetchCache: cacheData });
+
+    } catch (e) {
+        console.log("Lỗi tải trước chương tiếp theo:", e);
+    }
 }
 
 function fallbackVeWebSpeech(lyDo) {
@@ -369,10 +490,20 @@ async function phatdoanamthanh() {
     amthanh.playbackRate = tocdohientai;
     soLanLoiLienTuc = 0;
 
-    if (chisoamthanh + 1 < cacdoanamthanh.length && !cacdoanamthanh[chisoamthanh + 1].url) {
-        layamthanhtuapi(cacdoanamthanh[chisoamthanh + 1].text, maydoc)
-            .then(url => { cacdoanamthanh[chisoamthanh + 1].url = url; })
-            .catch(() => { });
+    const SO_LUONG_PREFETCH = 3;
+    for (let i = 1; i <= SO_LUONG_PREFETCH; i++) {
+        let idx = chisoamthanh + i;
+        if (idx < cacdoanamthanh.length && !cacdoanamthanh[idx].url && !cacdoanamthanh[idx].isFetching) {
+            cacdoanamthanh[idx].isFetching = true;
+            layamthanhtuapi(cacdoanamthanh[idx].text, maydoc)
+                .then(url => { cacdoanamthanh[idx].url = url; cacdoanamthanh[idx].isFetching = false; })
+                .catch(() => { cacdoanamthanh[idx].isFetching = false; });
+        }
+    }
+
+    if (chisoamthanh >= cacdoanamthanh.length * 0.8 && !window.isPrefetchingNext) {
+        window.isPrefetchingNext = true;
+        tienTaiChuongTiepTheo();
     }
 
     amthanh.onended = () => {
@@ -425,7 +556,7 @@ async function phatdoanweb() {
     let id_hientai = luotphat_id;
 
     if (cacgionghienuy.length === 0) {
-        await taicacgiong();
+        cacgionghienuy = await taicacgiong();
     }
 
     if (id_hientai !== luotphat_id) return;
@@ -469,6 +600,7 @@ function kiemtramahoa() {
     return co_mahoa;
 }
 function chuanbi_ngam() {
+    window.isPrefetchingNext = false;
     const congcu = maydoc === 'auto' || maydoc === 'google' ? 'web' : maydoc;
     if (congcu === 'web' && cacdoan_ws.length > 0) return true;
     if (congcu !== 'web' && cacdoanamthanh.length > 0) return true;
@@ -481,7 +613,7 @@ function chuanbi_ngam() {
     } else {
         window.obfuscationBlocked = false;
         const el = document.querySelector('.contentbox');
-        if (!el || el.innerText.trim().length < 50) return false;
+        if (!el || el.innerText.includes('Đang tải nội dung') || el.innerText.trim().length < 50) return false;
         cacnutdoan = chuanbinoidung();
         if (!cacnutdoan.length) return false;
     }
@@ -508,6 +640,7 @@ function chuanbi_ngam() {
 }
 
 function batdaudoc() {
+    taoMiniPlayer();
     if (!chuanbi_ngam()) { dangphat = false; return; }
     dangphat = true; dangtamdung = false;
     const congcu = maydoc === 'auto' || maydoc === 'google' ? 'web' : maydoc;
@@ -539,6 +672,9 @@ function chuyendoiphat(tuychon = {}) {
     } else {
         batdaudoc();
     }
+    const bubble = document.getElementById('stv-mini-bubble');
+    if (bubble) bubble.classList.add('stv-mp-hidden');
+    capnhatMiniPlayer();
     return true;
 }
 
@@ -546,6 +682,7 @@ function dungtatca() {
     dungtrinhdocweb(); dungamthanh();
     dangphat = false; dangtamdung = false;
     giaydatroi = 0; thoigiandatroichinhxac = 0;
+    capnhatMiniPlayer();
 }
 
 function doclaichuong(tuychon = {}) {
@@ -816,8 +953,14 @@ chrome.runtime.onMessage.addListener((yeucau, _nguoigui, phanhoi) => {
 });
 
 chrome.storage.local.get([
-    'autoStartOnLoad', 'sleepTargetTimestamp', 'readingList', 'customStopConfig'
+    'autoStartOnLoad', 'sleepTargetTimestamp', 'readingList', 'customStopConfig', 'isMiniPlayerMinimized', 'miniPlayerMode'
 ], localData => {
+    if (localData.isMiniPlayerMinimized !== undefined) {
+        isMiniPlayerMinimized = localData.isMiniPlayerMinimized;
+    }
+    if (localData.miniPlayerMode) {
+        miniPlayerMode = localData.miniPlayerMode;
+    }
     let tentruyen = document.getElementById('booknameholder')?.innerText.trim() || document.getElementById('book_name2')?.innerText.trim() || document.querySelector('h1')?.innerText.trim() || '';
     let danh_sach = localData.readingList || [];
     let muc = danh_sach.find(i => (i.title || '').trim().toLowerCase() === (tentruyen || '').trim().toLowerCase());
@@ -890,6 +1033,7 @@ document.addEventListener('keydown', e => {
     if (!batphimtat) return;
     if (!caidatdatai) return;
     if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName) || e.target.isContentEditable || e.isComposing) return;
+    if (e.target.closest && e.target.closest('#stv-mini-player, #stv-mini-bubble')) return;
     switch (e.key.toLowerCase()) {
         case 'k': e.preventDefault(); chuyendoiphat(); break;
         case 'arrowleft': e.preventDefault(); bamchuongtruoc(); break;
@@ -936,3 +1080,387 @@ function luutrangthaitienhat() {
     });
 }
 
+function taoMiniPlayer() {
+    if (document.getElementById('stv-mini-player')) return;
+
+    const kieu = document.createElement('style');
+    kieu.id = 'stv-mini-player-styles';
+    kieu.textContent = `
+        #stv-mini-player {
+            position: fixed;
+            bottom: 20px;
+            left: 14px;
+            width: 275px;
+            background: linear-gradient(140deg, #1a1929 0%, #12111e 100%);
+            border: 1px solid #2e2c45;
+            border-radius: 14px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.55), 0 0 0 1px rgba(232,160,69,0.08);
+            z-index: 2147483646;
+            font-family: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+            font-size: 12px;
+            color: #e8e6f0;
+            user-select: none;
+            transition: opacity 0.25s, transform 0.25s;
+            overflow: hidden;
+            -webkit-user-select: none;
+        }
+        #stv-mini-player, #stv-mini-player *, #stv-mini-bubble, #stv-mini-bubble * {
+            user-select: none !important;
+            -webkit-user-select: none !important;
+        }
+        #stv-mini-player.stv-mp-hidden {
+            opacity: 0;
+            transform: translateY(14px);
+            pointer-events: none;
+        }
+        #stv-mini-player .stv-mp-drag {
+            padding: 8px 10px 4px 12px;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        #stv-mini-player .stv-mp-drag:active { cursor: grabbing; }
+        #stv-mini-player .stv-mp-lbl {
+            flex: 1;
+            font-size: 9px;
+            font-weight: 700;
+            color: #7a7896;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        #stv-mini-player .stv-mp-status-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: #4caf86;
+            flex-shrink: 0;
+        }
+        #stv-mini-player .stv-mp-status-dot.paused { background: #e8a045; }
+        #stv-mini-player .stv-mp-status-dot.stopped { background: #7a7896; }
+        #stv-mini-player .stv-mp-min-btn {
+            background: none;
+            border: none;
+            color: #7a7896;
+            cursor: pointer;
+            padding: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: color 0.15s, background 0.15s;
+            flex-shrink: 0;
+        }
+        #stv-mini-player .stv-mp-min-btn:hover { color: #e8a045; background: rgba(232,160,69,0.1); }
+        #stv-mini-player .stv-mp-chap {
+            padding: 0 12px 6px;
+            font-size: 11px;
+            font-weight: 500;
+            color: #e8e6f0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.4;
+        }
+        #stv-mini-player .stv-mp-bar-wrap { padding: 0 12px; margin-bottom: 8px; }
+        #stv-mini-player .stv-mp-bar-bg {
+            height: 3px;
+            background: #2e2c45;
+            border-radius: 99px;
+            overflow: hidden;
+        }
+        #stv-mini-player .stv-mp-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #e8a045, #c45c8a);
+            border-radius: 99px;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+        #stv-mini-player .stv-mp-controls {
+            display: flex;
+            align-items: center;
+            padding: 2px 10px 10px;
+            gap: 4px;
+        }
+        #stv-mini-player .stv-mp-btn {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid #2e2c45;
+            color: #e8e6f0;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            padding: 0;
+            flex-shrink: 0;
+        }
+        #stv-mini-player .stv-mp-btn:hover {
+            background: rgba(232,160,69,0.12);
+            border-color: rgba(232,160,69,0.5);
+            color: #e8a045;
+        }
+        #stv-mini-player .stv-mp-btn-sm { width: 28px; height: 28px; }
+        #stv-mini-player .stv-mp-btn-play {
+            width: 36px;
+            height: 36px;
+            background: #e8a045;
+            border-color: #e8a045;
+            color: #0f0e17;
+            border-radius: 50%;
+            box-shadow: 0 0 14px rgba(232,160,69,0.35);
+        }
+        #stv-mini-player .stv-mp-btn-play:hover {
+            background: #f0b855;
+            border-color: #f0b855;
+            color: #0f0e17;
+            transform: scale(1.07);
+        }
+        #stv-mini-player .stv-mp-right {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 5px;
+            overflow: hidden;
+        }
+        #stv-mini-player .stv-mp-progress-txt {
+            font-size: 10px;
+            color: #7a7896;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+        #stv-mini-player .stv-mp-engine-badge {
+            font-size: 8px;
+            font-weight: 700;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid #2e2c45;
+            border-radius: 4px;
+            padding: 1px 5px;
+            color: #7a7896;
+            letter-spacing: 0.4px;
+            white-space: nowrap;
+        }
+
+        #stv-mini-bubble {
+            position: fixed;
+            bottom: 20px;
+            left: 14px;
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #e8a045, #c45c8a);
+            color: #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 4px 18px rgba(232,160,69,0.45);
+            z-index: 2147483646;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.25s, transform 0.25s;
+            border: 2px solid rgba(255,255,255,0.12);
+        }
+        #stv-mini-bubble.stv-mp-hidden {
+            opacity: 0;
+            transform: scale(0.75);
+            pointer-events: none;
+        }
+        #stv-mini-bubble:hover { transform: scale(1.1); box-shadow: 0 6px 22px rgba(232,160,69,0.6); }
+        @keyframes stv-pulse-bubble {
+            0%, 100% { box-shadow: 0 4px 18px rgba(232,160,69,0.45); }
+            50%        { box-shadow: 0 4px 26px rgba(232,160,69,0.75); }
+        }
+        #stv-mini-bubble.stv-playing { animation: stv-pulse-bubble 2s ease-in-out infinite; }
+    `;
+    document.head.appendChild(kieu);
+
+    const player = document.createElement('div');
+    player.id = 'stv-mini-player';
+    player.classList.add('stv-mp-hidden');
+    player.innerHTML = `
+        <div class="stv-mp-drag" id="stv-mp-drag-handle">
+            <span class="stv-mp-status-dot" id="stv-mp-dot"></span>
+            <span class="stv-mp-lbl">Auto Đọc STV</span>
+            <button class="stv-mp-min-btn" id="stv-mp-minimize" title="Thu nhỏ" tabindex="-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+            </button>
+        </div>
+        <div class="stv-mp-chap" id="stv-mp-chap">Đang tải...</div>
+        <div class="stv-mp-bar-wrap">
+            <div class="stv-mp-bar-bg"><div class="stv-mp-bar-fill" id="stv-mp-bar-fill"></div></div>
+        </div>
+        <div class="stv-mp-controls">
+            <button class="stv-mp-btn" id="stv-mp-mode" title="Đổi chức năng Tới/Lùi (Chương hoặc Đoạn)" tabindex="-1" style="height: 28px; padding: 0 8px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px; flex-shrink: 0; min-width: 62px;">CHƯƠNG</button>
+
+            <button class="stv-mp-btn stv-mp-btn-sm" id="stv-mp-prev" title="Lùi lại" tabindex="-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+            </button>
+
+            <button class="stv-mp-btn stv-mp-btn-play" id="stv-mp-playpause" title="Phát / Dừng" tabindex="-1">
+                <svg id="stv-mp-icon-play" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;margin-left:2px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                <svg id="stv-mp-icon-pause" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            </button>
+
+            <button class="stv-mp-btn stv-mp-btn-sm" id="stv-mp-next" title="Tiếp theo" tabindex="-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+            </button>
+            <div class="stv-mp-right">
+                <span class="stv-mp-progress-txt" id="stv-mp-progress-txt">—</span>
+                <span class="stv-mp-engine-badge" id="stv-mp-engine-badge">WEB</span>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(player);
+
+    const bubble = document.createElement('div');
+    bubble.id = 'stv-mini-bubble';
+    bubble.classList.add('stv-mp-hidden');
+    bubble.title = 'Mở trình phát';
+    bubble.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>';
+    document.body.appendChild(bubble);
+
+    document.getElementById('stv-mp-playpause').addEventListener('click', e => { e.stopPropagation(); chuyendoiphat(); });
+
+    document.getElementById('stv-mp-mode').addEventListener('click', e => {
+        e.stopPropagation();
+        miniPlayerMode = miniPlayerMode === 'chapter' ? 'chunk' : 'chapter';
+        chrome.storage.local.set({ miniPlayerMode });
+        capnhatMiniPlayer();
+    });
+
+    document.getElementById('stv-mp-prev').addEventListener('click', e => {
+        e.stopPropagation();
+        if (miniPlayerMode === 'chapter') bamchuongtruoc();
+        else xulynhaydoan('truoc');
+    });
+
+    document.getElementById('stv-mp-next').addEventListener('click', e => {
+        e.stopPropagation();
+        if (miniPlayerMode === 'chapter') bamchuongsau();
+        else xulynhaydoan('sau');
+    });
+    document.getElementById('stv-mp-minimize').addEventListener('click', e => {
+        e.stopPropagation();
+        isMiniPlayerMinimized = true;
+        chrome.storage.local.set({ isMiniPlayerMinimized: true });
+        capnhatMiniPlayer();
+    });
+    bubble.addEventListener('click', () => {
+        isMiniPlayerMinimized = false;
+        chrome.storage.local.set({ isMiniPlayerMinimized: false });
+        capnhatMiniPlayer();
+    });
+
+    let dragging = false, dX, dY, iL, iB;
+    const handle = document.getElementById('stv-mp-drag-handle');
+
+    function onDragStart(e) {
+        dragging = true;
+        const cx = e.touches ? e.touches[0].clientX : e.clientX;
+        const cy = e.touches ? e.touches[0].clientY : e.clientY;
+        const r = player.getBoundingClientRect();
+        dX = cx; dY = cy;
+        iL = r.left;
+        iB = window.innerHeight - r.bottom;
+        e.preventDefault();
+    }
+    function onDragMove(e) {
+        if (!dragging) return;
+        const cx = e.touches ? e.touches[0].clientX : e.clientX;
+        const cy = e.touches ? e.touches[0].clientY : e.clientY;
+        const newL = Math.max(0, Math.min(window.innerWidth - player.offsetWidth, iL + (cx - dX)));
+        const newB = Math.max(0, Math.min(window.innerHeight - player.offsetHeight, iB - (cy - dY)));
+        player.style.left = newL + 'px';
+        player.style.bottom = newB + 'px';
+        player.style.right = 'auto';
+        bubble.style.left = newL + 'px';
+        bubble.style.bottom = newB + 'px';
+        bubble.style.right = 'auto';
+    }
+    function onDragEnd() { dragging = false; }
+
+    handle.addEventListener('mousedown', onDragStart);
+    handle.addEventListener('touchstart', onDragStart, { passive: false });
+    document.addEventListener('mousemove', onDragMove);
+    document.addEventListener('touchmove', onDragMove, { passive: false });
+    document.addEventListener('mouseup', onDragEnd);
+    document.addEventListener('touchend', onDragEnd);
+    window.addEventListener('contextmenu', e => {
+        if (e.target.closest('#stv-mini-player, #stv-mini-bubble')) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    }, true);
+}
+
+function capnhatMiniPlayer() {
+    const player = document.getElementById('stv-mini-player');
+    const bubble = document.getElementById('stv-mini-bubble');
+    if (!player || !bubble) return;
+
+    const congcu = maydoc === 'auto' || maydoc === 'google' ? 'web' : maydoc;
+    const total = congcu === 'web' ? cacdoan_ws.length : cacdoanamthanh.length;
+    const current = (congcu === 'web' ? chisodoan_ws : chisoamthanh) + 1;
+    const isActive = dangphat || dangtamdung;
+    const isPlaying = dangphat && !dangtamdung;
+
+    const chapSrc = document.getElementById('bookchapnameholder');
+    const chapEl = document.getElementById('stv-mp-chap');
+    if (chapEl && chapSrc) chapEl.textContent = chapSrc.innerText.trim() || 'Đang đọc...';
+
+    const fill = document.getElementById('stv-mp-bar-fill');
+    const txt = document.getElementById('stv-mp-progress-txt');
+    if (fill) fill.style.width = total > 0 ? Math.round((current / total) * 100) + '%' : '0%';
+    if (txt) txt.textContent = total > 0 ? `${current}/${total}` : '—';
+
+    const iPlay = document.getElementById('stv-mp-icon-play');
+    const iPause = document.getElementById('stv-mp-icon-pause');
+    if (iPlay && iPause) {
+        iPlay.style.display = isPlaying ? 'none' : 'block';
+        iPause.style.display = isPlaying ? 'block' : 'none';
+    }
+
+    const btnMode = document.getElementById('stv-mp-mode');
+    if (btnMode) {
+        btnMode.textContent = miniPlayerMode === 'chapter' ? 'CHƯƠNG' : 'ĐOẠN';
+        btnMode.style.color = miniPlayerMode === 'chapter' ? '#e8e6f0' : '#e8a045';
+        btnMode.style.borderColor = miniPlayerMode === 'chapter' ? '#2e2c45' : 'rgba(232,160,69,0.5)';
+        btnMode.style.background = miniPlayerMode === 'chapter' ? 'rgba(255,255,255,0.04)' : 'rgba(232,160,69,0.1)';
+    }
+
+    const btnPrev = document.getElementById('stv-mp-prev');
+    const btnNext = document.getElementById('stv-mp-next');
+    if (btnPrev && btnNext) {
+        btnPrev.title = miniPlayerMode === 'chapter' ? 'Chương trước' : 'Đoạn trước';
+        btnNext.title = miniPlayerMode === 'chapter' ? 'Chương sau' : 'Đoạn sau';
+    }
+
+    if (isMiniPlayerMinimized) {
+        player.classList.add('stv-mp-hidden');
+        bubble.classList.remove('stv-mp-hidden');
+        if (isPlaying) bubble.classList.add('stv-playing');
+        else bubble.classList.remove('stv-playing');
+    } else {
+        player.classList.remove('stv-mp-hidden');
+        bubble.classList.add('stv-mp-hidden');
+        const dot = document.getElementById('stv-mp-dot');
+        if (dot) {
+            if (isPlaying) dot.className = 'stv-mp-status-dot';
+            else if (isActive) dot.className = 'stv-mp-status-dot paused';
+            else dot.className = 'stv-mp-status-dot stopped';
+        }
+    }
+}
+
+taoMiniPlayer();
+
+let choSTVTaiXong = setInterval(() => {
+    const el = document.querySelector('.contentbox');
+    if (el && !el.innerText.includes('Đang tải nội dung') && el.innerText.trim().length >= 50) {
+        clearInterval(choSTVTaiXong);
+        chuanbi_ngam();
+        capnhatMiniPlayer();
+    }
+}, 500);

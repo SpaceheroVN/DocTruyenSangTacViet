@@ -1,14 +1,4 @@
-'use strict';
-
-chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
-    const url = tabs[0]?.url || '';
-    if (url.includes('sangtacviet.com') && !url.includes('/truyen/')) {
-        const controls = document.querySelector('.controls');
-        const statusBar = document.querySelector('.status-bar');
-        if (controls) controls.style.display = 'none';
-        if (statusBar) statusBar.style.display = 'none';
-    }
-});
+﻿'use strict';
 
 const FALLBACK_COVER = "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='54' height='78' viewBox='0 0 24 24' fill='none' stroke='%237a7896' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.6 3.6A2 2 0 0 1 5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-.59 1.41'/%3E%3Cpath d='M3 8.7V19a2 2 0 0 0 2 2h10.3'/%3E%3Cpath d='m2 2 20 20'/%3E%3Cpath d='M13 13a3 3 0 1 0 0-6H9v2'/%3E%3Cpath d='M9 17v-2.3'/%3E%3C/svg%3E";
 const SVG_PLAY = `<polygon points="5 3 19 12 5 21 5 3"/>`;
@@ -26,7 +16,7 @@ let mahengio_capnhat = null;
 let dulieutruyenhientai = null;
 let danhsachdochientai = [];
 let amluongtruoc = 1.0;
-let sortMode = 'recent'; 
+let sortMode = 'recent';
 
 async function guitoithe(idthe, lenh, them = {}) {
     return new Promise(resolve => {
@@ -391,6 +381,7 @@ async function taicacgiong() {
             chrome.storage.sync.set({ lastVoiceName: opt.textContent });
             if (d.voiceIndex != muctieu && muctieu !== -1) {
                 chrome.storage.local.set({ voiceIndex: muctieu });
+                chrome.storage.sync.set({ voiceIndex: muctieu });
                 guilenh('setVoice', { value: muctieu });
             }
         }
@@ -424,7 +415,7 @@ document.getElementById('engine-select').addEventListener('change', async (e) =>
     if (placeholder_map[congcu]) input_key.placeholder = placeholder_map[congcu];
 
     await guilenh('setEngine', { value: congcu });
-    
+
     if (!['fpt', 'azure'].includes(congcu)) {
         chrome.storage.sync.set({ maydoc: congcu });
     }
@@ -482,7 +473,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
         if (isAlreadyActive && tab.dataset.tab !== 'main') {
             document.getElementById('panel-main').classList.add('active');
-            
+
             chrome.storage.sync.get('maydoc', d => {
                 const engineDaLuu = d.maydoc || 'web';
                 const engineSelect = document.getElementById('engine-select');
@@ -496,7 +487,6 @@ document.querySelectorAll('.tab').forEach(tab => {
             tab.classList.add('active');
             if (targetPanel) targetPanel.classList.add('active');
 
-            
             if (tab.dataset.tab === 'settings') {
                 chrome.storage.sync.get('maydoc', d => {
                     const engineSelect = document.getElementById('engine-select');
@@ -505,7 +495,7 @@ document.querySelectorAll('.tab').forEach(tab => {
                         engineSelect.value = engineDaLuu;
                         engineSelect.dispatchEvent(new Event('change'));
                     } else {
-                        
+
                         const can_key = ['fpt', 'azure'].includes(engineDaLuu);
                         if (can_key) {
                             chrome.storage.local.get([`${engineDaLuu}_key`, 'azure_region'], d2 => {
@@ -519,7 +509,6 @@ document.querySelectorAll('.tab').forEach(tab => {
                 });
             }
 
-            
             if (tab.dataset.tab === 'main') {
                 chrome.storage.sync.get('maydoc', d => {
                     const engineDaLuu = d.maydoc || 'web';
@@ -554,7 +543,7 @@ function sapxepdanhsach(danh_sach) {
     } else if (sortMode === 'chapters') {
         arr.sort((a, b) => (b.chunkTotal || 0) - (a.chunkTotal || 0));
     } else {
-        
+
         arr.reverse();
     }
     return arr;
@@ -813,13 +802,13 @@ document.getElementById('btn-save-api').addEventListener('click', async () => {
 
         if (thanhcong) {
             luuKey();
-            chrome.storage.sync.set({ maydoc: congcu }); 
+            chrome.storage.sync.set({ maydoc: congcu });
             icon.innerHTML = SVG_CHECK;
             textLabel.textContent = 'Đã lưu!';
             hienthithongbao('API Key hợp lệ, đã lưu!', 'success');
             setTimeout(() => { icon.innerHTML = SVG_SAVE; textLabel.textContent = 'Lưu API Key'; }, 2000);
         } else {
-            document.getElementById('api-key-input').value = ''; 
+            document.getElementById('api-key-input').value = '';
             icon.innerHTML = SVG_SAVE;
             textLabel.textContent = 'Lưu API Key';
             hienthithongbao('API Key không hợp lệ! Đã trở về nguồn đọc cũ.', 'warning');
@@ -836,9 +825,9 @@ document.getElementById('btn-save-api').addEventListener('click', async () => {
             });
         }
     } catch (e) {
-        
+
         luuKey();
-        chrome.storage.sync.set({ maydoc: congcu }); 
+        chrome.storage.sync.set({ maydoc: congcu });
         icon.innerHTML = SVG_CHECK;
         textLabel.textContent = 'Đã lưu!';
         hienthithongbao('Không thể xác minh (lỗi mạng), đã lưu key.', 'info');
@@ -1103,6 +1092,7 @@ async function khoitaopopup() {
         document.getElementById('book-meta').style.display = 'none';
         document.querySelector('.controls').style.display = 'none';
         document.querySelector('.status-bar').style.display = 'none';
+        document.body.style.opacity = '1';
     } else {
         chrome.storage.local.get(['last_active_state'], d => {
             if (d.last_active_state && !dang_o_trang_chu) {
@@ -1204,6 +1194,7 @@ async function khoitaopopup() {
         nut_mo_stv.textContent = 'Mở trang sangtacviet.com ngay!';
         document.querySelector('.controls').style.display = 'none';
         document.querySelector('.status-bar').style.display = 'none';
+        document.body.style.opacity = '1';
         return;
     }
 
@@ -1218,6 +1209,7 @@ async function khoitaopopup() {
         thongtin_truyen.style.display = 'block';
         document.querySelector('.controls').style.display = 'none';
         document.querySelector('.status-bar').style.display = 'none';
+        document.body.style.opacity = '1';
         return;
     }
 
@@ -1228,6 +1220,7 @@ async function khoitaopopup() {
     document.getElementById('btn-save').style.display = 'flex';
     document.querySelector('.controls').style.display = 'flex';
     document.querySelector('.status-bar').style.display = 'flex';
+    document.body.style.opacity = '1';
 
     dulieutruyenhientai = { ...phanhoi, pageUrl: phanhoi.pageUrl || phanhoi.bookUrl };
 
@@ -1735,8 +1728,8 @@ function hienThiTuDien() {
         item.style.cssText = 'display: flex; align-items: center; justify-content: space-between; background: var(--surface); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border);';
         item.innerHTML = `
             <div style="font-size: 10.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                <span style="color: var(--text);">${thoathtml(rule.origin)}</span> 
-                <span style="color: var(--text-muted); margin: 0 4px;">→</span> 
+                <span style="color: var(--text);">${thoathtml(rule.origin)}</span>
+                <span style="color: var(--text-muted); margin: 0 4px;">→</span>
                 <span style="color: var(--accent2);">${thoathtml(rule.replace)}</span>
             </div>
             <button class="btn-remove-dict" data-index="${index}" style="background: none; border: none; color: var(--danger); cursor: pointer; padding: 2px;">
