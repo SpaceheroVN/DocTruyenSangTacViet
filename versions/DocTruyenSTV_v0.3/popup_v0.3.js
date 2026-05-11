@@ -26,6 +26,7 @@ let mahengio_capnhat = null;
 let dulieutruyenhientai = null;
 let danhsachdochientai = [];
 let amluongtruoc = 1.0;
+let sortMode = 'recent'; 
 
 async function guitoithe(idthe, lenh, them = {}) {
     return new Promise(resolve => {
@@ -423,7 +424,7 @@ document.getElementById('engine-select').addEventListener('change', async (e) =>
     if (placeholder_map[congcu]) input_key.placeholder = placeholder_map[congcu];
 
     await guilenh('setEngine', { value: congcu });
-
+    
     if (!['fpt', 'azure'].includes(congcu)) {
         chrome.storage.sync.set({ maydoc: congcu });
     }
@@ -481,7 +482,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
         if (isAlreadyActive && tab.dataset.tab !== 'main') {
             document.getElementById('panel-main').classList.add('active');
-
+            
             chrome.storage.sync.get('maydoc', d => {
                 const engineDaLuu = d.maydoc || 'web';
                 const engineSelect = document.getElementById('engine-select');
@@ -495,7 +496,7 @@ document.querySelectorAll('.tab').forEach(tab => {
             tab.classList.add('active');
             if (targetPanel) targetPanel.classList.add('active');
 
-
+            
             if (tab.dataset.tab === 'settings') {
                 chrome.storage.sync.get('maydoc', d => {
                     const engineSelect = document.getElementById('engine-select');
@@ -504,7 +505,7 @@ document.querySelectorAll('.tab').forEach(tab => {
                         engineSelect.value = engineDaLuu;
                         engineSelect.dispatchEvent(new Event('change'));
                     } else {
-
+                        
                         const can_key = ['fpt', 'azure'].includes(engineDaLuu);
                         if (can_key) {
                             chrome.storage.local.get([`${engineDaLuu}_key`, 'azure_region'], d2 => {
@@ -518,7 +519,7 @@ document.querySelectorAll('.tab').forEach(tab => {
                 });
             }
 
-
+            
             if (tab.dataset.tab === 'main') {
                 chrome.storage.sync.get('maydoc', d => {
                     const engineDaLuu = d.maydoc || 'web';
@@ -537,7 +538,7 @@ document.querySelectorAll('.tab').forEach(tab => {
 async function taidanhsachdoc() {
     chrome.storage.local.get('readingList', d => {
         danhsachdochientai = d.readingList || [];
-        hienthidanhsachdoc(danhsachdochientai);
+        hienthidanhsachdoc(sapxepdanhsach(danhsachdochientai));
         document.getElementById('info-count').textContent = `${danhsachdochientai.length} truyện`;
     });
 }
@@ -546,16 +547,42 @@ function thoathtml(str) {
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+function sapxepdanhsach(danh_sach) {
+    const arr = [...danh_sach];
+    if (sortMode === 'az') {
+        arr.sort((a, b) => (a.title || '').localeCompare(b.title || '', 'vi'));
+    } else if (sortMode === 'chapters') {
+        arr.sort((a, b) => (b.chunkTotal || 0) - (a.chunkTotal || 0));
+    } else {
+        
+        arr.reverse();
+    }
+    return arr;
+}
+
 document.getElementById('list-search').addEventListener('input', e => {
     const q = e.target.value.toLowerCase().trim();
-    if (!q) {
-        hienthidanhsachdoc(danhsachdochientai);
-    } else {
-        const loc = danhsachdochientai.filter(i =>
+    const base = q
+        ? danhsachdochientai.filter(i =>
             i.title.toLowerCase().includes(q) || (i.chap && i.chap.toLowerCase().includes(q))
-        );
-        hienthidanhsachdoc(loc);
-    }
+        )
+        : danhsachdochientai;
+    hienthidanhsachdoc(sapxepdanhsach(base));
+});
+
+document.querySelectorAll('.sort-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        sortMode = btn.dataset.sort;
+        const q = document.getElementById('list-search').value.toLowerCase().trim();
+        const base = q
+            ? danhsachdochientai.filter(i =>
+                i.title.toLowerCase().includes(q) || (i.chap && i.chap.toLowerCase().includes(q))
+            )
+            : danhsachdochientai;
+        hienthidanhsachdoc(sapxepdanhsach(base));
+    });
 });
 
 function hienthidanhsachdoc(danh_sach) {
@@ -615,7 +642,7 @@ function xoakhoidanhsach(title) {
         danh_sach.splice(vitri, 1);
         chrome.storage.local.set({ readingList: danh_sach }, () => {
             danhsachdochientai = danh_sach;
-            hienthidanhsachdoc(danh_sach);
+            hienthidanhsachdoc(sapxepdanhsach(danh_sach));
             document.getElementById('info-count').textContent = `${danh_sach.length} truyện`;
             if (dulieutruyenhientai) {
                 const van_luu = danh_sach.some(i => (i.title || '').trim().toLowerCase() === (dulieutruyenhientai.bookTitle || '').trim().toLowerCase());
@@ -786,13 +813,13 @@ document.getElementById('btn-save-api').addEventListener('click', async () => {
 
         if (thanhcong) {
             luuKey();
-            chrome.storage.sync.set({ maydoc: congcu });
+            chrome.storage.sync.set({ maydoc: congcu }); 
             icon.innerHTML = SVG_CHECK;
             textLabel.textContent = 'Đã lưu!';
             hienthithongbao('API Key hợp lệ, đã lưu!', 'success');
             setTimeout(() => { icon.innerHTML = SVG_SAVE; textLabel.textContent = 'Lưu API Key'; }, 2000);
         } else {
-            document.getElementById('api-key-input').value = '';
+            document.getElementById('api-key-input').value = ''; 
             icon.innerHTML = SVG_SAVE;
             textLabel.textContent = 'Lưu API Key';
             hienthithongbao('API Key không hợp lệ! Đã trở về nguồn đọc cũ.', 'warning');
@@ -809,9 +836,9 @@ document.getElementById('btn-save-api').addEventListener('click', async () => {
             });
         }
     } catch (e) {
-
+        
         luuKey();
-        chrome.storage.sync.set({ maydoc: congcu });
+        chrome.storage.sync.set({ maydoc: congcu }); 
         icon.innerHTML = SVG_CHECK;
         textLabel.textContent = 'Đã lưu!';
         hienthithongbao('Không thể xác minh (lỗi mạng), đã lưu key.', 'info');
