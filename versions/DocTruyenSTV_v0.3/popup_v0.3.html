@@ -407,6 +407,103 @@
       color: var(--warning);
     }
 
+    .pause-card {
+      flex: 1;
+      min-width: 0;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 4px 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      transition: border-color 0.2s;
+      overflow: hidden;
+    }
+
+    .pause-card:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(232, 160, 69, 0.1);
+    }
+
+    .pause-symbol {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+      min-height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pause-type-label {
+      font-size: 8.5px;
+      color: var(--text-muted);
+      text-align: center;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+
+    .pause-stepper {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      width: 100%;
+      margin-top: 2px;
+    }
+
+    .pause-step-btn {
+      width: 18px;
+      height: 18px;
+      background: var(--border);
+      border: none;
+      border-radius: 4px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 13px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s, color 0.15s;
+      font-family: inherit;
+      padding: 0;
+    }
+
+    .pause-step-btn:hover {
+      background: var(--accent);
+      color: #0f0e17;
+    }
+
+    .pause-step-btn:active {
+      transform: scale(0.92);
+    }
+
+    .pause-num-input {
+      flex: 1;
+      min-width: 0;
+      text-align: center;
+      background: transparent;
+      border: none;
+      color: var(--accent);
+      font-size: 10.5px;
+      font-weight: 700;
+      font-family: inherit;
+      outline: none;
+      padding: 0;
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+
+    .pause-num-input::-webkit-inner-spin-button,
+    .pause-num-input::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
     @keyframes pulse {
 
       0%,
@@ -1972,10 +2069,44 @@
             <span class="toggle-slider"></span>
           </label>
         </div>
-
+        <div class="setting-row"
+          style="flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--border);">
+          <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+            <span class="setting-label" style="font-size: 11px;">Khoảng nghỉ thông minh</span>
+            <span style="font-size: 9px; color: var(--text-muted); font-variant-numeric: tabular-nums;">ms</span>
+          </div>
+          <div style="display: flex; gap: 4px; width: 100%;">
+            <div class="pause-card">
+              <div class="pause-symbol">,</div>
+              <div class="pause-type-label">Dấu phẩy</div>
+              <div class="pause-stepper">
+                <button class="pause-step-btn" data-target="pause-comma" data-delta="-100">−</button>
+                <input class="pause-num-input" type="number" id="pause-comma" value="300" min="0" step="100">
+                <button class="pause-step-btn" data-target="pause-comma" data-delta="100">+</button>
+              </div>
+            </div>
+            <div class="pause-card">
+              <div class="pause-symbol">.</div>
+              <div class="pause-type-label">Dấu chấm</div>
+              <div class="pause-stepper">
+                <button class="pause-step-btn" data-target="pause-dot" data-delta="-100">−</button>
+                <input class="pause-num-input" type="number" id="pause-dot" value="800" min="0" step="100">
+                <button class="pause-step-btn" data-target="pause-dot" data-delta="100">+</button>
+              </div>
+            </div>
+            <div class="pause-card">
+              <div class="pause-symbol">↵</div>
+              <div class="pause-type-label">Xuống dòng</div>
+              <div class="pause-stepper">
+                <button class="pause-step-btn" data-target="pause-para" data-delta="-100">−</button>
+                <input class="pause-num-input" type="number" id="pause-para" value="1200" min="0" step="100">
+                <button class="pause-step-btn" data-target="pause-para" data-delta="100">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-
     <div style="display: flex; flex-direction: column; gap: 6px;">
       <div
         style="font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; padding-left: 4px;">
@@ -2236,7 +2367,19 @@
             Xóa tất cả
           </button>
         </div>
-
+        <div style="margin-top: 12px; width: 100%;">
+          <div
+            style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); margin-bottom: 4px;">
+            <span>Dung lượng lưu trữ</span>
+            <span id="storage-usage-text">0 / 5MB</span>
+          </div>
+          <div style="width: 100%; height: 4px; background: var(--surface2); border-radius: 4px; overflow: hidden;">
+            <div id="storage-usage-bar" style="height: 100%; background: var(--success); width: 0%;"></div>
+          </div>
+          <div id="storage-warning" style="display: none; font-size: 9px; color: var(--danger); margin-top: 4px;">
+            Sắp đầy! Các truyện cũ nhất sẽ không được lưu nếu vượt quá giới hạn.
+          </div>
+        </div>
       </div>
     </div>
 

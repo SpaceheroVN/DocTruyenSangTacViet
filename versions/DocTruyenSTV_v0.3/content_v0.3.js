@@ -47,6 +47,44 @@ let soLanLoiLienTuc = 0;
 const NGUONG_FALLBACK = 2;
 let isMiniPlayerMinimized = false;
 let miniPlayerMode = 'chapter';
+let thoiGianNghi = { comma: 300, dot: 800, para: 1200 };
+
+const dbPromise = new Promise((resolve, reject) => {
+    const request = indexedDB.open('STV_TTS_Cache', 1);
+    request.onupgradeneeded = (e) => {
+        e.target.result.createObjectStore('audioBlobs');
+    };
+    request.onsuccess = (e) => resolve(e.target.result);
+    request.onerror = (e) => reject(e);
+});
+
+async function luuAudioVaoDB(key, blob) {
+    const db = await dbPromise;
+    return new Promise((resolve) => {
+        const tx = db.transaction('audioBlobs', 'readwrite');
+        tx.objectStore('audioBlobs').put(blob, key);
+        tx.oncomplete = () => resolve();
+    });
+}
+
+async function layAudioTuDB(key) {
+    const db = await dbPromise;
+    return new Promise((resolve) => {
+        const tx = db.transaction('audioBlobs', 'readonly');
+        const req = tx.objectStore('audioBlobs').get(key);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => resolve(null);
+    });
+}
+
+async function xoaSachAudioDB() {
+    const db = await dbPromise;
+    return new Promise((resolve) => {
+        const tx = db.transaction('audioBlobs', 'readwrite');
+        tx.objectStore('audioBlobs').clear();
+        tx.oncomplete = () => resolve();
+    });
+}
 
 function lamtranhvanban(vanban) {
     if (!vanban) return '';
@@ -232,7 +270,8 @@ function chiadoanvanban(vanban, dodaitoida) {
         }
     }
     if (hientai) cacdoan.push(hientai);
-    return cacdoan.filter(c => c.trim().length > 0) || [vanban];
+    const ket_qua = cacdoan.filter(c => c.trim().length > 0);
+    return ket_qua.length > 0 ? ket_qua : [vanban];
 }
 
 function taocacdoanmaydoc(cacnutdoan, dodaitoida) {
@@ -261,94 +300,77 @@ function capnhatnoibat(chiso, mangcacdoan) {
 }
 
 function taoKeyCache(text) {
-
     const clean = text.replace(/\s+/g, '');
-    return clean.substring(0, 40) + '_' + clean.substring(clean.length - 40);
-}
-
-function blobToBase64(blob) {
-    return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.readAsDataURL(blob);
-    });
+    let hash = 5381;
+    for (let i = 0; i < clean.length; i++) hash = ((hash << 5) + hash) ^ clean.charCodeAt(i);
+    return (hash >>> 0).toString(36) + '_' + clean.length;
 }
 
 async function layamthanhtuapi_raw(vanban, congcudoc, retries = 3) {
-    if (congcudoc === 'fpt') {
-        const cacgiong_fpt = ['banmai', 'leminh', 'thuminh', 'myan', 'giahuy', 'lannhi', 'linhsan'];
-        const giongdachon = cacgiong_fpt[chisogionghientai] || 'banmai';
-        let tocdo_fpt = '0';
+    try {
+        if (congcudoc === 'fpt') {
+            const tenCacGiong = ['banmai', 'leminh', 'thuminh', 'myan', 'giahuy', 'lannhi', 'linhsan'];
+            const tenGiong = tenCacGiong[chisogionghientai] || 'banmai';
+            const tocDoFpt = (tocdohientai > 1) ? 1 : (tocdohientai < 1 ? -1 : 0);
 
-        try {
-            const phanhoi = await fetch('https://api.fpt.ai/hmi/tts/v5', {
+            const res = await fetch('https://api.fpt.ai/hmi/tts/v5', {
                 method: 'POST',
-                headers: { 'api-key': khoa_api.fpt_key, 'speed': tocdo_fpt, 'voice': giongdachon },
+                headers: { 'api-key': khoa_api.fpt_key, 'voice': tenGiong, 'speed': tocDoFpt.toString() },
                 body: vanban
             });
+            if (!res.ok) throw new Error('Lỗi FPT');
+            const data = await res.json();
+            if (data.error) throw new Error(data.message);
 
-            if (phanhoi.status === 429 && retries > 0) {
-                await new Promise(r => setTimeout(r, 2000));
-                return layamthanhtuapi_raw(vanban, congcudoc, retries - 1);
-            }
-            if (!phanhoi.ok) throw new Error(`FPT API Error: ${phanhoi.status}`);
-
-            const dulieu = await phanhoi.json();
-            return dulieu.async || dulieu.audiourl;
-        } catch (e) {
-            if (retries > 0) {
+            for (let i = 0; i < 10; i++) {
                 await new Promise(r => setTimeout(r, 1000));
-                return layamthanhtuapi_raw(vanban, congcudoc, retries - 1);
+                const check = await fetch(data.async);
+                if (check.ok) return await check.blob();
             }
-            throw e;
+            throw new Error('FPT Timeout');
+
+        } else if (congcudoc === 'azure') {
+            const tenCacGiong = ['vi-VN-HoaiMyNeural', 'vi-VN-NamMinhNeural'];
+            const tenGiong = tenCacGiong[chisogionghientai] || 'vi-VN-HoaiMyNeural';
+            const textThoat = String(vanban).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const ssml = `<speak version='1.0' xml:lang='vi-VN'><voice xml:lang='vi-VN' name='${tenGiong}'><prosody rate='${tocdohientai}'>${textThoat}</prosody></voice></speak>`;
+
+            const region = khoa_api.azure_region || 'southeastasia';
+            const res = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
+                method: 'POST',
+                headers: {
+                    'Ocp-Apim-Subscription-Key': khoa_api.azure_key,
+                    'Content-Type': 'application/ssml+xml',
+                    'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3'
+                },
+                body: ssml
+            });
+            if (!res.ok) throw new Error('Lỗi Azure');
+            return await res.blob();
         }
-    }
-    else if (congcudoc === 'azure') {
-        const cacgiong_azure = ['vi-VN-HoaiMyNeural', 'vi-VN-NamMinhNeural'];
-        const giongdachon = cacgiong_azure[chisogionghientai] || 'vi-VN-HoaiMyNeural';
-        const vung = khoa_api.azure_region || 'southeastasia';
-        const thoatxml = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        const ssml = `<speak version='1.0' xml:lang='vi-VN'><voice xml:lang='vi-VN' name='${giongdachon}'><prosody rate="0%">${thoatxml(vanban)}</prosody></voice></speak>`;
-
-        const phanhoi = await fetch(`https://${vung}.tts.speech.microsoft.com/cognitiveservices/v1`, {
-            method: 'POST',
-            headers: {
-                'Ocp-Apim-Subscription-Key': khoa_api.azure_key,
-                'Content-Type': 'application/ssml+xml',
-                'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3'
-            },
-            body: ssml
-        });
-
-        if (phanhoi.status === 429 && retries > 0) {
-            await new Promise(r => setTimeout(r, 3000));
+    } catch (err) {
+        if (retries > 0) {
+            await new Promise(r => setTimeout(r, 1000));
             return layamthanhtuapi_raw(vanban, congcudoc, retries - 1);
         }
-        if (!phanhoi.ok) throw new Error(`Azure API Error: ${phanhoi.status}`);
-        const cucmau = await phanhoi.blob();
-        return URL.createObjectURL(cucmau);
+        throw err;
     }
-    return null;
+}
+
+const _urlCache = new Map();
+
+function xoaUrlCache() {
+    _urlCache.forEach(url => URL.revokeObjectURL(url));
+    _urlCache.clear();
 }
 
 async function layamthanhtuapi(vanban, congcudoc, retries = 3) {
     const cacheKey = taoKeyCache(vanban);
-
-    const cacheObj = await new Promise(resolve => chrome.storage.local.get('ttsPrefetchCache', resolve));
-    if (cacheObj && cacheObj.ttsPrefetchCache && cacheObj.ttsPrefetchCache[cacheKey]) {
-        const data = cacheObj.ttsPrefetchCache[cacheKey];
-
-        delete cacheObj.ttsPrefetchCache[cacheKey];
-        chrome.storage.local.set({ ttsPrefetchCache: cacheObj.ttsPrefetchCache });
-
-        if (data.startsWith('data:audio')) {
-            const res = await fetch(data);
-            const blob = await res.blob();
-            return URL.createObjectURL(blob);
-        }
-        return data;
+    const cachedBlob = await layAudioTuDB(cacheKey);
+    if (cachedBlob) {
+        if (!_urlCache.has(cacheKey)) _urlCache.set(cacheKey, URL.createObjectURL(cachedBlob));
+        return _urlCache.get(cacheKey);
     }
-
     return layamthanhtuapi_raw(vanban, congcudoc, retries);
 }
 
@@ -397,39 +419,24 @@ async function tienTaiChuongTiepTheo() {
             themText(clone.textContent);
         });
 
-        if (cacDoanText.length === 0) return;
-
-        let cacheData = {};
-        const cacheObj = await new Promise(resolve => chrome.storage.local.get('ttsPrefetchCache', resolve));
-        if (cacheObj && cacheObj.ttsPrefetchCache) {
-            cacheData = cacheObj.ttsPrefetchCache;
-
-            let keys = Object.keys(cacheData);
-            if (keys.length > 6) keys.slice(0, keys.length - 6).forEach(k => delete cacheData[k]);
-        }
+        await xoaSachAudioDB();
+        xoaUrlCache();
 
         for (let i = 0; i < Math.min(2, cacDoanText.length); i++) {
             const text = cacDoanText[i];
             const key = taoKeyCache(text);
 
-            if (cacheData[key]) continue;
-
             let urlOrBlob = await layamthanhtuapi_raw(text, maydoc);
 
             if (urlOrBlob instanceof Blob) {
-                cacheData[key] = await blobToBase64(urlOrBlob);
+                await luuAudioVaoDB(key, urlOrBlob);
             } else if (urlOrBlob && urlOrBlob.startsWith('blob:')) {
                 const b = await fetch(urlOrBlob).then(r => r.blob());
-                cacheData[key] = await blobToBase64(b);
-            } else if (urlOrBlob) {
-                cacheData[key] = urlOrBlob;
+                await luuAudioVaoDB(key, b);
             }
         }
 
-        chrome.storage.local.set({ ttsPrefetchCache: cacheData });
-
     } catch (e) {
-        console.log("Lỗi tải trước chương tiếp theo:", e);
     }
 }
 
@@ -446,15 +453,30 @@ function fallbackVeWebSpeech(lyDo) {
     if (dangphat && !dangtamdung) phatdoanweb();
 }
 
-async function phatdoanamthanh() {
+async function phatdoanamthanh(boQuaNghi = false) {
     if (!dangphat || dangtamdung) return;
     if (chisoamthanh >= cacdoanamthanh.length) {
         dangphat = false;
         xulyketthucchuong();
         return;
     }
+
+    let delay = 0;
+    if (!boQuaNghi && chisoamthanh > 0) {
+        const doanTruoc = cacdoanamthanh[chisoamthanh - 1].text.trim();
+        if (doanTruoc.match(/[,;]$/)) delay = thoiGianNghi.comma;
+        else if (doanTruoc.match(/[.!?…:]$/)) delay = thoiGianNghi.dot;
+        else delay = thoiGianNghi.para;
+    }
+
+    if (delay > 0) {
+        setTimeout(() => phatdoanamthanh(true), delay);
+        return;
+    }
+
     if (amthanhhientai) {
         amthanhhientai.pause();
+        amthanhhientai.src = '';
         amthanhhientai = null;
     }
     const doan = cacdoanamthanh[chisoamthanh];
@@ -476,7 +498,8 @@ async function phatdoanamthanh() {
                     return;
                 }
                 chisoamthanh++;
-                setTimeout(phatdoanamthanh, 100);
+
+                setTimeout(() => phatdoanamthanh(true), 100);
             }
             return;
         }
@@ -510,12 +533,12 @@ async function phatdoanamthanh() {
         if (doan.url && doan.url.startsWith('blob:')) { URL.revokeObjectURL(doan.url); doan.url = null; }
         if (amthanhhientai !== amthanh) return;
         chisoamthanh++;
-        if (dangphat && !dangtamdung) setTimeout(phatdoanamthanh, 50);
+        if (dangphat && !dangtamdung) setTimeout(() => phatdoanamthanh(false), 50);
     };
     amthanh.onerror = () => {
         if (amthanhhientai !== amthanh) return;
         chisoamthanh++;
-        if (dangphat && !dangtamdung) setTimeout(phatdoanamthanh, 300);
+        if (dangphat && !dangtamdung) setTimeout(() => phatdoanamthanh(true), 300);
     };
     amthanh.play().catch(err => {
         if (amthanhhientai !== amthanh) return;
@@ -525,12 +548,16 @@ async function phatdoanamthanh() {
             return;
         }
         chisoamthanh++;
-        setTimeout(phatdoanamthanh, 300);
+        setTimeout(() => phatdoanamthanh(true), 300);
     });
 }
 
 function dungamthanh() {
-    if (amthanhhientai) { amthanhhientai.pause(); amthanhhientai.src = ''; amthanhhientai = null; }
+    if (amthanhhientai) {
+        amthanhhientai.pause();
+        amthanhhientai.src = '';
+        amthanhhientai = null;
+    }
     cacdoanamthanh.forEach(c => { if (c.url && c.url.startsWith('blob:')) URL.revokeObjectURL(c.url); });
     cacdoanamthanh = [];
     chisoamthanh = 0;
@@ -547,9 +574,23 @@ function dungtrinhdocweb() {
     document.querySelectorAll('.tts-reading').forEach(el => el.classList.remove('tts-reading'));
 }
 
-async function phatdoanweb() {
+async function phatdoanweb(boQuaNghi = false) {
     if (!dangphat || dangtamdung) return;
     if (chisodoan_ws >= cacdoan_ws.length) { dangphat = false; xulyketthucchuong(); return; }
+
+    let delay = 0;
+    if (!boQuaNghi && chisodoan_ws > 0) {
+        const doanTruoc = cacdoan_ws[chisodoan_ws - 1].text.trim();
+        if (doanTruoc.match(/[,;]$/)) delay = thoiGianNghi.comma;
+        else if (doanTruoc.match(/[.!?…:]$/)) delay = thoiGianNghi.dot;
+        else delay = thoiGianNghi.para;
+    }
+
+    if (delay > 0) {
+        setTimeout(() => phatdoanweb(true), delay);
+        return;
+    }
+
     huyphatngonantoan();
     capnhatnoibat(chisodoan_ws, cacdoan_ws);
 
@@ -579,8 +620,9 @@ async function phatdoanweb() {
         if (vi) phatngon.voice = vi;
     }
     phatngonhientai = phatngon;
-    phatngon.onend = () => { if (phatngonhientai !== phatngon) return; chisodoan_ws++; if (dangphat && !dangtamdung) phatdoanweb(); };
-    phatngon.onerror = (e) => { if (e.error === 'interrupted' || e.error === 'canceled') return; if (dangphat && !dangtamdung) { chisodoan_ws++; phatdoanweb(); } };
+
+    phatngon.onend = () => { if (phatngonhientai !== phatngon) return; chisodoan_ws++; if (dangphat && !dangtamdung) phatdoanweb(false); };
+    phatngon.onerror = (e) => { if (e.error === 'interrupted' || e.error === 'canceled') return; if (dangphat && !dangtamdung) { chisodoan_ws++; phatdoanweb(true); } };
     tonghopam.speak(phatngon);
 }
 
@@ -816,8 +858,8 @@ function xulynhaydoan(hanhdong, giatri) {
     if (dangphat && !dangtamdung) {
         if (mahengio_nhaydoan) clearTimeout(mahengio_nhaydoan);
         mahengio_nhaydoan = setTimeout(() => {
-            if (congcu === 'web') phatdoanweb();
-            else phatdoanamthanh();
+            if (congcu === 'web') phatdoanweb(true);
+            else phatdoanamthanh(true);
         }, 250);
     }
 }
@@ -841,7 +883,7 @@ chrome.runtime.onMessage.addListener((yeucau, _nguoigui, phanhoi) => {
         case 'setAuto': tudongchuyenchuong = yeucau.value; trave(); break;
         case 'setSpeed':
             tocdohientai = yeucau.value;
-            if (congcu === 'web' && dangphat && !dangtamdung) { phatngonhientai = null; huyphatngonantoan(); phatdoanweb(); }
+            if (congcu === 'web' && dangphat && !dangtamdung) { phatngonhientai = null; huyphatngonantoan(); luotphat_id++; phatdoanweb(); }
             if (amthanhhientai) amthanhhientai.playbackRate = tocdohientai;
             trave(); break;
         case 'setVolume': amluonghientai = yeucau.value; if (amthanhhientai) amthanhhientai.volume = amluonghientai; trave(); break;
@@ -857,7 +899,7 @@ chrome.runtime.onMessage.addListener((yeucau, _nguoigui, phanhoi) => {
 
                 if (dangphat || dangtamdung) {
                     huyphatngonantoan();
-                    if (amthanhhientai) { amthanhhientai.pause(); amthanhhientai = null; }
+                    if (amthanhhientai) { amthanhhientai.pause(); amthanhhientai.src = ''; amthanhhientai = null; }
                     chuanbi_ngam();
                 }
             }
@@ -871,7 +913,7 @@ chrome.runtime.onMessage.addListener((yeucau, _nguoigui, phanhoi) => {
             if (dangphat || dangtamdung) {
                 const dangPhatCu = dangphat;
                 huyphatngonantoan();
-                if (amthanhhientai) { amthanhhientai.pause(); amthanhhientai = null; }
+                if (amthanhhientai) { amthanhhientai.pause(); amthanhhientai.src = ''; amthanhhientai = null; }
                 cacdoanamthanh.forEach(c => { if (c.url && c.url.startsWith('blob:')) URL.revokeObjectURL(c.url); c.url = null; });
 
                 if (dangPhatCu) {
@@ -886,6 +928,7 @@ chrome.runtime.onMessage.addListener((yeucau, _nguoigui, phanhoi) => {
                 }
             }
             trave(); break;
+        case 'setPauses': thoiGianNghi = yeucau; trave(); break;
         case 'setApiKeys': Object.assign(khoa_api, yeucau); chrome.storage.local.set(yeucau); trave(); break;
         case 'setSleepTimer':
             if (mahengio_ngu) clearTimeout(mahengio_ngu);
@@ -996,6 +1039,7 @@ chrome.storage.sync.get([
     'batphimtat', 'doctentruyen', 'doctenchuong', 'customDict'
 ], syncData => {
     Object.assign(khoa_api, syncData);
+    if (syncData.smartPauses) thoiGianNghi = syncData.smartPauses;
     maydoc = syncData.savedEngine || syncData.maydoc || 'auto';
 
     if (syncData.speed !== undefined) tocdohientai = syncData.speed;
@@ -1022,7 +1066,7 @@ chrome.storage.onChanged.addListener((thay_doi, vung_chon) => {
             if (nutchuong) nutchuong.classList.remove('tts-chunk');
             cacdoan_ws = [];
             cacdoanamthanh = [];
-            chuanbi_ngam()
+            chuanbi_ngam();
             const congcu = maydoc === 'auto' || maydoc === 'google' ? 'web' : maydoc;
             capnhatnoibat(congcu === 'web' ? chisodoan_ws : chisoamthanh, congcu === 'web' ? cacdoan_ws : cacdoanamthanh);
         }

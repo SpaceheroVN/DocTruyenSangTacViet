@@ -285,15 +285,15 @@ document.getElementById('btn-replay').addEventListener('click', async () => {
 });
 
 const chk_tudongchuong = document.getElementById('chk-autonext');
-chrome.storage.sync.get('autoNext', d => {
-    const gia_tri = d.autoNext !== undefined ? d.autoNext : true;
+chrome.storage.sync.get('tudongchuyenchuong', d => {
+    const gia_tri = d.tudongchuyenchuong !== undefined ? d.tudongchuyenchuong : true;
     chk_tudongchuong.checked = gia_tri;
     guilenh('setAuto', { value: gia_tri });
 });
 chk_tudongchuong.addEventListener('change', e => {
     const gia_tri = e.target.checked;
     guilenh('setAuto', { value: gia_tri });
-    chrome.storage.sync.set({ autoNext: gia_tri });
+    chrome.storage.sync.set({ tudongchuyenchuong: gia_tri });
 });
 
 const thanh_truot_toc_do = document.getElementById('speed-slider');
@@ -543,8 +543,7 @@ function sapxepdanhsach(danh_sach) {
     } else if (sortMode === 'chapters') {
         arr.sort((a, b) => (b.chunkTotal || 0) - (a.chunkTotal || 0));
     } else {
-
-        arr.reverse();
+        arr.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
     }
     return arr;
 }
@@ -575,50 +574,55 @@ document.querySelectorAll('.sort-btn').forEach(btn => {
 });
 
 function hienthidanhsachdoc(danh_sach) {
+    capNhatDungLuongStorage();
     const vung_danh_sach = document.getElementById('list-container');
-    if (!danh_sach.length) {
-        vung_danh_sach.innerHTML = '<div class="list-empty">Chưa có truyện nào được lưu.<br><small style="color:#555">Nhấn <strong style="color:var(--accent)">Lưu</strong> để thêm truyện đang mở.</small></div>';
-        return;
-    }
-    vung_danh_sach.innerHTML = danh_sach.map((m, i) => `
-        <div class="list-item" data-title="${thoathtml(m.title)}" title="Nhấn để mở truyện này">
-            <img class="list-thumb" src="${m.imgUrl || FALLBACK_COVER}" alt="">
-            <div class="list-info">
-                <div class="list-name">${thoathtml(m.title)}</div>
-                <div class="list-chap">
-                    ${thoathtml(m.chap || 'Chưa xác định chương')}
-                    <span style="color:var(--accent); font-weight: 500;">
-                        ${m.chunkIndex && m.chunkTotal ? `(Đoạn ${m.chunkIndex}/${m.chunkTotal})` : ''}
-                    </span>
+
+    chrome.storage.local.getBytesInUse(null, (bytes) => {
+        const isNearLimit = bytes > 4.5 * 1024 * 1024;
+
+        if (!danh_sach.length) {
+            vung_danh_sach.innerHTML = '<div class="list-empty">Chưa có truyện nào được lưu.</div>';
+            return;
+        }
+
+        vung_danh_sach.innerHTML = danh_sach.map((m, i) => {
+
+            const isOldAndRisky = isNearLimit && !(m.timestamp) ||
+                (isNearLimit && m.timestamp < Date.now() - 30 * 24 * 60 * 60 * 1000);
+            const warningStyle = isOldAndRisky ? 'border: 1px solid var(--danger); background: rgba(224, 92, 110, 0.05);' : '';
+
+            return `
+            <div class="list-item" data-title="${thoathtml(m.title)}" style="${warningStyle}" title="${isOldAndRisky ? 'Truyện cũ, có thể bị xóa nếu bộ nhớ đầy' : 'Nhấn để mở'}">
+                <img class="list-thumb" src="${m.imgUrl || FALLBACK_COVER}" alt="">
+                <div class="list-info">
+                    <div class="list-name" style="${isOldAndRisky ? 'color: var(--danger)' : ''}">${thoathtml(m.title)}</div>
+                    <div class="list-chap">
+                        ${thoathtml(m.chap || '...')}
+                        <span style="color:var(--accent);">
+                            ${m.chunkIndex ? `(Đoạn ${m.chunkIndex})` : ''}
+                        </span>
+                    </div>
                 </div>
-                ${m.url ? '<div class="list-date" style="font-size:9px;color:#555;margin-top:1px">Nhấn để tiếp tục đọc</div>' : ''}
-            </div>
-            <button class="btn-remove" data-title="${thoathtml(m.title)}" title="Xoá khỏi danh sách">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-        </div>
-    `).join('');
+                ${isOldAndRisky ? '<span style="color:var(--danger); font-size:8px; margin-right:5px;">⚠️ Cũ</span>' : ''}
+                <button class="btn-remove" data-title="${thoathtml(m.title)}">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>`;
+        }).join('');
 
-    vung_danh_sach.querySelectorAll('.list-thumb').forEach(img => {
-        img.addEventListener('error', function () { this.src = FALLBACK_COVER; }, { once: true });
-        if (img.complete && img.naturalHeight === 0) img.src = FALLBACK_COVER;
-    });
-
-    vung_danh_sach.querySelectorAll('.btn-remove').forEach(btn => {
-        btn.addEventListener('click', e => {
-            e.stopPropagation();
-            xoakhoidanhsach(btn.dataset.title);
+        document.querySelectorAll('.list-item').forEach((item, index) => {
+            item.addEventListener('click', (e) => {
+                if (e.target.closest('.btn-remove')) return;
+                const muc = danh_sach[index];
+                if (muc && muc.url) window.open(muc.url, '_blank');
+            });
         });
-    });
 
-    vung_danh_sach.querySelectorAll('.list-item').forEach(item => {
-        item.style.cursor = 'pointer';
-        item.addEventListener('click', () => {
-            const title = item.dataset.title;
-            chrome.storage.local.get('readingList', data => {
-                const entry = (data.readingList || []).find(e => (e.title || '').trim().toLowerCase() === (title || '').trim().toLowerCase());
-                if (entry?.url) chrome.tabs.create({ url: entry.url });
-                else hienthithongbao('URL không được lưu cho truyện này', 'warning');
+        document.querySelectorAll('.btn-remove').forEach((btn) => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const title = btn.getAttribute('data-title');
+                xoakhoidanhsach(title);
             });
         });
     });
@@ -658,12 +662,15 @@ document.getElementById('btn-save').addEventListener('click', () => {
             danh_sach.splice(vitri, 1);
             chrome.storage.local.set({ readingList: danh_sach }, () => {
                 danhsachdochientai = danh_sach;
-                hienthidanhsachdoc(danh_sach);
+                hienthidanhsachdoc(sapxepdanhsach(danh_sach));
                 dattrangthailuu(false);
                 document.getElementById('info-count').textContent = `${danh_sach.length} truyện`;
                 hienthithongbao('Đã bỏ lưu truyện', 'info');
             });
         } else {
+            if (danh_sach.length >= 50) {
+                danh_sach.shift();
+            }
             danh_sach.push({
                 title: dulieutruyenhientai.bookTitle,
                 chap: dulieutruyenhientai.chapTitle,
@@ -671,11 +678,12 @@ document.getElementById('btn-save').addEventListener('click', () => {
                 url: dulieutruyenhientai.pageUrl,
                 chunkIndex: dulieutruyenhientai.progress ? dulieutruyenhientai.progress.current : null,
                 chunkTotal: dulieutruyenhientai.progress ? dulieutruyenhientai.progress.total : null,
-                savedAt: new Date().toLocaleDateString('vi-VN')
+                savedAt: new Date().toLocaleDateString('vi-VN'),
+                timestamp: Date.now()
             });
             chrome.storage.local.set({ readingList: danh_sach }, () => {
                 danhsachdochientai = danh_sach;
-                hienthidanhsachdoc(danh_sach);
+                hienthidanhsachdoc(sapxepdanhsach(danh_sach));
                 dattrangthailuu(true);
                 document.getElementById('info-count').textContent = `${danh_sach.length} truyện`;
                 hienthithongbao('Đã lưu truyện thành công!', 'success');
@@ -692,46 +700,52 @@ document.getElementById('btn-clear-all').addEventListener('click', () => {
 
     const onConfirm = () => {
         chrome.storage.local.clear(() => {
-            danhsachdochientai = [];
-            hienthidanhsachdoc([]);
-            document.getElementById('info-count').textContent = '0 truyện';
-            dattrangthailuu(false);
+            chrome.storage.sync.clear(() => {
+                danhsachdochientai = [];
+                hienthidanhsachdoc([]);
+                document.getElementById('info-count').textContent = '0 truyện';
+                dattrangthailuu(false);
 
-            document.getElementById('speed-slider').value = 1.0;
-            document.getElementById('speed-val').textContent = '1.0×';
-            document.getElementById('vol-slider').value = 1;
-            document.getElementById('vol-val').textContent = '100%';
+                document.getElementById('speed-slider').value = 1.0;
+                document.getElementById('speed-val').textContent = '1.0×';
+                document.getElementById('vol-slider').value = 1;
+                document.getElementById('vol-val').textContent = '100%';
 
-            const engineSelect = document.getElementById('engine-select');
-            engineSelect.value = 'web';
-            engineSelect.dispatchEvent(new Event('change'));
+                const engineSelect = document.getElementById('engine-select');
+                engineSelect.value = 'web';
+                engineSelect.dispatchEvent(new Event('change'));
 
-            document.getElementById('api-settings-box').style.display = 'none';
-            document.getElementById('api-key-input').value = '';
-            document.getElementById('api-region-input').value = '';
+                document.getElementById('api-settings-box').style.display = 'none';
+                document.getElementById('api-key-input').value = '';
+                document.getElementById('api-region-input').value = '';
 
-            const voiceSelect = document.getElementById('voice-select');
-            voiceSelect.innerHTML = '<option value="-1">Giọng mặc định</option>';
-            voiceSelect.dispatchEvent(new Event('change'));
+                const voiceSelect = document.getElementById('voice-select');
+                voiceSelect.innerHTML = '<option value="-1">Giọng mặc định</option>';
+                voiceSelect.dispatchEvent(new Event('change'));
 
-            const autoStopSelect = document.getElementById('select-auto-stop');
-            autoStopSelect.value = 'off';
-            autoStopSelect.dispatchEvent(new Event('change'));
+                const autoStopSelect = document.getElementById('select-auto-stop');
+                autoStopSelect.value = 'off';
+                autoStopSelect.dispatchEvent(new Event('change'));
 
-            const vanban_autostop = document.getElementById('custom-autostop-text');
-            if (vanban_autostop) vanban_autostop.textContent = 'Không có';
+                const vanban_autostop = document.getElementById('custom-autostop-text');
+                if (vanban_autostop) vanban_autostop.textContent = 'Không có';
 
-            const _resetNow = new Date();
-            gio_val_vt = _resetNow.getHours();
-            phut_val_vt = _resetNow.getMinutes();
-            capnhat_gia_tri_vt('hour', gio_val_vt);
-            capnhat_gia_tri_vt('minute', phut_val_vt);
+                const _resetNow = new Date();
+                gio_val_vt = _resetNow.getHours();
+                phut_val_vt = _resetNow.getMinutes();
+                capnhat_gia_tri_vt('hour', gio_val_vt);
+                capnhat_gia_tri_vt('minute', phut_val_vt);
 
-            antatcanhom_tudongdung();
+                antatcanhom_tudongdung();
+                capnhathuyhieu('web');
 
-            capnhathuyhieu('web');
-            guilenh('stopPlay');
-            hienthithongbao('Đã xoá toàn bộ dữ liệu tiện ích', 'info');
+                document.getElementById('pause-comma').value = 300;
+                document.getElementById('pause-dot').value = 800;
+                document.getElementById('pause-para').value = 1200;
+
+                guilenh('stopPlay');
+                hienthithongbao('Đã xoá toàn bộ dữ liệu tiện ích', 'info');
+            });
         });
         modal.classList.remove('show');
         cleanup();
@@ -1115,7 +1129,7 @@ async function khoitaopopup() {
 
     chrome.storage.sync.get([
         'speed', 'volume', 'voiceIndex', 'maydoc',
-        'batphimtat', 'doctentruyen', 'doctenchuong', 'lastVoiceName'
+        'batphimtat', 'doctentruyen', 'doctenchuong', 'lastVoiceName', 'smartPauses'
     ], d => {
         if (d.lastVoiceName) {
             const voiceTextEl = document.getElementById('custom-voice-text');
@@ -1129,11 +1143,17 @@ async function khoitaopopup() {
         const o_chon_may_doc = document.getElementById('engine-select');
         if (d.maydoc) {
             o_chon_may_doc.value = d.maydoc;
-            setTimeout(() => o_chon_may_doc.dispatchEvent(new Event('change')), 350);
+            requestAnimationFrame(() => o_chon_may_doc.dispatchEvent(new Event('change')));
         }
         if (d.batphimtat !== undefined) document.getElementById('chk-shortcuts').checked = d.batphimtat;
         if (d.doctentruyen !== undefined) document.getElementById('chk-read-book').checked = d.doctentruyen;
         if (d.doctenchuong !== undefined) document.getElementById('chk-read-chap').checked = d.doctenchuong;
+
+        if (d.smartPauses) {
+            document.getElementById('pause-comma').value = d.smartPauses.comma || 300;
+            document.getElementById('pause-dot').value = d.smartPauses.dot || 800;
+            document.getElementById('pause-para').value = d.smartPauses.para || 1200;
+        }
 
         chrome.storage.local.get(['stopTime', 'stopAfterChapters', 'sleepTargetTimestamp', 'stopRealtimeTarget', 'customStopConfig'], data => {
             antatcanhom_tudongdung();
@@ -1477,12 +1497,6 @@ function capnhat_gia_tri_vt(type, val) {
     if (type === 'hour') {
         gio_val_vt = Math.min(23, Math.max(0, val));
 
-        const isPM = gio_val_vt >= 12;
-
-        const displayHour = isPM
-            ? gio_val_vt
-            : get12h(gio_val_vt);
-
         if (digitH) {
             const isPM = gio_val_vt >= 12;
 
@@ -1664,28 +1678,29 @@ document.addEventListener('keydown', e => {
 });
 
 document.getElementById('btn-export-data').addEventListener('click', () => {
-    chrome.storage.local.get(null, data => {
-        const backupData = {
-            readingList: data.readingList || [],
-            fpt_key: data.fpt_key || '',
-            azure_key: data.azure_key || '',
-            azure_region: data.azure_region || '',
-            customDict: data.customDict || [],
-            speed: data.speed,
-            volume: data.volume,
-            maydoc: data.maydoc
-        };
-
-        const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `AutoDocSTV_Backup_${new Date().toISOString().slice(0, 10)}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        hienthithongbao('Đã tải xuống file sao lưu!', 'success');
+    chrome.storage.sync.get(['customDict', 'speed', 'volume'], syncData => {
+        chrome.storage.local.get(null, localData => {
+            const backupData = {
+                readingList: localData.readingList || [],
+                fpt_key: localData.fpt_key || '',
+                azure_key: localData.azure_key || '',
+                azure_region: localData.azure_region || '',
+                customDict: syncData.customDict || [],
+                speed: syncData.speed,
+                volume: syncData.volume,
+                maydoc: localData.maydoc
+            };
+            const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `AutoDocSTV_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            hienthithongbao('Đã tải xuống file sao lưu!', 'success');
+        });
     });
 });
 
@@ -1700,10 +1715,33 @@ document.getElementById('import-file-input').addEventListener('change', (e) => {
     reader.onload = (event) => {
         try {
             const parsedData = JSON.parse(event.target.result);
-            chrome.storage.local.set(parsedData, () => {
-                hienthithongbao('Phục hồi dữ liệu thành công! Khởi động lại...', 'success');
-                setTimeout(() => window.location.reload(), 1500);
+
+            chrome.storage.local.get('readingList', data => {
+                let currentList = data.readingList || [];
+                let importedList = parsedData.readingList || [];
+
+                importedList.forEach(newItem => {
+                    const existsIdx = currentList.findIndex(i =>
+                        (i.title || '').trim().toLowerCase() === (newItem.title || '').trim().toLowerCase()
+                    );
+                    if (existsIdx === -1) {
+                        currentList.push(newItem);
+                    } else {
+
+                        if (newItem.chunkIndex > currentList[existsIdx].chunkIndex) {
+                            currentList[existsIdx] = newItem;
+                        }
+                    }
+                });
+
+                parsedData.readingList = currentList;
+
+                chrome.storage.local.set(parsedData, () => {
+                    hienthithongbao('Phục hồi dữ liệu thành công! Khởi động lại...', 'success');
+                    setTimeout(() => window.location.reload(), 1500);
+                });
             });
+
         } catch (err) {
             hienthithongbao('File backup không hợp lệ!', 'warning');
         }
@@ -1778,5 +1816,58 @@ document.getElementById('btn-add-dict').addEventListener('click', () => {
         hienThiTuDien();
         hienthithongbao('Đã thêm vào từ điển!', 'success');
         guilenh('setEngine', { value: document.getElementById('engine-select').value });
+    });
+});
+
+function capNhatDungLuongStorage() {
+    if (!chrome.storage.local.getBytesInUse) return;
+
+    chrome.storage.local.getBytesInUse(null, (bytes) => {
+        const MAX_BYTES = 5242880;
+        const percent = (bytes / MAX_BYTES) * 100;
+        const kb = (bytes / 1024).toFixed(1);
+
+        const usageText = document.getElementById('storage-usage-text');
+        const usageBar = document.getElementById('storage-usage-bar');
+        const warning = document.getElementById('storage-warning');
+
+        if (usageText) usageText.textContent = `${kb} KB / 5000 KB`;
+        if (usageBar) {
+            usageBar.style.width = `${Math.min(100, percent)}%`;
+            usageBar.style.background = percent > 85 ? 'var(--danger)' : (percent > 60 ? 'var(--warning)' : 'var(--success)');
+        }
+        if (warning) warning.style.display = percent > 85 ? 'block' : 'none';
+    });
+}
+
+const inpComma = document.getElementById('pause-comma');
+const inpDot = document.getElementById('pause-dot');
+const inpPara = document.getElementById('pause-para');
+
+function luuKhoangNghi() {
+    if (!inpComma || !inpDot || !inpPara) return;
+    const pauses = {
+        comma: parseInt(inpComma.value) || 300,
+        dot: parseInt(inpDot.value) || 800,
+        para: parseInt(inpPara.value) || 1200
+    };
+    chrome.storage.sync.set({ smartPauses: pauses });
+    guilenh('setPauses', pauses);
+}
+
+if (inpComma && inpDot && inpPara) {
+    [inpComma, inpDot, inpPara].forEach(inp => {
+        inp.addEventListener('change', luuKhoangNghi);
+    });
+}
+
+document.querySelectorAll('.pause-step-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const input = document.getElementById(btn.dataset.target);
+        if (!input) return;
+        const delta = parseInt(btn.dataset.delta, 10);
+        const newVal = Math.max(0, (parseInt(input.value, 10) || 0) + delta);
+        input.value = newVal;
+        luuKhoangNghi();
     });
 });
