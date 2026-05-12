@@ -106,7 +106,8 @@ function lamtranhvanban(vanban) {
     if (tudienhientai.length > 0) {
         tudienhientai.forEach(rule => {
             try {
-                txt = txt.replace(new RegExp(rule.origin, 'gi'), rule.replace);
+                const safeReplace = rule.replace.replace(/\$/g, '$$$$');
+                txt = txt.replace(new RegExp(rule.origin, 'gi'), safeReplace);
             } catch (e) { }
         });
     }
@@ -188,6 +189,32 @@ function chuanbinoidung() {
     const nutchuong = document.getElementById('bookchapnameholder');
     if (doctenchuong && nutchuong) themnut(nutchuong, nutchuong.innerText);
 
+    function baocacdong(chua) {
+        let thespanhientai = null;
+        const cacnut = Array.from(chua.childNodes);
+        cacnut.forEach(nut => {
+            if (['BR', 'DIV', 'P', 'H1', 'H2', 'H3', 'HR', 'TABLE', 'UL', 'LI'].includes(nut.nodeName)) {
+                thespanhientai = null;
+                if (nut.nodeType === 1 && !['BR', 'HR'].includes(nut.nodeName)) {
+                    baocacdong(nut);
+                }
+            } else {
+                if (['SCRIPT', 'STYLE'].includes(nut.nodeName)) return;
+                if (nut.nodeType === 3 && !nut.textContent.replace(/\u200B/g, '').trim()) {
+                    if (thespanhientai) thespanhientai.appendChild(nut);
+                    return;
+                }
+                if (!thespanhientai) {
+                    thespanhientai = document.createElement('span');
+                    thespanhientai.className = 'tts-chunk';
+                    thespanhientai.id = `tts-c-${demiddoan++}`;
+                    chua.insertBefore(thespanhientai, nut);
+                }
+                thespanhientai.appendChild(nut);
+            }
+        });
+    }
+
     const cackhung = document.querySelectorAll('.contentbox');
     cackhung.forEach(khung => {
         const vanbantho = lamtranhvanban(khung.innerText);
@@ -200,31 +227,6 @@ function chuanbinoidung() {
                     thespan.parentNode.insertBefore(khoangcach, thespan.nextSibling);
                     while (thespan.firstChild) thespan.parentNode.insertBefore(thespan.firstChild, thespan);
                     thespan.remove();
-                });
-            }
-            function baocacdong(chua) {
-                let thespanhientai = null;
-                const cacnut = Array.from(chua.childNodes);
-                cacnut.forEach(nut => {
-                    if (['BR', 'DIV', 'P', 'H1', 'H2', 'H3', 'HR', 'TABLE', 'UL', 'LI'].includes(nut.nodeName)) {
-                        thespanhientai = null;
-                        if (nut.nodeType === 1 && !['BR', 'HR'].includes(nut.nodeName)) {
-                            baocacdong(nut);
-                        }
-                    } else {
-                        if (['SCRIPT', 'STYLE'].includes(nut.nodeName)) return;
-                        if (nut.nodeType === 3 && !nut.textContent.replace(/\u200B/g, '').trim()) {
-                            if (thespanhientai) thespanhientai.appendChild(nut);
-                            return;
-                        }
-                        if (!thespanhientai) {
-                            thespanhientai = document.createElement('span');
-                            thespanhientai.className = 'tts-chunk';
-                            thespanhientai.id = `tts-c-${demiddoan++}`;
-                            chua.insertBefore(thespanhientai, nut);
-                        }
-                        thespanhientai.appendChild(nut);
-                    }
                 });
             }
             baocacdong(khung);
@@ -327,8 +329,11 @@ async function layamthanhtuapiraw(vanban, congcudoc, solanth = 3) {
             if (!res.ok) throw new Error('Lỗi FPT');
             const data = await res.json();
             if (data.error) throw new Error(data.message);
+
+            const myId = idluotphat;
             for (let i = 0; i < 10; i++) {
                 await new Promise(r => setTimeout(r, 1000));
+                if (idluotphat !== myId) throw new Error('Cancelled');
                 const check = await fetch(data.async);
                 if (check.ok) return await check.blob();
             }
@@ -367,7 +372,14 @@ async function layamthanhtuapi(vanban, congcudoc, solanth = 3) {
         if (!bondemurl.has(cacheKey)) bondemurl.set(cacheKey, URL.createObjectURL(cachedBlob));
         return bondemurl.get(cacheKey);
     }
-    return layamthanhtuapiraw(vanban, congcudoc, solanth);
+    const ketqua = await layamthanhtuapiraw(vanban, congcudoc, solanth);
+    if (ketqua instanceof Blob) {
+        await luuamthanhdb(cacheKey, ketqua);
+        const url = URL.createObjectURL(ketqua);
+        bondemurl.set(cacheKey, url);
+        return url;
+    }
+    return ketqua;
 }
 
 async function taitruocchuongsau() {
@@ -503,7 +515,7 @@ async function phatdoanamthanh(boquanghi = false) {
         taitruocchuongsau();
     }
     amthanh.onended = () => {
-        if (doan.url && doan.url.startsWith('blob:')) { URL.revokeObjectURL(doan.url); doan.url = null; }
+        if (doan.url && doan.url.startsWith('blob:')) { URL.revokeObjectURL(doan.url); bondemurl.delete(taomakhoa(doan.text)); doan.url = null; }
         if (amthanhhientai !== amthanh) return;
         chisoamthanh++;
         if (dangphat && !dangtamdung) setTimeout(() => phatdoanamthanh(false), 50);
@@ -660,7 +672,7 @@ function chuyendoiphat(tuychon = {}) {
     if (tuychon.speed !== undefined) tocdohientai = tuychon.speed;
     if (tuychon.volume !== undefined) amluonghientai = tuychon.volume;
     if (tuychon.voiceIndex !== undefined) chisogionghientai = tuychon.voiceIndex;
-    const congcu = maydoc === 'auto' ? 'web' : maydoc;
+    const congcu = (maydoc === 'auto' || maydoc === 'google') ? 'web' : maydoc;
     if (dangphat && !dangtamdung) {
         if (congcu === 'web') tonghopam.pause(); else if (amthanhhientai) amthanhhientai.pause();
         dangphat = false; dangtamdung = true;
@@ -687,6 +699,7 @@ function chuyendoiphat(tuychon = {}) {
 }
 
 function dungtatca() {
+    idluotphat++;
     dungtrinhdocweb(); dungamthanh();
     dangphat = false; dangtamdung = false;
     giaydatroi = 0; thoigiandatroichinhxac = 0;
@@ -720,8 +733,14 @@ function xulyketthucchuong() {
                         return;
                     }
                     cauhinhdungtuychon = null; dabamdung = false;
-                    chrome.storage.local.remove(['customStopConfig', 'sleepTargetTimestamp']);
-                    if (mahengiongu) { clearTimeout(mahengiongu); mahengiongu = null; }
+                    chrome.storage.local.remove([
+                        'stopTime',
+                        'stopChapters',
+                        'sleepTargetTimestamp',
+                        'stopRealtimeTarget',
+                        'customStopConfig',
+                        'stopAfterChapters'
+                    ]); if (mahengiongu) { clearTimeout(mahengiongu); mahengiongu = null; }
                 }
                 dungtatca();
                 hienthithongbao('<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg><span>Đã dừng sau khi hoàn thành số chương hẹn trước!</span>');
@@ -734,7 +753,7 @@ function xulyketthucchuong() {
 
 function bamchuongsau(latudong = false) {
     dungtatca();
-    if (latudong) chrome.storage.local.set({ autoStartOnLoad: true, speed: tocdohientai, volume: amluonghientai, voiceIndex: chisogionghientai, savedEngine: maydoc });
+    if (latudong) chrome.storage.local.set({ autoStartOnLoad: true, speed: tocdohientai, volume: amluonghientai, voiceIndex: chisogionghientai });
     else chrome.storage.local.remove('autoStartOnLoad');
     const banchon = ['#navnexttop', '#navnextbot', '#navnext', '#nav_next', '#btnnext', '#btn_next', '.btn-next-chapter', 'a.next', '.chapter-next a', '[data-nav="next"]'];
     for (const chon of banchon) {
@@ -791,7 +810,7 @@ function bamchuongtruoc() {
 
 function xulynhaydoan(hanhdong, giatri) {
     chuanbingam();
-    const congcu = maydoc === 'auto' ? 'web' : maydoc;
+    const congcu = (maydoc === 'auto' || maydoc === 'google') ? 'web' : maydoc;
     idluotphat++;
     if (congcu === 'web') {
         if (hanhdong === 'sau' && chisodoanweb < cacdoanweb.length - 1) chisodoanweb++;
@@ -839,7 +858,9 @@ function luutrangthaitienhat() {
     const congcu = maydoc === 'auto' || maydoc === 'google' ? 'web' : maydoc;
     const cur = (congcu === 'web' ? chisodoanweb : chisoamthanh) + 1;
     const tot = congcu === 'web' ? cacdoanweb.length : cacdoanamthanh.length;
-    let tentruyen = document.getElementById('booknameholder')?.innerText.trim() || document.getElementById('book_name2')?.innerText.trim() || document.querySelector('h1')?.innerText.trim() || '';
+    let tentruyen = document.getElementById('booknameholder')?.innerText.trim()
+        || document.getElementById('book_name2')?.innerText.trim()
+        || document.querySelector('h1')?.innerText.trim() || '';
     let tenchuong = document.getElementById('bookchapnameholder')?.innerText.trim() || '';
     if (!tentruyen || tot === 0) return;
     chrome.storage.local.set({
@@ -851,15 +872,15 @@ function luutrangthaitienhat() {
     });
     chrome.storage.local.get('readingList', data => {
         let danhsach = data.readingList || [];
-        let idx = danhsach.findIndex(i => (i.title || '').trim().toLowerCase() === (tentruyen || '').trim().toLowerCase());
+        let idx = danhsach.findIndex(i =>
+            (i.title || '').trim().toLowerCase() === (tentruyen || '').trim().toLowerCase()
+        );
         if (idx !== -1) {
             let capnhat = false;
             if (danhsach[idx].url !== window.location.href) { danhsach[idx].url = window.location.href; capnhat = true; }
             if (danhsach[idx].chap !== tenchuong) { danhsach[idx].chap = tenchuong; capnhat = true; }
             if (danhsach[idx].chunkIndex !== cur || danhsach[idx].chunkTotal !== tot) {
-                danhsach[idx].chunkIndex = cur;
-                danhsach[idx].chunkTotal = tot;
-                capnhat = true;
+                danhsach[idx].chunkIndex = cur; danhsach[idx].chunkTotal = tot; capnhat = true;
             }
             if (capnhat) chrome.storage.local.set({ readingList: danhsach });
         }
@@ -1187,6 +1208,14 @@ function capnhatminiplayer() {
     const bubble = document.getElementById('stv-mini-bubble');
     if (!player || !bubble) return;
 
+    const contentBox = document.querySelector('.contentbox');
+    const coMaHoa = document.getElementById('stv-obfuscation-warning');
+    if (!contentBox && !coMaHoa) {
+        player.classList.add('stv-mp-hidden');
+        bubble.classList.add('stv-mp-hidden');
+        return;
+    }
+
     const congcu = maydoc === 'auto' || maydoc === 'google' ? 'web' : maydoc;
     const tongdoan = congcu === 'web' ? cacdoanweb.length : cacdoanamthanh.length;
     const doanhientai = (congcu === 'web' ? chisodoanweb : chisoamthanh) + 1;
@@ -1242,7 +1271,7 @@ function capnhatminiplayer() {
 }
 
 chrome.runtime.onMessage.addListener((yeucau, _nguoigui, phanhoi) => {
-    const congcu = maydoc === 'auto' ? 'web' : maydoc;
+    const congcu = (maydoc === 'auto' || maydoc === 'google') ? 'web' : maydoc;
     const trave = (them = {}) => phanhoi({ isPlaying: dangphat, isPaused: dangtamdung, ttsEngine: congcu, ...them });
 
     switch (yeucau.action) {
@@ -1267,7 +1296,7 @@ chrome.runtime.onMessage.addListener((yeucau, _nguoigui, phanhoi) => {
         case 'setEngine': {
             const congcucu = maydoc === 'auto' ? 'web' : maydoc;
             maydoc = yeucau.value || 'auto';
-            chrome.storage.local.set({ maydoc });
+            chrome.storage.sync.set({ maydoc });
             const congcumoi = maydoc === 'auto' ? 'web' : maydoc;
             if (congcucu !== congcumoi) {
                 if (congcumoi === 'web') cacdoanweb = [];
@@ -1281,7 +1310,7 @@ chrome.runtime.onMessage.addListener((yeucau, _nguoigui, phanhoi) => {
             trave(); break;
         }
         case 'setVoice':
-            if (chisogionghientai == yeucau.value) { trave(); break; }
+            if (String(chisogionghientai) === String(yeucau.value)) { trave(); break; }
             chisogionghientai = yeucau.value;
             if (dangphat || dangtamdung) {
                 const dangphatcu = dangphat;
@@ -1401,13 +1430,13 @@ chrome.storage.local.get([
 });
 
 chrome.storage.sync.get([
-    'speed', 'volume', 'voiceIndex', 'savedEngine', 'maydoc',
+    'speed', 'volume', 'voiceIndex', 'maydoc',
     'fpt_key', 'azure_key', 'azure_region', 'tudongchuyenchuong',
-    'batphimtat', 'doctentruyen', 'doctenchuong', 'customDict'
+    'batphimtat', 'doctentruyen', 'doctenchuong', 'customDict', 'smartPauses'
 ], syncData => {
     Object.assign(khoaapi, syncData);
     if (syncData.smartPauses) thoigianngh = syncData.smartPauses;
-    maydoc = syncData.savedEngine || syncData.maydoc || 'auto';
+    maydoc = syncData.maydoc || 'auto';
     if (syncData.speed !== undefined) tocdohientai = syncData.speed;
     if (syncData.volume !== undefined) amluonghientai = syncData.volume;
     if (syncData.voiceIndex !== undefined) chisogionghientai = syncData.voiceIndex;

@@ -236,18 +236,17 @@ function dattrangthailuu(daluu) {
 }
 
 function hienthidanhsachdoc(danhsach) {
-    capnhatdungluong();
     const vungdanhsach = document.getElementById('list-container');
-    chrome.storage.local.getBytesInUse(null, (bytes) => {
-        const gangay = bytes > 4.5 * 1024 * 1024;
-        if (!danhsach.length) {
-            vungdanhsach.innerHTML = '<div class="list-empty">Chưa có truyện nào được lưu.</div>';
-            return;
-        }
-        vungdanhsach.innerHTML = danhsach.map((m) => {
-            const nguycucu = gangay && (!(m.timestamp) || m.timestamp < Date.now() - 30 * 24 * 60 * 60 * 1000);
-            const kieunguy = nguycucu ? 'border: 1px solid var(--danger); background: rgba(224, 92, 110, 0.05);' : '';
-            return `
+    capnhatdungluong();
+
+    if (!danhsach.length) {
+        vungdanhsach.innerHTML = '<div class="list-empty">Chưa có truyện nào được lưu.</div>';
+        return;
+    }
+    vungdanhsach.innerHTML = danhsach.map((m) => {
+        const nguycucu = gangay && (!(m.timestamp) || m.timestamp < Date.now() - 30 * 24 * 60 * 60 * 1000);
+        const kieunguy = nguycucu ? 'border: 1px solid var(--danger); background: rgba(224, 92, 110, 0.05);' : '';
+        return `
             <div class="list-item" data-title="${thoathtml(m.title)}" style="${kieunguy}" title="${nguycucu ? 'Truyện cũ, có thể bị xóa nếu bộ nhớ đầy' : 'Nhấn để mở'}">
                 <img class="list-thumb" src="${m.imgUrl || ANH_KHUYET}" alt="">
                 <div class="list-info">
@@ -264,19 +263,18 @@ function hienthidanhsachdoc(danhsach) {
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
             </div>`;
-        }).join('');
-        document.querySelectorAll('.list-item').forEach((item, index) => {
-            item.addEventListener('click', (e) => {
-                if (e.target.closest('.btn-remove')) return;
-                const muc = danhsach[index];
-                if (muc && muc.url) window.open(muc.url, '_blank');
-            });
+    }).join('');
+    document.querySelectorAll('.list-item').forEach((item, index) => {
+        item.addEventListener('click', (e) => {
+            if (e.target.closest('.btn-remove')) return;
+            const muc = danhsach[index];
+            if (muc && muc.url) window.open(muc.url, '_blank');
         });
-        document.querySelectorAll('.btn-remove').forEach((btn) => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                xoakhoidanhsach(btn.getAttribute('data-title'));
-            });
+    });
+    document.querySelectorAll('.btn-remove').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            xoakhoidanhsach(btn.getAttribute('data-title'));
         });
     });
 }
@@ -342,7 +340,7 @@ function hienthitudien() {
     });
     document.querySelectorAll('.btn-remove-dict').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            const idx = e.currentTarget.dataset.index;
+            const idx = parseInt(e.currentTarget.dataset.index, 10);
             tudienhientai.splice(idx, 1);
             chrome.storage.sync.set({ customDict: tudienhientai }, () => {
                 hienthitudien();
@@ -389,7 +387,7 @@ async function taicacgiong() {
         });
     }
     if (goiygiong) goiygiong.style.display = giongviet.length > 0 ? 'none' : 'block';
-    chrome.storage.local.get('voiceIndex', d => {
+    chrome.storage.sync.get('voiceIndex', d => {
         let muctieu = d.voiceIndex;
         if (muctieu === undefined || muctieu === -1) {
             muctieu = (chisohoaimy !== -1) ? chisohoaimy : chisodautien;
@@ -410,8 +408,7 @@ async function taicacgiong() {
         if (opt) {
             document.getElementById('info-voice').textContent = opt.textContent;
             chrome.storage.sync.set({ lastVoiceName: opt.textContent });
-            if (d.voiceIndex != muctieu && muctieu !== -1) {
-                chrome.storage.local.set({ voiceIndex: muctieu });
+            if (d.voiceIndex !== muctieu && muctieu !== -1) {
                 chrome.storage.sync.set({ voiceIndex: muctieu });
                 guilenh('setVoice', { value: muctieu });
             }
@@ -892,7 +889,7 @@ async function khoitaopopup() {
             if (dulieutruyenhientai.pageUrl && danhsach[mucdal].url !== dulieutruyenhientai.pageUrl) { danhsach[mucdal].url = dulieutruyenhientai.pageUrl; dacapnhat = true; }
             if (phanhoi.chapTitle && danhsach[mucdal].chap !== phanhoi.chapTitle) { danhsach[mucdal].chap = phanhoi.chapTitle; dacapnhat = true; }
             if (phanhoi.imgUrl && danhsach[mucdal].imgUrl !== phanhoi.imgUrl) { danhsach[mucdal].imgUrl = phanhoi.imgUrl; dacapnhat = true; }
-            if (dacapnhat) chrome.storage.local.set({ readingList: danhsach }, () => hienthidanhsachdoc(danhsach));
+            if (dacapnhat) chrome.storage.local.set({ readingList: danhsach }, () => hienthidanhsachdoc(sapxepdanhsach(danhsach)));
         }
     });
 
@@ -1273,7 +1270,6 @@ document.getElementById('btn-add-dict').addEventListener('click', () => {
         document.getElementById('dict-replace').value = '';
         hienthitudien();
         hienthithongbao('Đã thêm vào từ điển!', 'success');
-        guilenh('setEngine', { value: document.getElementById('engine-select').value });
     });
 });
 
@@ -1288,7 +1284,7 @@ document.getElementById('btn-export-data').addEventListener('click', () => {
                 customDict: syncData.customDict || [],
                 speed: syncData.speed,
                 volume: syncData.volume,
-                maydoc: localData.maydoc
+                maydoc: syncData.maydoc
             };
             const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -1327,9 +1323,14 @@ document.getElementById('import-file-input').addEventListener('change', (e) => {
                     }
                 });
                 parsedData.readingList = danhsachu;
-                chrome.storage.local.set(parsedData, () => {
-                    hienthithongbao('Phục hồi dữ liệu thành công! Khởi động lại...', 'success');
-                    setTimeout(() => window.location.reload(), 1500);
+
+                const { readingList, fpt_key, azure_key, azure_region, maydoc } = parsedData;
+                const { customDict, speed, volume } = parsedData;
+                chrome.storage.local.set({ readingList, fpt_key, azure_key, azure_region, maydoc }, () => {
+                    chrome.storage.sync.set({ customDict, speed, volume, maydoc }, () => {
+                        hienthithongbao('Phục hồi thành công! Đang tải lại...', 'success');
+                        setTimeout(() => window.location.reload(), 1500);
+                    });
                 });
             });
         } catch (err) {
@@ -1382,6 +1383,8 @@ document.getElementById('btn-clear-all').addEventListener('click', () => {
                 onhapxuongdong.value = 1200;
                 guilenh('stopPlay');
                 hienthithongbao('Đã xoá toàn bộ dữ liệu tiện ích', 'info');
+                tudienhientai = [];
+                hienthitudien();
             });
         });
         modal.classList.remove('show');
@@ -1415,6 +1418,19 @@ document.querySelectorAll('.sort-btn').forEach(btn => {
         hienthidanhsachdoc(sapxepdanhsach(co));
     });
 });
+
+function dongboEngine(callback) {
+    chrome.storage.sync.get('maydoc', d => {
+        const enginedaluu = d.maydoc || 'web';
+        const engineSelect = document.getElementById('engine-select');
+        if (engineSelect.value !== enginedaluu) {
+            engineSelect.value = enginedaluu;
+            engineSelect.dispatchEvent(new Event('change'));
+        }
+        capnhathuyhieu(enginedaluu);
+        if (callback) callback(enginedaluu);
+    });
+}
 
 document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -1453,6 +1469,13 @@ document.querySelectorAll('.tab').forEach(tab => {
                         }
                     }
                 });
+                const noteContent = document.getElementById('pause-note-content');
+                const btnNote = document.getElementById('btn-show-pause-note');
+
+                if (noteContent) {
+                    noteContent.style.display = 'none';
+                    if (btnNote) btnNote.textContent = 'Xem lưu ý';
+                }
             }
             if (tab.dataset.tab === 'main') {
                 chrome.storage.sync.get('maydoc', d => {
@@ -1491,7 +1514,7 @@ chontudongdung.addEventListener('change', e => {
         guilenh('setSleepTimer', { minutes: 0 });
         guilenh('setStopChapters', { count: 0 });
         guilenh('setCustomStop', { config: null });
-        chrome.storage.local.remove(['stopTime', 'stopChapters', 'sleepTargetTimestamp', 'stopRealtimeTarget', 'customStopConfig', 'stopAfterChapters']);
+        chrome.storage.local.remove(['stopTime', 'sleepTargetTimestamp', 'stopRealtimeTarget', 'customStopConfig', 'stopAfterChapters']);
         hienthithongbao('Đã tắt tự động dừng', 'info');
     }
 });
@@ -1718,5 +1741,17 @@ setTimeout(() => {
     capnhatgiatrivt('minute', phut_val_vt);
 }, 500);
 
-khoitaopopup().finally(() => { document.body.style.opacity = '1'; });
+khoitaopopup().finally(() => {
+    document.body.style.opacity = '1';
+    const btnNote = document.getElementById('btn-show-pause-note');
+    const noteContent = document.getElementById('pause-note-content');
+    if (btnNote && noteContent) {
+        btnNote.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isHidden = noteContent.style.display === 'none';
+            noteContent.style.display = isHidden ? 'block' : 'none';
+            btnNote.textContent = isHidden ? 'Đóng lưu ý' : 'Xem lưu ý';
+        });
+    }
+});
 taidanhsachdoc();
