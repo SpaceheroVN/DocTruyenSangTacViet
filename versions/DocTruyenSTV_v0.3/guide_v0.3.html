@@ -570,7 +570,9 @@
               <div>
                 <strong>Hãy đánh giá</strong><br>
                 <span style="color: #fff;">Tiện ích giúp trải nghiệm đọc của bạn tốt hơn? Xin hãy dành chút thời
-                  gian</span> <a href="LINK_EXTENSION" target="_blank" class="link-rate">đánh giá 5 sao trên cửa
+                  gian</span> <a href="
+https://microsoftedge.microsoft.com/addons/detail/mabgcghglcjheefkkicmkpmlhaooiiae" target="_blank"
+                  class="link-rate">đánh giá 5 sao trên cửa
                   hàng</a> <span style="color: #fff;">nhé!</span>
               </div>
             </div>
@@ -611,23 +613,7 @@
     </div>
   </main>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const navItems = document.querySelectorAll('.nav-item');
-      const sections = document.querySelectorAll('.content-section');
-
-      navItems.forEach(item => {
-        item.addEventListener('click', () => {
-          navItems.forEach(nav => nav.classList.remove('active'));
-          sections.forEach(sec => sec.classList.remove('active'));
-
-          item.classList.add('active');
-          const targetId = 'tab-' + item.getAttribute('data-tab');
-          document.getElementById(targetId).classList.add('active');
-        });
-      });
-    });
-  </script>
+  <script src="guide_v0.3.js"></script>
 </body>
 
 </html>
