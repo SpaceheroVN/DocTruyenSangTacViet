@@ -58,7 +58,7 @@ Hướng dẫn lấy key chi tiết có trong tab **Hướng dẫn lấy API** n
 
 ---
 
-## Cấu trúc dự án
+## Cấu trúc dự án (extension đang làm)
 
 ```
 ├── manifest.json
