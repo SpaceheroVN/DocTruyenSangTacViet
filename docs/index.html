@@ -2030,7 +2030,18 @@
         try {
           const res = await fetch(mauUrl);
           let html = await res.text();
-          html = html.replace('<head>', `<head><base href="${baseUrl}">`);
+          const scriptChan = `<script>
+  document.addEventListener('click', function(e) {
+    var a = e.target.closest('a[href]');
+    if (!a) return;
+    var m = a.getAttribute('href').match(/chuong-(\\d+)\\.html/);
+    if (m && window.parent && typeof window.parent.setDemoChapter === 'function') {
+      e.preventDefault();
+      window.parent.setDemoChapter(parseInt(m[1]));
+    }
+  }, true);
+<\/script>`;
+          html = html.replace('<head>', `<head><base href="${baseUrl}">${scriptChan}`);
           khungTrangMau.srcdoc = html;
         } catch (_) {
           khungTrangMau.src = mauUrl;
