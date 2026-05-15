@@ -2020,14 +2020,12 @@
       return maEdgeGia;
     }
 
-    async function taiTrangMau() {
-      if (trangMauDaTai) return;
-      trangMauDaTai = true;
+    async function taiTrangMauTheoSo(num) {
       const isLive = window.location.hostname.includes('github.io');
       const baseUrl = isLive
         ? `https://cdn.jsdelivr.net/gh/${REPO}@main/docs/mau/`
         : 'mau/';
-      const mauUrl = baseUrl + 'chuong-1.html';
+      const mauUrl = baseUrl + `chuong-${num}.html`;
       if (isLive) {
         try {
           const res = await fetch(mauUrl);
@@ -2040,6 +2038,12 @@
       } else {
         khungTrangMau.src = mauUrl;
       }
+    }
+
+    async function taiTrangMau() {
+      if (trangMauDaTai) return;
+      trangMauDaTai = true;
+      await taiTrangMauTheoSo(1);
     }
 
     async function taiXemTruoc(phienBan) {
@@ -2080,6 +2084,7 @@
           if (prevChapter !== undefined && prevChapter !== num) {
             khungPreview.srcdoc = '';
             requestAnimationFrame(() => { khungPreview.srcdoc = noiDungHtmlHienTai; });
+            taiTrangMauTheoSo(num);
           }
         };
 
