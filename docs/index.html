@@ -1819,6 +1819,7 @@
         Xem trước phiên bản:
         <select id="preview-version-select" class="version-select"
           style="background:transparent; border:none; color:var(--accent); font-weight:700; cursor:pointer; outline:none; font-size:12px;">
+          <option value="v0.3.1">v0.3.1</option>
           <option value="v0.3">v0.3</option>
           <option value="v0.2">v0.2</option>
           <option value="v0.1">v0.1</option>
@@ -2037,14 +2038,19 @@
       if (phienBanDaTai === phienBan) return;
       phienBanDaTai = phienBan;
       try {
+        const isLive = window.location.hostname.includes('github.io');
+        const baseUrl = isLive
+          ? `https://cdn.jsdelivr.net/gh/${REPO}@main/versions/DocTruyenSTV_${phienBan}/`
+          : `../versions/DocTruyenSTV_${phienBan}/`;
+
         const [ketQuaPopup, maGia] = await Promise.all([
-          fetch(`../versions/DocTruyenSTV_${phienBan}/popup_${phienBan}.html`),
+          fetch(baseUrl + `popup_${phienBan}.html`),
           layMaChromeGia()
         ]);
         if (!ketQuaPopup.ok) throw new Error('Not found');
         let noiDungHtml = await ketQuaPopup.text();
         const theScriptGia = '<scr' + 'ipt>' + maGia + '</scr' + 'ipt>';
-        noiDungHtml = noiDungHtml.replace('<head>', '<head><base href="../versions/DocTruyenSTV_' + phienBan + '/">' + theScriptGia);
+        noiDungHtml = noiDungHtml.replace('<head>', '<head><base href="' + baseUrl + '">' + theScriptGia);
         khungPreview.srcdoc = noiDungHtml;
       } catch (loi) {
         console.error(loi);
