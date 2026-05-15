@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 
 <head>
@@ -1842,10 +1842,10 @@
     }
 
     function layUrlTai(tenTag, danhSachAsset) {
-      const fileRar = danhSachAsset.find(a => a.name.endsWith('.rar'));
-      return fileRar
-        ? { url: fileRar.browser_download_url, ten: fileRar.name, dungLuong: Math.round(fileRar.size / 1024) + ' KB' }
-        : { url: `https://github.com/${REPO}/releases/download/${tenTag}/DocTruyenSTV.rar`, ten: 'DocTruyenSTV.rar', dungLuong: '' };
+      const fileZip = danhSachAsset.find(a => a.name.endsWith('.zip'));
+      return fileZip
+        ? { url: fileZip.browser_download_url, ten: fileZip.name, dungLuong: Math.round(fileZip.size / 1024) + ' KB' }
+        : { url: `https://github.com/${REPO}/releases/download/${tenTag}/DocTruyenSTV_${tenTag}.zip`, ten: `DocTruyenSTV_${tenTag}.zip`, dungLuong: '' };
     }
 
     function taoThe(phatHanh, chiSo) {
@@ -1859,15 +1859,13 @@
       const the = document.createElement('div');
       the.className = 'release-card' + (laMoiNhat ? ' latest open' : '');
 
-      const badgeDau = !laMoiNhat ? `<span class="badge badge-first">Phiên bản đầu</span>` : '';
-
       the.innerHTML = `
     <div class="card-head" role="button" aria-expanded="${laMoiNhat}">
       <div class="version-dot"></div>
       <div class="card-head-info">
         <div class="card-version-row">
           <span class="card-title">${thoatHtml(ten)}</span>
-          ${laMoiNhat ? '<span class="badge badge-latest">Latest</span>' : badgeDau}
+          ${laMoiNhat ? '<span class="badge badge-latest">Latest</span>' : ''}
         </div>
         <div class="card-date">${ngay}</div>
         <div class="tag-pill">
@@ -1912,6 +1910,8 @@
           danhSach.innerHTML = '<div class="error-box">Chưa có phiên bản nào được phát hành.</div>';
           return;
         }
+
+        danhSachPH.sort((a, b) => new Date(b.published_at || b.created_at) - new Date(a.published_at || a.created_at));
 
         const thanhThongKe = document.getElementById('stats-strip');
         document.getElementById('stat-releases').innerHTML = `<span>${danhSachPH.length}</span>`;

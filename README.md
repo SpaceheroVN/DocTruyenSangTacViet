@@ -62,11 +62,12 @@ Hướng dẫn lấy key chi tiết có trong tab **Hướng dẫn lấy API** n
 
 ```
 ├── manifest.json
-├── popup_v0.3.html      # Giao diện popup chính
-├── popup_v0.3.js        # Logic popup
-├── content_v0.3.js      # Content script (chạy trên trang STV)
-├── guide_v0.3.html      # Trang hướng dẫn & thông tin
-├── guide_v0.3.js        # Logic trang hướng dẫn
+├── popup_v0.3.1.html      # Giao diện popup chính
+├── popup_v0.3.1.js        # Logic popup
+├── background_v0.3.1.js   # Service worker xử lý API nền (Bảo mật key)
+├── content_v0.3.1.js      # Content script (chạy trên trang STV)
+├── guide_v0.3.1.html      # Trang hướng dẫn & thông tin
+├── guide_v0.3.1.js        # Logic trang hướng dẫn
 └── icons/
     ├── icon16.png
     ├── icon32.png

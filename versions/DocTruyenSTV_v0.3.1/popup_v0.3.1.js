@@ -9,6 +9,7 @@ const SVG_LUU = `<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0
 const SVG_TICH = `<polyline points="20 6 9 17 4 12"/>`;
 const svgcanhbao = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 3px; color: var(--warning);"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
 
+
 let mahengiodongho = null;
 let giaydongho = 0;
 let trangthaicuoi = { isPlaying: false, isPaused: false };
@@ -203,7 +204,27 @@ function dungcapnhat() {
 }
 
 function thoathtml(str) {
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/\//g, '&#x2F;');
+}
+
+async function kiemtravalamsachdungluong() {
+    if (!chrome.storage.local.getBytesInUse) return false;
+    return new Promise(resolve => {
+        chrome.storage.local.getBytesInUse(null, bytehientai => {
+            const toida = 4.2 * 1024 * 1024;
+            if (bytehientai < toida) return resolve(false);
+            chrome.storage.local.get('readingList', data => {
+                let danhsach = data.readingList || [];
+                if (danhsach.length === 0) return resolve(false);
+                danhsach.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+                const truyencunhat = danhsach.shift();
+                chrome.storage.local.set({ readingList: danhsach }, () => {
+                    hienthithongbao(`Dung lượng gần đầy, đã tự động xoá "${truyencunhat.title}" để lưu truyện mới`, 'warning');
+                    resolve(true);
+                });
+            });
+        });
+    });
 }
 
 function sapxepdanhsach(danhsach) {
@@ -244,13 +265,21 @@ function hienthidanhsachdoc(danhsach) {
         return;
     }
     vungdanhsach.innerHTML = danhsach.map((m) => {
-        const nguycucu = gangay && (!(m.timestamp) || m.timestamp < Date.now() - 30 * 24 * 60 * 60 * 1000);
-        const kieunguy = nguycucu ? 'border: 1px solid var(--danger); background: rgba(224, 92, 110, 0.05);' : '';
+        let maungay = 'var(--text-muted)';
+        let textngay = m.savedAt || '';
+        if (m.timestamp) {
+            const songay = (Date.now() - m.timestamp) / (1000 * 60 * 60 * 24);
+            if (songay > 60) maungay = '#888888';
+            else if (songay > 30) maungay = 'var(--danger)';
+            else if (songay > 15) maungay = 'var(--warning)';
+            if (!textngay) textngay = new Date(m.timestamp).toLocaleDateString('vi-VN');
+        }
+        const htmlngay = textngay ? `<span style="color:${maungay}; font-size:9px; margin-right:6px;">${textngay}</span>` : '';
         return `
-            <div class="list-item" data-title="${thoathtml(m.title)}" style="${kieunguy}" title="${nguycucu ? 'Truyện cũ, có thể bị xóa nếu bộ nhớ đầy' : 'Nhấn để mở'}">
-                <img class="list-thumb" src="${m.imgUrl || ANH_KHUYET}" alt="">
+            <div class="list-item" data-title="${thoathtml(m.title)}" title="Nhấn để mở">
+                <img class="list-thumb" src="${thoathtml(m.imgUrl || ANH_KHUYET)}" alt="">
                 <div class="list-info">
-                    <div class="list-name" style="${nguycucu ? 'color: var(--danger)' : ''}">${thoathtml(m.title)}</div>
+                    <div class="list-name">${thoathtml(m.title)}</div>
                     <div class="list-chap">
                         ${thoathtml(m.chap || '...')}
                         <span style="color:var(--accent);">
@@ -258,7 +287,7 @@ function hienthidanhsachdoc(danhsach) {
                         </span>
                     </div>
                 </div>
-                ${nguycucu ? '<span style="color:var(--danger); font-size:8px; margin-right:5px;">⚠️ Cũ</span>' : ''}
+                ${htmlngay}
                 <button class="btn-remove" data-title="${thoathtml(m.title)}">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
@@ -268,7 +297,7 @@ function hienthidanhsachdoc(danhsach) {
         item.addEventListener('click', (e) => {
             if (e.target.closest('.btn-remove')) return;
             const muc = danhsach[index];
-            if (muc && muc.url) window.open(muc.url, '_blank');
+            if (muc && muc.url && /^https?:\/\//.test(muc.url)) window.open(muc.url, '_blank');
         });
     });
     document.querySelectorAll('.btn-remove').forEach((btn) => {
@@ -342,7 +371,7 @@ function hienthitudien() {
         btn.addEventListener('click', (e) => {
             const idx = parseInt(e.currentTarget.dataset.index, 10);
             tudienhientai.splice(idx, 1);
-            chrome.storage.sync.set({ customDict: tudienhientai }, () => {
+            chrome.storage.local.set({ customDict: tudienhientai }, () => {
                 hienthitudien();
                 hienthithongbao('Đã xóa từ!', 'info');
             });
@@ -1030,23 +1059,28 @@ document.getElementById('btn-save').addEventListener('click', () => {
                 hienthithongbao('Đã bỏ lưu truyện', 'info');
             });
         } else {
-            if (danhsach.length >= 50) danhsach.shift();
-            danhsach.push({
-                title: dulieutruyenhientai.bookTitle,
-                chap: dulieutruyenhientai.chapTitle,
-                imgUrl: dulieutruyenhientai.imgUrl,
-                url: dulieutruyenhientai.pageUrl,
-                chunkIndex: dulieutruyenhientai.progress ? dulieutruyenhientai.progress.current : null,
-                chunkTotal: dulieutruyenhientai.progress ? dulieutruyenhientai.progress.total : null,
-                savedAt: new Date().toLocaleDateString('vi-VN'),
-                timestamp: Date.now()
-            });
-            chrome.storage.local.set({ readingList: danhsach }, () => {
-                danhsachdochientai = danhsach;
-                hienthidanhsachdoc(sapxepdanhsach(danhsach));
-                dattrangthailuu(true);
-                document.getElementById('info-count').textContent = `${danhsach.length} truyện`;
-                hienthithongbao('Đã lưu truyện thành công!', 'success');
+            kiemtravalamsachdungluong().then(() => {
+                chrome.storage.local.get('readingList', d => {
+                    let danhsach = d.readingList || [];
+                    if (danhsach.length >= 50) danhsach.shift();
+                    danhsach.push({
+                        title: dulieutruyenhientai.bookTitle,
+                        chap: dulieutruyenhientai.chapTitle,
+                        imgUrl: dulieutruyenhientai.imgUrl,
+                        url: dulieutruyenhientai.pageUrl,
+                        chunkIndex: dulieutruyenhientai.progress ? dulieutruyenhientai.progress.current : null,
+                        chunkTotal: dulieutruyenhientai.progress ? dulieutruyenhientai.progress.total : null,
+                        savedAt: new Date().toLocaleDateString('vi-VN'),
+                        timestamp: Date.now()
+                    });
+                    chrome.storage.local.set({ readingList: danhsach }, () => {
+                        danhsachdochientai = danhsach;
+                        hienthidanhsachdoc(sapxepdanhsach(danhsach));
+                        dattrangthailuu(true);
+                        document.getElementById('info-count').textContent = `${danhsach.length} truyện`;
+                        hienthithongbao('Đã lưu truyện thành công!', 'success');
+                    });
+                });
             });
         }
     });
@@ -1178,7 +1212,8 @@ document.getElementById('btn-save-api').addEventListener('click', async () => {
             const r = await fetch('https://api.fpt.ai/hmi/tts/v5', { method: 'POST', headers: { 'api-key': key }, body: 'Kiểm tra' });
             thanhcong = r.ok;
         } else if (congcu === 'azure') {
-            const regionVal = region || 'southeastasia';
+            const REGION_PATTERN = /^[a-z0-9-]{2,30}$/;
+            const regionVal = REGION_PATTERN.test(region) ? region : 'southeastasia';
             const r = await fetch(`https://${regionVal}.tts.speech.microsoft.com/cognitiveservices/v1`, {
                 method: 'POST',
                 headers: { 'Ocp-Apim-Subscription-Key': key, 'Content-Type': 'application/ssml+xml', 'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3' },
@@ -1236,7 +1271,10 @@ document.getElementById('btn-test-api').addEventListener('click', async () => {
             const r = await fetch('https://api.fpt.ai/hmi/tts/v5', { method: 'POST', headers: { 'api-key': key }, body: 'Kiểm tra' });
             thanhcong = r.ok;
         } else if (congcu === 'azure') {
-            const region = document.getElementById('api-region-input').value.trim() || 'southeastasia';
+            const REGION_PATTERN = /^[a-z0-9-]{2,30}$/;
+            const region = REGION_PATTERN.test(document.getElementById('api-region-input').value.trim())
+                ? document.getElementById('api-region-input').value.trim()
+                : 'southeastasia';
             if (!document.getElementById('api-region-input').value.trim()) hienthithongbao('Region trống, sử dụng mặc định: southeastasia', 'info');
             const r = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
                 method: 'POST',
@@ -1256,16 +1294,20 @@ document.getElementById('btn-test-api').addEventListener('click', async () => {
 });
 
 document.getElementById('btn-add-dict').addEventListener('click', () => {
-    const origin = document.getElementById('dict-origin').value.trim();
-    const replace = document.getElementById('dict-replace').value.trim();
-    if (!origin || !replace) { hienthithongbao('Vui lòng nhập đủ 2 ô!', 'warning'); return; }
-    const existIdx = tudienhientai.findIndex(r => r.origin.toLowerCase() === origin.toLowerCase());
-    if (existIdx !== -1) {
-        tudienhientai[existIdx].replace = replace;
-    } else {
-        tudienhientai.unshift({ origin, replace });
+    const goc = document.getElementById('dict-origin').value.trim();
+    const thaythe = document.getElementById('dict-replace').value.trim();
+    if (!goc || !thaythe) { hienthithongbao('Vui lòng nhập đủ 2 ô!', 'warning'); return; }
+    if (tudienhientai.length >= 50 && tudienhientai.findIndex(r => r.origin.toLowerCase() === goc.toLowerCase()) === -1) {
+        hienthithongbao('Chỉ được phép thêm tối đa 50 quy tắc. Vui lòng xóa bớt trước khi thêm mới.', 'warning');
+        return;
     }
-    chrome.storage.sync.set({ customDict: tudienhientai }, () => {
+    const vitritontai = tudienhientai.findIndex(r => r.origin.toLowerCase() === goc.toLowerCase());
+    if (vitritontai !== -1) {
+        tudienhientai[vitritontai].replace = thaythe;
+    } else {
+        tudienhientai.unshift({ origin: goc, replace: thaythe });
+    }
+    chrome.storage.local.set({ customDict: tudienhientai }, () => {
         document.getElementById('dict-origin').value = '';
         document.getElementById('dict-replace').value = '';
         hienthitudien();
@@ -1281,11 +1323,12 @@ document.getElementById('btn-export-data').addEventListener('click', () => {
                 fpt_key: localData.fpt_key || '',
                 azure_key: localData.azure_key || '',
                 azure_region: localData.azure_region || '',
-                customDict: syncData.customDict || [],
+                customDict: localData.customDict || syncData.customDict || [],
                 speed: syncData.speed,
                 volume: syncData.volume,
                 maydoc: syncData.maydoc
             };
+            hienthithongbao('File backup chứa API Key — không chia sẻ cho người khác!', 'warning');
             const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1326,8 +1369,8 @@ document.getElementById('import-file-input').addEventListener('change', (e) => {
 
                 const { readingList, fpt_key, azure_key, azure_region, maydoc } = parsedData;
                 const { customDict, speed, volume } = parsedData;
-                chrome.storage.local.set({ readingList, fpt_key, azure_key, azure_region, maydoc }, () => {
-                    chrome.storage.sync.set({ customDict, speed, volume, maydoc }, () => {
+                chrome.storage.local.set({ readingList, fpt_key, azure_key, azure_region, maydoc, customDict }, () => {
+                    chrome.storage.sync.set({ speed, volume, maydoc }, () => {
                         hienthithongbao('Phục hồi thành công! Đang tải lại...', 'success');
                         setTimeout(() => window.location.reload(), 1500);
                     });
@@ -1693,9 +1736,17 @@ caidatochontinh('custom-operator', 'text-operator', 'dropdown-operator');
 caidatochontinh('engine-select', 'custom-engine-text', 'custom-engine-dropdown');
 caidatochontinh('select-auto-stop', 'custom-autostop-text', 'custom-autostop-dropdown');
 
-chrome.storage.sync.get('customDict', d => {
-    tudienhientai = d.customDict || [];
-    hienthitudien();
+chrome.storage.local.get('customDict', dulieudiaphuong => {
+    if (dulieudiaphuong.customDict) {
+        tudienhientai = dulieudiaphuong.customDict;
+        hienthitudien();
+    } else {
+        chrome.storage.sync.get('customDict', d => {
+            tudienhientai = d.customDict || [];
+            hienthitudien();
+            if (tudienhientai.length > 0) chrome.storage.local.set({ customDict: tudienhientai });
+        });
+    }
 });
 
 setTimeout(() => {
