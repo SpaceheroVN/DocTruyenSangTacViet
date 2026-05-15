@@ -96,6 +96,10 @@ async function xoacsdl() {
     });
 }
 
+function thoatregex(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function lamtranhvanban(vanban) {
     if (!vanban) return '';
     let txt = vanban
@@ -107,7 +111,7 @@ function lamtranhvanban(vanban) {
         tudienhientai.forEach(rule => {
             try {
                 const safeReplace = rule.replace.replace(/\$/g, '$$$$');
-                txt = txt.replace(new RegExp(rule.origin, 'gi'), safeReplace);
+                txt = txt.replace(new RegExp(thoatregex(rule.origin), 'gi'), safeReplace);
             } catch (e) { }
         });
     }
@@ -343,7 +347,8 @@ async function layamthanhtuapiraw(vanban, congcudoc, solanth = 3) {
             const tengiong = tenCacGiong[chisogionghientai] || 'vi-VN-HoaiMyNeural';
             const vantanthoat = String(vanban).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             const ssml = `<speak version='1.0' xml:lang='vi-VN'><voice xml:lang='vi-VN' name='${tengiong}'><prosody rate='${tocdohientai}'>${vantanthoat}</prosody></voice></speak>`;
-            const region = khoaapi.azure_region || 'southeastasia';
+            const REGION_PATTERN = /^[a-z0-9-]{2,30}$/;
+            const region = REGION_PATTERN.test(khoaapi.azure_region) ? khoaapi.azure_region : 'southeastasia';
             const res = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
                 method: 'POST',
                 headers: {
@@ -1431,8 +1436,7 @@ chrome.storage.local.get([
 
 chrome.storage.sync.get([
     'speed', 'volume', 'voiceIndex', 'maydoc',
-    'fpt_key', 'azure_key', 'azure_region', 'tudongchuyenchuong',
-    'batphimtat', 'doctentruyen', 'doctenchuong', 'customDict', 'smartPauses'
+    'tudongchuyenchuong', 'batphimtat', 'doctentruyen', 'doctenchuong', 'customDict', 'smartPauses'
 ], syncData => {
     Object.assign(khoaapi, syncData);
     if (syncData.smartPauses) thoigianngh = syncData.smartPauses;
@@ -1445,6 +1449,10 @@ chrome.storage.sync.get([
     doctentruyen = syncData.doctentruyen !== undefined ? syncData.doctentruyen : true;
     doctenchuong = syncData.doctenchuong !== undefined ? syncData.doctenchuong : true;
     dadatcaidat = true;
+});
+
+chrome.storage.local.get(['fpt_key', 'azure_key', 'azure_region'], localKeyData => {
+    Object.assign(khoaapi, localKeyData);
 });
 
 chrome.storage.onChanged.addListener((thaydoi, vungchon) => {

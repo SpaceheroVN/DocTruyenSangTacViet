@@ -9,6 +9,7 @@ const SVG_LUU = `<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0
 const SVG_TICH = `<polyline points="20 6 9 17 4 12"/>`;
 const svgcanhbao = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 3px; color: var(--warning);"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
 
+let gangay = false;
 let mahengiodongho = null;
 let giaydongho = 0;
 let trangthaicuoi = { isPlaying: false, isPaused: false };
@@ -248,7 +249,7 @@ function hienthidanhsachdoc(danhsach) {
         const kieunguy = nguycucu ? 'border: 1px solid var(--danger); background: rgba(224, 92, 110, 0.05);' : '';
         return `
             <div class="list-item" data-title="${thoathtml(m.title)}" style="${kieunguy}" title="${nguycucu ? 'Truyện cũ, có thể bị xóa nếu bộ nhớ đầy' : 'Nhấn để mở'}">
-                <img class="list-thumb" src="${m.imgUrl || ANH_KHUYET}" alt="">
+                <img class="list-thumb" src="${thoathtml(m.imgUrl || ANH_KHUYET)}" alt="">
                 <div class="list-info">
                     <div class="list-name" style="${nguycucu ? 'color: var(--danger)' : ''}">${thoathtml(m.title)}</div>
                     <div class="list-chap">
@@ -268,7 +269,7 @@ function hienthidanhsachdoc(danhsach) {
         item.addEventListener('click', (e) => {
             if (e.target.closest('.btn-remove')) return;
             const muc = danhsach[index];
-            if (muc && muc.url) window.open(muc.url, '_blank');
+            if (muc && muc.url && /^https?:\/\//.test(muc.url)) window.open(muc.url, '_blank');
         });
     });
     document.querySelectorAll('.btn-remove').forEach((btn) => {
@@ -1178,7 +1179,8 @@ document.getElementById('btn-save-api').addEventListener('click', async () => {
             const r = await fetch('https://api.fpt.ai/hmi/tts/v5', { method: 'POST', headers: { 'api-key': key }, body: 'Kiểm tra' });
             thanhcong = r.ok;
         } else if (congcu === 'azure') {
-            const regionVal = region || 'southeastasia';
+            const REGION_PATTERN = /^[a-z0-9-]{2,30}$/;
+            const regionVal = REGION_PATTERN.test(region) ? region : 'southeastasia';
             const r = await fetch(`https://${regionVal}.tts.speech.microsoft.com/cognitiveservices/v1`, {
                 method: 'POST',
                 headers: { 'Ocp-Apim-Subscription-Key': key, 'Content-Type': 'application/ssml+xml', 'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3' },
@@ -1236,7 +1238,10 @@ document.getElementById('btn-test-api').addEventListener('click', async () => {
             const r = await fetch('https://api.fpt.ai/hmi/tts/v5', { method: 'POST', headers: { 'api-key': key }, body: 'Kiểm tra' });
             thanhcong = r.ok;
         } else if (congcu === 'azure') {
-            const region = document.getElementById('api-region-input').value.trim() || 'southeastasia';
+            const REGION_PATTERN = /^[a-z0-9-]{2,30}$/;
+            const region = REGION_PATTERN.test(document.getElementById('api-region-input').value.trim())
+                ? document.getElementById('api-region-input').value.trim()
+                : 'southeastasia';
             if (!document.getElementById('api-region-input').value.trim()) hienthithongbao('Region trống, sử dụng mặc định: southeastasia', 'info');
             const r = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
                 method: 'POST',
@@ -1286,6 +1291,7 @@ document.getElementById('btn-export-data').addEventListener('click', () => {
                 volume: syncData.volume,
                 maydoc: syncData.maydoc
             };
+            hienthithongbao('File backup chứa API Key — không chia sẻ cho người khác!', 'warning');
             const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
