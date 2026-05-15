@@ -2024,13 +2024,15 @@
       if (trangMauDaTai) return;
       trangMauDaTai = true;
       const isLive = window.location.hostname.includes('github.io');
-      const mauUrl = isLive
-        ? `https://cdn.jsdelivr.net/gh/${REPO}@main/docs/mau/chuong-1.html`
-        : 'mau/chuong-1.html';
+      const baseUrl = isLive
+        ? `https://cdn.jsdelivr.net/gh/${REPO}@main/docs/mau/`
+        : 'mau/';
+      const mauUrl = baseUrl + 'chuong-1.html';
       if (isLive) {
         try {
           const res = await fetch(mauUrl);
-          const html = await res.text();
+          let html = await res.text();
+          html = html.replace('<head>', `<head><base href="${baseUrl}">`);
           khungTrangMau.srcdoc = html;
         } catch (_) {
           khungTrangMau.src = mauUrl;
