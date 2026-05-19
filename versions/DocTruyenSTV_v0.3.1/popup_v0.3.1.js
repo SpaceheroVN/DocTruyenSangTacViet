@@ -329,13 +329,17 @@ function xoakhoidanhsach(title) {
 function capnhatdungluong() {
     if (!chrome.storage.local.getBytesInUse) return;
     chrome.storage.local.getBytesInUse(null, (bytes) => {
-        const MAX_BYTES = 5242880;
+        const MAX_BYTES = 4.111 * 1024 * 1024;
         const phantram = (bytes / MAX_BYTES) * 100;
         const kb = (bytes / 1024).toFixed(1);
+        const maxKb = (MAX_BYTES / 1024).toFixed(0);
+
         const usageText = document.getElementById('storage-usage-text');
         const usageBar = document.getElementById('storage-usage-bar');
         const warning = document.getElementById('storage-warning');
-        if (usageText) usageText.textContent = `${kb} KB / 5000 KB`;
+
+        if (usageText) usageText.textContent = `${kb} KB / ${maxKb} KB`;
+
         if (usageBar) {
             usageBar.style.width = `${Math.min(100, phantram)}%`;
             usageBar.style.background = phantram > 85 ? 'var(--danger)' : (phantram > 60 ? 'var(--warning)' : 'var(--success)');
