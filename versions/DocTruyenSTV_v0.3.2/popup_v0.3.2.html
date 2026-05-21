@@ -33,13 +33,13 @@
     }
 
     html {
-      width: 320px;
+      width: 350px;
       max-height: 600px;
       overflow: hidden;
     }
 
     body {
-      width: 320px;
+      width: 350px;
       max-height: 600px;
       background: var(--bg);
       color: var(--text);
@@ -48,6 +48,8 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      opacity: 0;
+      transition: opacity 0.12s ease;
     }
 
     .toast {
@@ -403,6 +405,103 @@
       vertical-align: middle;
       margin-right: 4px;
       color: var(--warning);
+    }
+
+    .pause-card {
+      flex: 1;
+      min-width: 0;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 4px 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      transition: border-color 0.2s;
+      overflow: hidden;
+    }
+
+    .pause-card:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(232, 160, 69, 0.1);
+    }
+
+    .pause-symbol {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+      min-height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pause-type-label {
+      font-size: 8.5px;
+      color: var(--text-muted);
+      text-align: center;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+
+    .pause-stepper {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      width: 100%;
+      margin-top: 2px;
+    }
+
+    .pause-step-btn {
+      width: 18px;
+      height: 18px;
+      background: var(--border);
+      border: none;
+      border-radius: 4px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 13px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s, color 0.15s;
+      font-family: inherit;
+      padding: 0;
+    }
+
+    .pause-step-btn:hover {
+      background: var(--accent);
+      color: #0f0e17;
+    }
+
+    .pause-step-btn:active {
+      transform: scale(0.92);
+    }
+
+    .pause-num-input {
+      flex: 1;
+      min-width: 0;
+      text-align: center;
+      background: transparent;
+      border: none;
+      color: var(--accent);
+      font-size: 10.5px;
+      font-weight: 700;
+      font-family: inherit;
+      outline: none;
+      padding: 0;
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+
+    .pause-num-input::-webkit-inner-spin-button,
+    .pause-num-input::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
     }
 
     @keyframes pulse {
@@ -853,6 +952,38 @@
       border-color: var(--accent);
     }
 
+    .sort-bar {
+      display: flex;
+      gap: 5px;
+      margin-top: 7px;
+    }
+
+    .sort-btn {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 5px;
+      font-size: 10px;
+      font-family: inherit;
+      padding: 4px 0;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .sort-btn:hover {
+      border-color: var(--accent);
+      color: var(--text);
+    }
+
+    .sort-btn.active {
+      background: rgba(232, 160, 69, 0.12);
+      border-color: var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
     .list-empty {
       text-align: center;
       color: var(--text-muted);
@@ -1192,7 +1323,6 @@
       pointer-events: none;
     }
 
-
     svg .drag-handle,
     svg .ring-group {
       pointer-events: all;
@@ -1300,7 +1430,6 @@
       border-color: var(--accent) !important;
       text-align: center !important;
     }
-
 
     .digital-clock-display {
       display: flex;
@@ -1478,12 +1607,12 @@
     }
 
     .drag-handle:hover {
-      r: 9.5px;
+      r: 11.5px;
     }
 
     .drag-handle.dragging {
       cursor: grabbing;
-      r: 10px;
+      r: 12px;
     }
 
     .picker-number {
@@ -1826,305 +1955,480 @@
   <div class="panel" id="panel-reading-list">
     <div class="search-box">
       <input type="text" id="list-search" placeholder="Tìm tên truyện hoặc chương...">
+      <div class="sort-bar">
+        <button class="sort-btn active" data-sort="recent"><svg xmlns="http://www.w3.org/2000/svg" width="11"
+            height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round" style="vertical-align:-1px;margin-right:3px">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>Gần nhất</button>
+        <button class="sort-btn" data-sort="az"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round" style="vertical-align:-1px;margin-right:3px">
+            <path d="m3 8 4-4 4 4" />
+            <path d="M7 4v16" />
+            <path d="M20 8h-5" />
+            <path d="M15 10V6.5a2.5 2.5 0 0 1 5 0V10" />
+            <path d="M15 14h5l-5 6h5" />
+          </svg>Tên A-Z</button>
+        <button class="sort-btn" data-sort="chapters"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round" style="vertical-align:-1px;margin-right:3px">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+          </svg>Nhiều chương</button>
+      </div>
     </div>
     <div id="list-container">
       <div class="list-empty">Chưa có truyện nào được lưu.</div>
     </div>
   </div>
-  <div class="panel" id="panel-settings">
-    <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 6px; padding-bottom: 12px;">
-      <span class="setting-label">Nguồn giọng đọc (TTS Engine)</span>
-      <div class="custom-select-container" style="width: 100%;">
-        <div class="custom-select-trigger">
-          <span id="custom-engine-text">Web Speech API (Miễn phí)</span>
-        </div>
-        <div class="custom-select-dropdown" id="custom-engine-dropdown"></div>
-        <select class="voice-select" id="engine-select" style="display: none;">
-          <option value="web">Web Speech API (Miễn phí)</option>
-          <optgroup label="API Cao Cấp (Cần Key)">
-            <option value="fpt">FPT.AI TTS (Việt Nam)</option>
-            <option value="azure">Microsoft Azure TTS</option>
-          </optgroup>
-        </select>
-      </div>
-      <div id="api-settings-box" style="display:none;">
-        <input type="password" id="api-key-input" placeholder="Nhập API Key vào đây...">
-        <input type="text" id="api-region-input" placeholder="Azure Region (VD: southeastasia)" style="display:none;">
-        <div style="display: flex; gap: 8px;">
-          <button class="btn-ctrl btn-sm" id="btn-save-api" style="flex: 1;">
-            <svg id="btn-save-api-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-              style="margin-right: 4px;">
-              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-              <polyline points="17 21 17 13 7 13 7 21" />
-              <polyline points="7 3 7 8 15 8" />
-            </svg>
-            <span id="btn-save-api-text">Lưu API Key</span>
-          </button>
-          <button class="btn-ctrl btn-sm" id="btn-test-api"
-            style="width: auto; padding: 0 12px; height: 28px; font-size: 10px; border-color: var(--accent2); color: var(--accent2);"
-            title="Kiểm tra Key này có hoạt động không">
-            Thử Key
-          </button>
-        </div>
-        <div style="margin-top: 10px; text-align: center;">
-          <a href="guide_v0.2.0.html" target="_blank"
-            style="color: var(--accent); text-decoration: none; font-size: 11px;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-              style="vertical-align: middle; margin-right: 2px;">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>
-            Hướng dẫn cách lấy API Key miễn phí
-          </a>
-        </div>
-      </div>
-    </div>
-    <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 10px; padding: 10px 0;">
+  <div class="panel" id="panel-settings"
+    style="padding: 12px; flex: 1; overflow-y: auto; scrollbar-gutter: stable; border-top: 1px solid var(--border); flex-direction: column; gap: 14px; background: var(--bg);">
 
-      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 10px;">
-        <span class="setting-label" style="white-space: nowrap;">Tự động dừng</span>
-        <div class="custom-select-container" style="flex: 1; max-width: 155px;">
-          <div class="custom-select-trigger">
-            <span id="custom-autostop-text">Không có</span>
-          </div>
-          <div class="custom-select-dropdown" id="custom-autostop-dropdown"></div>
-          <select class="auto-stop-select" id="select-auto-stop" style="display: none;">
-            <option value="off">Không có</option>
-            <option value="time">Hẹn giờ</option>
-            <option value="chapters">Theo số chương</option>
-            <option value="realtime">Theo thời gian thực</option>
-            <option value="custom">Theo tùy chỉnh</option>
-          </select>
-        </div>
+    <div style="display: flex; flex-direction: column; gap: 6px;">
+      <div
+        style="font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; padding-left: 4px;">
+        Giọng đọc
       </div>
 
-      <div id="group-stop-time" class="auto-stop-input-group"
-        style="display: none; width: 100%; justify-content: flex-start; flex-wrap: wrap; gap: 6px; margin-top: 0;">
-        <div style="display: flex; align-items: center; gap: 4px;">
-          <input type="number" id="input-stop-hours" class="auto-stop-input" value="0" min="0" style="width: 36px;">
-          <span class="auto-stop-unit">Giờ</span>
-          <input type="number" id="input-stop-minutes" class="auto-stop-input" value="30" min="0" max="59"
-            style="width: 36px;">
-          <span class="auto-stop-unit">Phút</span>
-        </div>
-        <div style="display: flex; gap: 4px; margin-left: auto;">
-          <button class="btn-ctrl btn-sm" id="btn-toggle-sign"
-            style="height: 22px; width: 22px; font-size: 15px; font-weight: bold; padding: 0; display: flex; align-items: center; justify-content: center; line-height: 1; letter-spacing: 0; color: var(--accent);">+</button>
-          <button class="btn-ctrl btn-sm preset-time" data-min="15"
-            style="height: 22px; width: auto; font-size: 9px; padding: 0 6px;">15p</button>
-          <button class="btn-ctrl btn-sm preset-time" data-min="30"
-            style="height: 22px; width: auto; font-size: 9px; padding: 0 6px;">30p</button>
-          <button class="btn-ctrl btn-sm" id="btn-apply-stop-time"
-            style="height: 22px; width: 34px; font-size: 9px; margin-left: 4px;">Lưu</button>
-        </div>
-      </div>
+      <div
+        style="background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 0 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
 
-      <div id="group-stop-realtime" class="auto-stop-input-group"
-        style="display: none; width: 100%; flex-direction: column; align-items: center; gap: 10px; margin-top: 0; position: relative;">
-
-        <div class="digital-clock-display" id="realtime-digital-display">
-          <input class="digit-input-overlay" id="digit-input-hidden" type="number" min="0" max="59" inputmode="numeric">
-          <span class="digital-digit" id="digit-hours" title="Nhấn để nhập giờ">00</span>
-          <span class="digital-separator">:</span>
-          <span class="digital-digit" id="digit-minutes" title="Nhấn để nhập phút">00</span>
-          <div class="custom-select-container ampm-select-wrap" id="ampm-container">
-            <div class="custom-select-trigger"><span id="ampm-text">AM</span></div>
-            <div class="custom-select-dropdown" id="ampm-dropdown">
-              <div class="custom-option selected" data-val="AM">AM</div>
-              <div class="custom-option" data-val="PM">PM</div>
+        <div class="setting-row"
+          style="flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--border);">
+          <span class="setting-label" style="font-size: 11px;">Nguồn giọng đọc (TTS Engine)</span>
+          <div class="custom-select-container" style="width: 100%;">
+            <div class="custom-select-trigger" style="border-radius: 8px; background-color: var(--surface2);">
+              <span id="custom-engine-text">Web Speech API (Miễn phí)</span>
             </div>
-          </div>
-        </div>
-        <div class="digital-clock-hint">Nhấn vào số để gõ trực tiếp · Kéo vòng tròn để chọn</div>
-
-        <div class="circular-picker-container" style="position: relative;">
-          <svg width="190" height="190" viewBox="0 0 190 190" class="circular-picker-svg">
-
-            <defs>
-              <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stop-color="#222136" stop-opacity="0.9" />
-                <stop offset="100%" stop-color="#0f0e17" stop-opacity="0" />
-              </radialGradient>
-              <filter id="glow-h">
-                <feGaussianBlur stdDeviation="2.5" result="blur" />
-                <feMerge>
-                  <feMergeNode in="blur" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-              <filter id="glow-m">
-                <feGaussianBlur stdDeviation="2.5" result="blur" />
-                <feMerge>
-                  <feMergeNode in="blur" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-            </defs>
-            <circle cx="95" cy="95" r="90" fill="url(#bgGrad)" />
-            <circle class="base-circle" cx="95" cy="95" r="89"></circle>
-
-
-            <g class="ring-group" id="hour-ring-group">
-
-              <g id="hour-ticks"></g>
-              <circle class="ring-path" cx="95" cy="95" r="82"></circle>
-              <circle class="active-progress" cx="95" cy="95" r="82" id="hour-progress"></circle>
-              <text class="picker-number" x="95" y="28">12</text>
-              <text class="picker-number" x="158" y="99">3</text>
-              <text class="picker-number" x="95" y="168">6</text>
-              <text class="picker-number" x="32" y="99">9</text>
-              <circle class="drag-handle" cx="95" cy="13" r="8" id="hour-handle"></circle>
-
-              <text class="picker-ring-label" x="95" y="87" style="fill:var(--accent);opacity:0.5;">GIỜ</text>
-            </g>
-
-
-            <g class="ring-group" id="minute-ring-group">
-
-              <g id="minute-ticks"></g>
-              <circle class="ring-path" cx="95" cy="95" r="56"></circle>
-              <circle class="active-progress minute-prog" cx="95" cy="95" r="56" id="minute-progress"></circle>
-              <text class="picker-number sm" x="95" y="52">00</text>
-              <text class="picker-number sm" x="138" y="98">15</text>
-              <text class="picker-number sm" x="95" y="144">30</text>
-              <text class="picker-number sm" x="52" y="98">45</text>
-              <circle class="drag-handle minute-handle" cx="95" cy="39" r="7" id="minute-handle"></circle>
-
-              <text class="picker-ring-label" x="95" y="103" style="fill:var(--accent2);opacity:0.5;">PHÚT</text>
-            </g>
-
-
-            <circle cx="95" cy="95" r="3" fill="var(--border)" opacity="0.6" />
-          </svg>
-        </div>
-
-        <button class="btn-ctrl btn-sm" id="btn-apply-stop-realtime"
-          style="height: 26px; font-size: 11px; padding: 0 16px; width: auto; margin-top: 4px; align-self: flex-end;">Lưu</button>
-      </div>
-
-      <div id="group-stop-chapters" class="auto-stop-input-group"
-        style="display: none; width: 100%; justify-content: flex-end; gap: 6px; margin-top: 0;">
-        <input type="number" id="input-stop-chapters" class="auto-stop-input" value="1" min="1" style="width: 60px;">
-        <span class="auto-stop-unit" style="margin-right: 4px;">chương</span>
-        <button class="btn-ctrl btn-sm" id="btn-apply-stop-chapters"
-          style="height: 26px; width: 44px; font-size: 11px;">Lưu</button>
-      </div>
-
-      <div id="group-stop-custom" class="auto-stop-input-group"
-        style="display: none; flex-direction: column; gap: 10px; width: 100%; background: rgba(0, 0, 0, 0.25); box-shadow: inset 0 2px 5px rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid var(--border); margin-top: 0;">
-        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-          <div style="display: flex; align-items: center; gap: 4px;">
-            <div class="custom-select-container custom-select-sm" style="width: 72px;">
-              <div class="custom-select-trigger"><span id="text-left-type">-Chọn-</span></div>
-              <div class="custom-select-dropdown" id="dropdown-left-type"></div>
-              <select id="custom-left-type" style="display: none;">
-                <option value="">-Chọn-</option>
-                <option value="time">H.Giờ</option>
-                <option value="realtime">G.Thực</option>
-                <option value="chapters">Chương</option>
-              </select>
-            </div>
-            <div id="custom-left-input" style="display: flex; gap: 2px; align-items: center;"></div>
-          </div>
-
-          <div class="custom-select-container custom-select-sm" id="custom-operator-container" style="width: 65px;">
-            <div class="custom-select-trigger"><span id="text-operator">HOẶC</span></div>
-            <div class="custom-select-dropdown" id="dropdown-operator"></div>
-            <select id="custom-operator" style="display: none;">
-              <option value="or">HOẶC</option>
-              <option value="and">VÀ</option>
+            <div class="custom-select-dropdown" id="custom-engine-dropdown"></div>
+            <select class="voice-select" id="engine-select" style="display: none;">
+              <option value="web">Web Speech API (Miễn phí)</option>
+              <optgroup label="API Cao Cấp (Cần Key)">
+                <option value="fpt">FPT.AI TTS (Việt Nam)</option>
+                <option value="azure">Microsoft Azure TTS</option>
+              </optgroup>
             </select>
           </div>
+
+          <div id="api-settings-box"
+            style="display:none; width: 100%; background: var(--surface2); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); margin-top: 4px; box-sizing: border-box;">
+            <input type="password" id="api-key-input" placeholder="Nhập API Key vào đây..."
+              style="width: 100%; margin-bottom: 8px; padding: 8px 10px; font-size: 11px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); outline: none; box-sizing: border-box;">
+            <input type="text" id="api-region-input" placeholder="Azure Region (VD: southeastasia)"
+              style="display:none; width: 100%; margin-bottom: 8px; padding: 8px 10px; font-size: 11px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); outline: none; box-sizing: border-box;">
+            <div style="display: flex; gap: 8px;">
+              <button class="btn-ctrl btn-sm" id="btn-save-api"
+                style="flex: 1; height: 30px; font-size: 11px; background: rgba(232, 160, 69, 0.15); color: var(--accent); border-color: var(--accent); border-radius: 6px;">
+                <svg id="btn-save-api-icon" xmlns="http://www.w3.org/2000/svg" width="13" height="13"
+                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" style="margin-right: 4px; vertical-align: text-top;">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                  <polyline points="17 21 17 13 7 13 7 21" />
+                  <polyline points="7 3 7 8 15 8" />
+                </svg>
+                <span id="btn-save-api-text">Lưu API Key</span>
+              </button>
+              <button class="btn-ctrl btn-sm" id="btn-test-api"
+                style="width: auto; padding: 0 12px; height: 30px; font-size: 11px; border-color: var(--accent2); color: var(--accent2); background: transparent; border-radius: 6px;"
+                title="Kiểm tra Key này có hoạt động không">
+                Thử Key
+              </button>
+            </div>
+            <div style="margin-top: 10px; text-align: center;">
+              <a href="guide_v0.3.2.html" target="_blank"
+                style="color: var(--accent); text-decoration: none; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+                Hướng dẫn cách lấy API Key
+              </a>
+            </div>
+          </div>
         </div>
 
-        <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-          <div style="display: flex; align-items: center; gap: 4px;">
-            <div class="custom-select-container custom-select-sm" style="width: 72px;">
-              <div class="custom-select-trigger"><span id="text-right-type">-Chọn-</span></div>
-              <div class="custom-select-dropdown" id="dropdown-right-type"></div>
-              <select id="custom-right-type" style="display: none;">
-                <option value="">-Chọn-</option>
-                <option value="time">H.Giờ</option>
-                <option value="realtime">G.Thực</option>
-                <option value="chapters">Chương</option>
-              </select>
-            </div>
-            <div id="custom-right-input" style="display: flex; gap: 2px; align-items: center;"></div>
+        <div class="setting-row" style="padding: 12px 0; border-bottom: 1px solid var(--border);">
+          <span class="setting-label" style="font-size: 11px;">Giọng đang dùng</span>
+          <span class="setting-val" id="info-voice" style="font-size: 11px; color: var(--accent);">Mặc định</span>
+        </div>
+        <div class="setting-row" style="padding: 12px 0; border-bottom: 1px solid var(--border);">
+          <span class="setting-label" style="font-size: 11px;">Đọc tên truyện</span>
+          <label class="toggle">
+            <input type="checkbox" id="chk-read-book" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-row" style="padding: 12px 0; border-bottom: none;">
+          <span class="setting-label" style="font-size: 11px;">Đọc tên chương</span>
+          <label class="toggle">
+            <input type="checkbox" id="chk-read-chap" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-row"
+          style="flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--border);">
+          <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+            <span class="setting-label" style="font-size: 11px;">Khoảng nghỉ các đoạn</span>
+            <span style="font-size: 9px; color: var(--text-muted); font-variant-numeric: tabular-nums;">ms</span>
           </div>
-          <button class="btn-ctrl btn-sm" id="btn-apply-stop-custom"
-            style="height: 24px; font-size: 11px; padding: 0 12px; width: auto; background: rgba(232, 160, 69, 0.1); color: var(--accent); border-color: var(--accent);">Lưu</button>
+          <div style="display: flex; gap: 4px; width: 100%;">
+            <div class="pause-card">
+              <div class="pause-symbol">,</div>
+              <div class="pause-type-label">Dấu phẩy</div>
+              <div class="pause-stepper">
+                <button class="pause-step-btn" data-target="pause-comma" data-delta="-100">−</button>
+                <input class="pause-num-input" type="number" id="pause-comma" value="300" min="0" step="100">
+                <button class="pause-step-btn" data-target="pause-comma" data-delta="100">+</button>
+              </div>
+            </div>
+            <div class="pause-card">
+              <div class="pause-symbol">.</div>
+              <div class="pause-type-label">Dấu chấm</div>
+              <div class="pause-stepper">
+                <button class="pause-step-btn" data-target="pause-dot" data-delta="-100">−</button>
+                <input class="pause-num-input" type="number" id="pause-dot" value="800" min="0" step="100">
+                <button class="pause-step-btn" data-target="pause-dot" data-delta="100">+</button>
+              </div>
+            </div>
+            <div class="pause-card">
+              <div class="pause-symbol">↵</div>
+              <div class="pause-type-label">Xuống dòng</div>
+              <div class="pause-stepper">
+                <button class="pause-step-btn" data-target="pause-para" data-delta="-100">−</button>
+                <input class="pause-num-input" type="number" id="pause-para" value="1200" min="0" step="100">
+                <button class="pause-step-btn" data-target="pause-para" data-delta="100">+</button>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top: 10px; width: 100%;">
+            <button id="btn-show-pause-note" class="btn-ctrl"
+              style="width: 100%; height: 26px; font-size: 11px; border-color: var(--warning); color: var(--warning); background: rgba(240, 192, 64, 0.05); border-radius: 6px; cursor: pointer;">
+              Xem lưu ý
+            </button>
+            <div id="pause-note-content"
+              style="display: none; font-size: 12px; color: var(--warning); margin-top: 8px; line-height: 1.5; padding: 10px; border: 1px dashed var(--warning); border-radius: 8px; background: rgba(240, 192, 64, 0.02);">
+              <strong style="font-weight: 700;">* Lưu ý:</strong> Khoảng nghỉ dấu câu (phẩy/chấm) chỉ hoạt động tại các
+              điểm nối khi văn bản quá dài bị cắt nhỏ, hoặc khi chuyển đoạn. Không áp dụng cho mọi dấu câu do giới hạn
+              API.
+            </div>
+          </div>
         </div>
       </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 6px;">
+      <div
+        style="font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; padding-left: 4px;">
+        Sửa lỗi phát âm
+      </div>
 
+      <div
+        style="background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+        <div style="display: flex; gap: 6px; width: 100%; align-items: center;">
+          <input type="text" id="dict-origin" placeholder="Từ bị lỗi..."
+            style="flex: 1; min-width: 0; padding: 8px; font-size: 11px; background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; outline: none; box-sizing: border-box;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            style="flex-shrink: 0;">
+            <path d="M5 12h14" />
+            <path d="m13 18 6-6-6-6" />
+          </svg>
+          <input type="text" id="dict-replace" placeholder="Đọc thành..."
+            style="flex: 1; min-width: 0; padding: 8px; font-size: 11px; background: var(--surface2); border: 1px solid var(--border); color: var(--accent2); border-radius: 6px; outline: none; box-sizing: border-box;">
+          <button class="btn-ctrl btn-sm" id="btn-add-dict"
+            style="height: 31px; width: 44px; flex-shrink: 0; font-size: 11px; background: rgba(76, 175, 134, 0.15); color: var(--success); border: 1px solid rgba(76, 175, 134, 0.3); border-radius: 6px; font-weight: 600;">Thêm</button>
+        </div>
+        <div id="dict-list"
+          style="width: 100%; max-height: 110px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; margin-top: 8px; padding-right: 2px;">
+        </div>
+      </div>
     </div>
-    <div class="setting-row">
-      <span class="setting-label">Giọng Web Speech</span>
-      <span class="setting-val" id="info-voice">Mặc định</span>
+
+    <div style="display: flex; flex-direction: column; gap: 6px;">
+      <div
+        style="font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; padding-left: 4px;">
+        Phát lại
+      </div>
+
+      <div
+        style="background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 0 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+
+        <div class="setting-row"
+          style="flex-direction: column; align-items: stretch; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border);">
+          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 10px;">
+            <span class="setting-label" style="font-size: 11px; white-space: nowrap;">Tự động dừng</span>
+            <div class="custom-select-container" style="flex: 1; max-width: 155px;">
+              <div class="custom-select-trigger" style="border-radius: 8px; background-color: var(--surface2);">
+                <span id="custom-autostop-text">Không có</span>
+              </div>
+              <div class="custom-select-dropdown" id="custom-autostop-dropdown"></div>
+              <select class="auto-stop-select" id="select-auto-stop" style="display: none;">
+                <option value="off">Không có</option>
+                <option value="time">Hẹn giờ</option>
+                <option value="chapters">Theo số chương</option>
+                <option value="realtime">Theo thời gian thực</option>
+                <option value="custom">Theo tùy chỉnh</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="group-stop-time" class="auto-stop-input-group"
+            style="display: none; width: 100%; justify-content: space-between; align-items: center; gap: 6px; margin-top: 2px;">
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <input type="number" id="input-stop-hours" class="auto-stop-input" value="0" min="0"
+                style="width: 36px; background: var(--surface2); border-radius: 6px; padding: 4px 2px;">
+              <span class="auto-stop-unit" style="font-size: 11px;">Giờ</span>
+              <input type="number" id="input-stop-minutes" class="auto-stop-input" value="30" min="0" max="59"
+                style="width: 36px; background: var(--surface2); border-radius: 6px; padding: 4px 2px;">
+              <span class="auto-stop-unit" style="font-size: 11px;">Phút</span>
+            </div>
+            <div style="display: flex; gap: 4px;">
+              <button class="btn-ctrl btn-sm" id="btn-toggle-sign"
+                style="height: 25px; width: 25px; font-size: 14px; font-weight: bold; padding: 0; display: flex; align-items: center; justify-content: center; color: var(--accent); background: rgba(255,255,255,0.05); border-radius: 6px;">+</button>
+              <button class="btn-ctrl btn-sm preset-time" data-min="15"
+                style="height: 25px; width: auto; font-size: 10px; padding: 0 6px; background: rgba(255,255,255,0.05); border-radius: 6px;">15p</button>
+              <button class="btn-ctrl btn-sm preset-time" data-min="30"
+                style="height: 25px; width: auto; font-size: 10px; padding: 0 6px; background: rgba(255,255,255,0.05); border-radius: 6px;">30p</button>
+              <button class="btn-ctrl btn-sm" id="btn-apply-stop-time"
+                style="height: 25px; width: 38px; font-size: 10px; background: rgba(232, 160, 69, 0.15); color: var(--accent); border-color: var(--accent); border-radius: 6px; font-weight: 600;">Lưu</button>
+            </div>
+          </div>
+
+          <div id="group-stop-realtime" class="auto-stop-input-group"
+            style="display: none; width: 100%; flex-direction: column; align-items: center; gap: 10px; margin-top: 2px; position: relative;">
+            <div class="digital-clock-display" id="realtime-digital-display" style="margin-bottom: 2px;">
+              <input class="digit-input-overlay" id="digit-input-hidden" type="number" min="0" max="59"
+                inputmode="numeric">
+              <span class="digital-digit" id="digit-hours" title="Nhấn để nhập giờ">00</span>
+              <span class="digital-separator">:</span>
+              <span class="digital-digit" id="digit-minutes" title="Nhấn để nhập phút">00</span>
+              <div class="custom-select-container ampm-select-wrap" id="ampm-container">
+                <div class="custom-select-trigger"><span id="ampm-text">AM</span></div>
+                <div class="custom-select-dropdown" id="ampm-dropdown">
+                  <div class="custom-option selected" data-val="AM">AM</div>
+                  <div class="custom-option" data-val="PM">PM</div>
+                </div>
+              </div>
+            </div>
+            <div class="digital-clock-hint" style="margin-bottom: 0;">Nhấn vào số để gõ trực tiếp · Kéo vòng tròn để
+              chọn</div>
+
+            <div class="circular-picker-container" style="position: relative;">
+              <svg width="190" height="190" viewBox="0 0 190 190" class="circular-picker-svg">
+                <defs>
+                  <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#222136" stop-opacity="0.9" />
+                    <stop offset="100%" stop-color="#0f0e17" stop-opacity="0" />
+                  </radialGradient>
+                  <filter id="glow-h">
+                    <feGaussianBlur stdDeviation="2.5" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                  <filter id="glow-m">
+                    <feGaussianBlur stdDeviation="2.5" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                <circle cx="95" cy="95" r="90" fill="url(#bgGrad)" />
+                <circle class="base-circle" cx="95" cy="95" r="89"></circle>
+
+                <g class="ring-group" id="hour-ring-group">
+                  <g id="hour-ticks"></g>
+                  <circle class="ring-path" cx="95" cy="95" r="82"></circle>
+                  <circle class="active-progress" cx="95" cy="95" r="82" id="hour-progress"></circle>
+                  <text class="picker-number" x="95" y="28">12</text>
+                  <text class="picker-number" x="158" y="99">3</text>
+                  <text class="picker-number" x="95" y="168">6</text>
+                  <text class="picker-number" x="32" y="99">9</text>
+                  <circle class="drag-handle" cx="95" cy="13" r="10" id="hour-handle"></circle>
+                  <text class="picker-ring-label" x="95" y="87" style="fill:var(--accent);opacity:0.5;">GIỜ</text>
+                </g>
+
+                <g class="ring-group" id="minute-ring-group">
+                  <g id="minute-ticks"></g>
+                  <circle class="ring-path" cx="95" cy="95" r="56"></circle>
+                  <circle class="active-progress minute-prog" cx="95" cy="95" r="56" id="minute-progress"></circle>
+                  <text class="picker-number sm" x="95" y="52">00</text>
+                  <text class="picker-number sm" x="138" y="98">15</text>
+                  <text class="picker-number sm" x="95" y="144">30</text>
+                  <text class="picker-number sm" x="52" y="98">45</text>
+                  <circle class="drag-handle minute-handle" cx="95" cy="39" r="9" id="minute-handle"></circle>
+                  <text class="picker-ring-label" x="95" y="103" style="fill:var(--accent2);opacity:0.5;">PHÚT</text>
+                </g>
+                <circle cx="95" cy="95" r="3" fill="var(--border)" opacity="0.6" />
+              </svg>
+            </div>
+            <button class="btn-ctrl btn-sm" id="btn-apply-stop-realtime"
+              style="height: 28px; font-size: 11px; padding: 0 16px; width: 100%; background: rgba(232, 160, 69, 0.15); color: var(--accent); border-color: var(--accent); border-radius: 6px; font-weight: 600;">Lưu
+              thời gian</button>
+          </div>
+
+          <div id="group-stop-chapters" class="auto-stop-input-group"
+            style="display: none; width: 100%; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 2px;">
+            <input type="number" id="input-stop-chapters" class="auto-stop-input" value="1" min="1"
+              style="width: 60px; background: var(--surface2); border-radius: 6px; padding: 4px 2px;">
+            <span class="auto-stop-unit" style="font-size: 11px;">chương</span>
+            <button class="btn-ctrl btn-sm" id="btn-apply-stop-chapters"
+              style="height: 26px; width: 44px; font-size: 11px; background: rgba(232, 160, 69, 0.15); color: var(--accent); border-color: var(--accent); border-radius: 6px; font-weight: 600;">Lưu</button>
+          </div>
+
+          <div id="group-stop-custom" class="auto-stop-input-group"
+            style="display: none; flex-direction: column; gap: 10px; width: 100%; background: var(--surface2); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); margin-top: 2px; box-sizing: border-box;">
+            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <div class="custom-select-container custom-select-sm" style="width: 76px;">
+                  <div class="custom-select-trigger"><span id="text-left-type">-Chọn-</span></div>
+                  <div class="custom-select-dropdown" id="dropdown-left-type"></div>
+                  <select id="custom-left-type" style="display: none;">
+                    <option value="">-Chọn-</option>
+                    <option value="time">H.Giờ</option>
+                    <option value="realtime">G.Thực</option>
+                    <option value="chapters">Chương</option>
+                  </select>
+                </div>
+                <div id="custom-left-input" style="display: flex; gap: 2px; align-items: center;"></div>
+              </div>
+
+              <div class="custom-select-container custom-select-sm" id="custom-operator-container" style="width: 65px;">
+                <div class="custom-select-trigger"><span id="text-operator">HOẶC</span></div>
+                <div class="custom-select-dropdown" id="dropdown-operator"></div>
+                <select id="custom-operator" style="display: none;">
+                  <option value="or">HOẶC</option>
+                  <option value="and">VÀ</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <div class="custom-select-container custom-select-sm" style="width: 76px;">
+                  <div class="custom-select-trigger"><span id="text-right-type">-Chọn-</span></div>
+                  <div class="custom-select-dropdown" id="dropdown-right-type"></div>
+                  <select id="custom-right-type" style="display: none;">
+                    <option value="">-Chọn-</option>
+                    <option value="time">H.Giờ</option>
+                    <option value="realtime">G.Thực</option>
+                    <option value="chapters">Chương</option>
+                  </select>
+                </div>
+                <div id="custom-right-input" style="display: flex; gap: 2px; align-items: center;"></div>
+              </div>
+              <button class="btn-ctrl btn-sm" id="btn-apply-stop-custom"
+                style="height: 25px; font-size: 11px; padding: 0 12px; width: auto; background: rgba(232, 160, 69, 0.15); color: var(--accent); border-color: var(--accent); border-radius: 6px; font-weight: 600;">Lưu</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="setting-row" style="padding: 12px 0; border-bottom: none;">
+          <span class="setting-label" style="font-size: 11px;">Phím tắt (K, R, mũi tên)</span>
+          <label class="toggle">
+            <input type="checkbox" id="chk-shortcuts" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+      </div>
     </div>
-    <div class="setting-row">
-      <span class="setting-label">Sử dụng phím tắt (K, R, mũi tên)</span>
-      <label class="toggle">
-        <input type="checkbox" id="chk-shortcuts" checked>
-        <span class="toggle-slider"></span>
-      </label>
+
+    <div style="display: flex; flex-direction: column; gap: 6px;">
+      <div
+        style="font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; padding-left: 4px;">
+        Dữ liệu
+      </div>
+
+      <div
+        style="background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 0 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+
+        <div class="setting-row" style="padding: 12px 0; border-bottom: 1px solid var(--border);">
+          <span class="setting-label" style="font-size: 11px;">Tổng truyện đã lưu</span>
+          <span class="setting-val" id="info-count" style="font-size: 11px;">0 truyện</span>
+        </div>
+
+        <div class="setting-row"
+          style="flex-direction: column; align-items: flex-start; gap: 6px; padding: 12px 0; border-bottom: 1px solid var(--border);">
+          <span class="setting-label" style="font-weight: 600; font-size: 11px; color: var(--accent);">Sao lưu & Đồng bộ
+            (Backup)</span>
+          <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 2px;">Sao lưu API Key, Danh sách truyện
+            và Cài đặt.</div>
+          <div style="display: flex; gap: 8px; width: 100%; margin-top: 2px;">
+            <button class="btn-ctrl btn-sm" id="btn-export-data"
+              style="flex: 1; height: 30px; font-size: 11px; color: #40c0f0; border: 1px solid rgba(64, 192, 240, 0.3); background: rgba(64, 192, 240, 0.08); border-radius: 6px; font-weight: 500;">
+              Xuất (.json)
+            </button>
+            <button class="btn-ctrl btn-sm" id="btn-import-data"
+              style="flex: 1; height: 30px; font-size: 11px; color: #f0c040; border: 1px solid rgba(240, 192, 64, 0.3); background: rgba(240, 192, 64, 0.08); border-radius: 6px; font-weight: 500;">
+              Nhập dữ liệu
+            </button>
+            <input type="file" id="import-file-input" accept=".json" style="display: none;">
+          </div>
+        </div>
+
+        <div class="setting-row" style="padding: 12px 0; border-bottom: none;">
+          <span class="setting-label" style="font-size: 11px;">Xóa toàn bộ dữ liệu</span>
+          <button class="btn-ctrl btn-sm" id="btn-clear-all"
+            style="color: #f44336; border: 1px solid rgba(244, 67, 54, 0.3); background: rgba(244, 67, 54, 0.1); font-size: 11px; width: auto; padding: 0 10px; height: 26px; border-radius: 6px; font-weight: 600;">
+            Xóa tất cả
+          </button>
+        </div>
+        <div style="margin-top: 12px; width: 100%;">
+          <div
+            style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); margin-bottom: 4px;">
+            <span>Dung lượng lưu trữ</span>
+            <span id="storage-usage-text">0 / 4.11MB</span>
+          </div>
+          <div style="width: 100%; height: 4px; background: var(--surface2); border-radius: 4px; overflow: hidden;">
+            <div id="storage-usage-bar" style="height: 100%; background: var(--success); width: 0%;"></div>
+          </div>
+          <div id="storage-warning" style="display: none; font-size: 9px; color: var(--danger); margin-top: 4px;">
+            Sắp đầy! Các truyện cũ nhất sẽ không được lưu nếu vượt quá giới hạn.
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="setting-row">
-      <span class="setting-label">Đọc tên truyện</span>
-      <label class="toggle">
-        <input type="checkbox" id="chk-read-book" checked>
-        <span class="toggle-slider"></span>
-      </label>
-    </div>
-    <div class="setting-row">
-      <span class="setting-label">Đọc tên chương</span>
-      <label class="toggle">
-        <input type="checkbox" id="chk-read-chap" checked>
-        <span class="toggle-slider"></span>
-      </label>
-    </div>
-    <div class="setting-row">
-      <span class="setting-label">Tổng truyện đã lưu</span>
-      <span class="setting-val" id="info-count">0 truyện</span>
-    </div>
-    <div class="setting-row" style="border-bottom:none;">
-      <span class="setting-label">Xoá toàn bộ dữ liệu</span>
-      <button class="btn-ctrl btn-sm" id="btn-clear-all"
-        style="color:var(--danger);border-color:var(--danger);font-size:11px;width:auto;padding:4px 8px;">Xoá tất
-        cả</button>
-    </div>
-    <div class="support-box">
+
+    <div class="support-box"
+      style="margin-top: 6px; padding-top: 14px; border-top: 1px dashed var(--border); display: flex; gap: 8px;">
       <a href="
 https://microsoftedge.microsoft.com/addons/detail/mabgcghglcjheefkkicmkpmlhaooiiae" target="_blank"
-        class="sp-link sp-rate">
-        <svg class="sp-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+        class="sp-link sp-rate" style="border-radius: 8px; padding: 8px 4px;">
+        <svg class="sp-icon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path
             d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" />
         </svg>
-        <span>Đánh giá</span>
+        <span style="font-size: 10px;">Đánh giá</span>
       </a>
-      <a href="https://forms.gle/rcrew33xXDU144j79" target="_blank" class="sp-link sp-mail">
-        <svg class="sp-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+      <a href="https://forms.gle/rcrew33xXDU144j79" target="_blank" class="sp-link sp-mail"
+        style="border-radius: 8px; padding: 8px 4px;">
+        <svg class="sp-icon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
         </svg>
-        <span>Báo lỗi</span>
+        <span style="font-size: 10px;">Báo lỗi</span>
       </a>
-      <a href="https://biolink.com.vn/autostv" target="_blank" class="sp-link sp-donate">
-        <svg class="sp-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+      <a href="https://biolink.com.vn/autostv" target="_blank" class="sp-link sp-donate"
+        style="border-radius: 8px; padding: 8px 4px;">
+        <svg class="sp-icon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M10 2v2" />
           <path d="M14 2v2" />
           <path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1" />
           <path d="M6 2v2" />
         </svg>
-        <span>Mời cafe</span>
+        <span style="font-size: 10px;">Mời cafe</span>
       </a>
     </div>
+
   </div>
   <div class="footer">Auto Đọc STV · Sử dụng <span id="footer-engine">Web Speech API</span></div>
   <div class="modal-overlay" id="confirm-modal">
@@ -2139,7 +2443,7 @@ https://microsoftedge.microsoft.com/addons/detail/mabgcghglcjheefkkicmkpmlhaooii
       </div>
     </div>
   </div>
-  <script src="popup_v0.2.0.js"></script>
+  <script src="popup_v0.3.2.js"></script>
 </body>
 
 </html>
