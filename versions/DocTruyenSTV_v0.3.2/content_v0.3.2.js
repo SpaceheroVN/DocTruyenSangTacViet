@@ -1,15 +1,5 @@
 'use strict';
 
-function phachongantrom() {
-    const kieu = document.createElement('style');
-    kieu.innerHTML = `* { user-select: text !important; }`;
-    document.head.appendChild(kieu);
-    ['contextmenu', 'copy', 'cut', 'paste'].forEach(ev => {
-        document.addEventListener(ev, e => e.stopPropagation(), true);
-    });
-}
-phachongantrom();
-
 let tudienhientai = [];
 chrome.storage.local.get('customDict', d => { tudienhientai = d.customDict || []; });
 

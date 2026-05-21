@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Đọc Truyện STV",
+  "name": "Đọc Truyện Cho STV",
   "version": "0.3.2",
-  "description": "Tự động đọc truyện trên Sáng Tác Việt. Hỗ trợ Web Speech, FPT.AI, Azure.",
+  "description": "Tự động đọc truyện trên Sáng Tác Việt. Hỗ trợ Web Speech, FPT.AI, Azure.(Unofficial)",
   "permissions": [
     "activeTab",
     "scripting",
