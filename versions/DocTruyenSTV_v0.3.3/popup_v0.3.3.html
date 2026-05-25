@@ -30,6 +30,7 @@
       -webkit-user-select: none;
       -moz-user-select: none;
       user-select: none;
+      outline: none;
     }
 
     html {
@@ -736,6 +737,13 @@
       opacity: 0.9;
       color: #fff;
       border: none;
+    }
+
+    #btn-play:hover {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%) !important;
+      opacity: 0.85 !important;
+      color: #fff !important;
+      border: none !important;
     }
 
     .sliders-row {
@@ -1779,7 +1787,7 @@
   </div>
   <div class="panel active" id="panel-main" style="padding:0; border:none; max-height:none; overflow:visible;">
     <div class="book-card" id="book-card-content">
-      <img id="cover-img" alt="Bìa truyện" style="display: none;">
+      <img id="cover-img" alt="Bìa truyện" style="display: none;" referrerpolicy="no-referrer">
       <div class="book-meta" id="book-meta">
         <div class="book-label">Đang mở</div>
         <div id="current-title">Đang kiểm tra trang...</div>
@@ -2443,7 +2451,7 @@ https://microsoftedge.microsoft.com/addons/detail/mabgcghglcjheefkkicmkpmlhaooii
       </div>
     </div>
   </div>
-  <script src="popup_v0.3.3.js"></script>
+  <script type="module" src="bangdieukhien/chinh.js"></script>
 </body>
 
 </html>

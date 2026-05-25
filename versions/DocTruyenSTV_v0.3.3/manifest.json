@@ -10,11 +10,14 @@
     "tabs"
   ],
   "host_permissions": [
-    "*://sangtacviet.com/*",
-    "*://www.sangtacviet.com/*",
+    "https://sangtacviet.com/*",
+    "https://www.sangtacviet.com/*",
     "https://api.fpt.ai/*",
     "https://*.tts.speech.microsoft.com/*"
   ],
+  "content_security_policy": {
+    "extension_pages": "default-src 'self'; script-src 'self'; object-src 'none'; connect-src https://api.fpt.ai https://*.tts.speech.microsoft.com; img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; frame-ancestors 'none';"
+  },
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
@@ -32,16 +35,18 @@
     }
   },
   "background": {
-    "service_worker": "background_v0.3.3.js"
+    "service_worker": "chayngam_v0.3.3.js"
   },
   "content_scripts": [
     {
       "matches": [
-        "*://sangtacviet.com/*",
-        "*://www.sangtacviet.com/*"
+        "https://sangtacviet.com/*",
+        "https://www.sangtacviet.com/*"
       ],
       "js": [
-        "content_v0.3.3.js"
+        "noidung/cau_hinh.js",
+      "noidung/xu_ly.js",
+      "noidung/giao_dien.js"
       ],
       "run_at": "document_idle"
     }
