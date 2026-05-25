@@ -1,4 +1,3 @@
-// bangdieukhien/quan_ly_thu_vien.js
 import { showToast, showConfirm } from './dieu_khien_trinh_phat.js';
 
 export const QuanLyThuVien = {
@@ -159,12 +158,10 @@ export const QuanLyThuVien = {
                 const dulieu = JSON.parse(text);
                 if (typeof dulieu !== 'object' || dulieu === null) throw new Error('File hỏng');
                 
-                // Chỉ import các key được whitelist
                 const duLieuSach = {};
                 for (const khoa of CAC_KHOA_HOP_LE) {
                     if (dulieu[khoa] !== undefined) duLieuSach[khoa] = dulieu[khoa];
                 }
-                // Validate readingList phải là mảng
                 if (duLieuSach.readingList && !Array.isArray(duLieuSach.readingList)) {
                     delete duLieuSach.readingList;
                 }

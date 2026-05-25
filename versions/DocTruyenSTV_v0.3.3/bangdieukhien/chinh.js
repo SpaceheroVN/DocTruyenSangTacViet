@@ -1,4 +1,3 @@
-// bangdieukhien/chinh.js
 import { CauHinh } from './cau_hinh.js';
 import { DieuKhienTrinhPhat } from './dieu_khien_trinh_phat.js';
 import { QuanLyThuVien } from './quan_ly_thu_vien.js';

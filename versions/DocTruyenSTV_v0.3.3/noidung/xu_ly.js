@@ -1,4 +1,3 @@
-// noidung/amthanh.js
 'use strict';
 var DocTruyenSTV_Ext = window.DocTruyenSTV_Ext || {};
 
@@ -41,12 +40,10 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
     cacDoan: [],
     chiSoHienTai: 0,
     
-    // Audio Context and instances
     doiTuongAmThanh: null,
     phatNgonHienTai: null,
     duongDanBoNhoDem: null,
     
-    // Timers & controllers
     dongHoGiamSat: null,
     dongHoDuyTri: null,
     dongHoLuuTrangThai: null,
@@ -275,7 +272,6 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
         }
     },
 
-    // ===== WEB SPEECH API (AUTO) =====
     
     huyAmThanhWeb() {
         if (this.dongHoGiamSat) { clearTimeout(this.dongHoGiamSat); this.dongHoGiamSat = null; }
@@ -357,7 +353,6 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
         window.speechSynthesis.speak(u);
     },
 
-    // ===== CLOUD API (FPT/AZURE) =====
 
     huyTaiAPI() {
         try {
@@ -368,11 +363,9 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
     },
 
     async taiAmThanhTrucTiep(vanBan, khoaCache) {
-        // 1. Check cache trước
         const cacheBlob = await DocTruyenSTV_Ext.LuuTruSTV.layAmThanh(khoaCache);
         if (cacheBlob) return cacheBlob;
 
-        // 2. Gửi message đến background script
         const phanHoi = await new Promise((dongY, tuChoi) => {
             try {
                 chrome.runtime.sendMessage({
@@ -396,7 +389,6 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
             }
         });
 
-        // 3. Xử lý kết quả
         if (!phanHoi) throw new Error('No response from background');
         if (phanHoi.error) {
             const err = new Error(phanHoi.error);
@@ -404,7 +396,6 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
             throw err;
         }
 
-        // 4. Lấy blob từ IndexedDB
         const blob = await DocTruyenSTV_Ext.LuuTruSTV.layAmThanh(khoaCache);
         if (!blob) throw new Error('Lỗi không lấy được Blob từ DB');
         return blob;
@@ -468,7 +459,6 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
 
             await this.doiTuongAmThanh.play();
 
-            // Prefetch next chunk
             if (this.chiSoHienTai + 1 < this.cacDoan.length) {
                 const idLuotHienTai = this.idLuotPhat;
                 const vanBanTiep = this.cacDoan[this.chiSoHienTai + 1].text;
@@ -520,7 +510,6 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
 };
 
 
-// noidung/phantich.js
 'use strict';
 var DocTruyenSTV_Ext = window.DocTruyenSTV_Ext || {};
 
@@ -688,10 +677,8 @@ DocTruyenSTV_Ext.PhanTichSTV = {
     },
     
     taoKhoaLuuTru(vanBan, congCu, chiSoGiong, tocDo) {
-        // Tạo chuỗi base để băm
         const tho = vanBan.replace(/\s+/g, '') + `_${congCu}_${chiSoGiong}_${tocDo}`;
         
-        // Băm chuỗi đơn giản ra số nguyên 32-bit (chống trùng lặp tốt và nhanh)
         let bam = 5381;
         for (let i = 0; i < tho.length; i++) bam = ((bam << 5) + bam) ^ tho.charCodeAt(i);
         return (bam >>> 0).toString(36) + '_' + tho.length;

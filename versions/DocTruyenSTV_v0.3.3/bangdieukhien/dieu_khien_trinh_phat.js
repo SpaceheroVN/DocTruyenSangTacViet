@@ -1,4 +1,3 @@
-// bangdieukhien/dieu_khien_trinh_phat.js
 import { CauHinh } from './cau_hinh.js';
 import { QuanLyThuVien } from './quan_ly_thu_vien.js';
 import { GiaoDienCaiDat } from './giao_dien_cai_dat.js';
@@ -15,7 +14,6 @@ export function showConfirm(tieuDe, noiDung, hanhDongXacNhan) {
     body.textContent = noiDung;
     modal.style.display = 'flex';
 
-    // Clone buttons to strip all previous listeners
     const btnConfirmMoi = btnConfirm.cloneNode(true);
     btnConfirm.replaceWith(btnConfirmMoi);
     const btnCancelMoi = btnCancel.cloneNode(true);
@@ -116,7 +114,7 @@ export const DieuKhienTrinhPhat = {
     guiLenh(hanhDong, thamSoThem = {}) {
         if (!this.idTabHienTai) return;
         chrome.tabs.sendMessage(this.idTabHienTai, { hanhDong: hanhDong, ...thamSoThem }, () => {
-            if (chrome.runtime.lastError) { /* ignore */ }
+            if (chrome.runtime.lastError) {  }
         });
     },
 

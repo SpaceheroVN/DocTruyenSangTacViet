@@ -1,4 +1,3 @@
-// chayngam_v0.3.3.js
 'use strict';
 
 const cac_tien_trinh_dang_tai = new Map();

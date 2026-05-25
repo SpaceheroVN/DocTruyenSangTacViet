@@ -1,4 +1,3 @@
-// bangdieukhien/cau_hinh.js
 export const CauHinh = {
     duLieuDongBo: {},
     duLieuCucBo: {},

@@ -1,4 +1,3 @@
-// noidung/luutru.js
 'use strict';
 var DocTruyenSTV_Ext = window.DocTruyenSTV_Ext || {};
 
@@ -182,7 +181,6 @@ DocTruyenSTV_Ext.LuuTruSTV = {
     async luuTienTrinhDoc(trangThai) {
         if (!trangThai.tenTruyen || trangThai.tongSoDoan === 0) return;
 
-        // BẢO TOAN: Key 'last_active_state' giữ nguyên
         const duLieuGoc = {
             isPlaying: trangThai.dangPhat,
             isPaused: trangThai.dangTamDung,
@@ -216,7 +214,6 @@ DocTruyenSTV_Ext.LuuTruSTV = {
         return new Promise(dongY => {
             if (this._debounceTimer) clearTimeout(this._debounceTimer);
             this._debounceTimer = setTimeout(() => {
-                // BẢO TOAN: Key 'readingList' giữ nguyên
                 chrome.storage.local.get('readingList', duLieu => {
                     let danhSach = duLieu.readingList || [];
                     let viTri = danhSach.findIndex(i => (i.title || '').trim().toLowerCase() === (duLieuGoc.bookTitle || '').trim().toLowerCase());

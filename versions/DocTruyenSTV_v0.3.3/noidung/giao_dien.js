@@ -1,4 +1,3 @@
-// noidung/giaodien.js
 'use strict';
 var DocTruyenSTV_Ext = window.DocTruyenSTV_Ext || {};
 
@@ -17,7 +16,6 @@ DocTruyenSTV_Ext.GiaoDienSTV = {
     },
 
     boiDenDoan(chiSo, danhSachDoan, dangPhat, dangTamDung) {
-        // Xóa class cũ chỉ trên element đã biết thay vì querySelectorAll
         if (this._theBoiDenTruoc) {
             this._theBoiDenTruoc.classList.remove('tts-reading');
             this._theBoiDenTruoc = null;
@@ -191,7 +189,6 @@ DocTruyenSTV_Ext.GiaoDienSTV = {
             this.capNhatBangDieuKhien(DocTruyenSTV_Ext.TrinhPhatAmThanh.layChiSoHienTai(), DocTruyenSTV_Ext.TrinhPhatAmThanh.layTongSoDoan(), DocTruyenSTV_Ext.TrinhPhatAmThanh.dangPhat, DocTruyenSTV_Ext.TrinhPhatAmThanh.dangTamDung);
         });
 
-        // Drag functionality
         let dangKeo = false, startX, startY, startLeft, startBottom;
         const tayCam = document.getElementById('stv-mp-drag-handle');
         const bangDieuKhien = document.getElementById('stv-mini-player');
@@ -295,7 +292,6 @@ DocTruyenSTV_Ext.GiaoDienSTV = {
         }
     }
 };
-// noidung/chinh.js
 'use strict';
 var DocTruyenSTV_Ext = window.DocTruyenSTV_Ext || {};
 
@@ -313,7 +309,6 @@ DocTruyenSTV_Ext.ChinhSTV = {
         DocTruyenSTV_Ext.TrinhPhatAmThanh.khoiTao();
         DocTruyenSTV_Ext.GiaoDienSTV.taoBangDieuKhien();
         
-        // Dọn dẹp cache cũ (chạy ngầm)
         setTimeout(() => DocTruyenSTV_Ext.LuuTruSTV.donDepCacheCu(), 3000);
 
         chrome.storage.sync.get(['batphimtat'], duLieu => {
