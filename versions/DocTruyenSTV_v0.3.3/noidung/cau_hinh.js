@@ -143,17 +143,37 @@ DocTruyenSTV_Ext.LuuTruSTV = {
     },
 
     async layAnhBia() {
-        const duongDan = window.location.pathname.split('/').filter(Boolean);
-        if (duongDan.length < 4 || duongDan[0] !== 'truyen') return null;
-        const khoa = `bia_${duongDan[3]}`;
+        let linkTruyen = '';
+        const theTenTruyen = document.getElementById('booknameholder');
+        if (theTenTruyen && theTenTruyen.getAttribute('href')) {
+            linkTruyen = theTenTruyen.getAttribute('href');
+        } else {
+            const duongDan = window.location.pathname.split('/').filter(Boolean);
+            if (duongDan.length >= 4 && duongDan[0] === 'truyen') {
+                linkTruyen = `/${duongDan[0]}/${duongDan[1]}/${duongDan[2]}/${duongDan[3]}/`;
+            }
+        }
+        
+        if (!linkTruyen) return null;
+
+        const parts = linkTruyen.split('/').filter(Boolean);
+        if (parts.length < 4) return null;
+        const idTruyen = parts[3];
+        const khoa = `bia_${idTruyen}`;
+        const khoaCu = `cover_${idTruyen}`;
         
         return new Promise(dongY => {
-            chrome.storage.local.get(khoa, async duLieu => {
+            chrome.storage.local.get([khoa, khoaCu], async duLieu => {
                 if (duLieu[khoa] && duLieu[khoa].startsWith('http')) { dongY(duLieu[khoa]); return; }
+                if (duLieu[khoaCu] && duLieu[khoaCu].startsWith('http')) {
+                    chrome.storage.local.set({ [khoa]: duLieu[khoaCu] });
+                    dongY(duLieu[khoaCu]);
+                    return;
+                }
                 try {
                     const boDieuKhien = new AbortController();
-                    const dongHo = setTimeout(() => boDieuKhien.abort(), 3000);
-                    const phanHoi = await fetch(`/${duongDan[0]}/${duongDan[1]}/${duongDan[2]}/${duongDan[3]}/`, { signal: boDieuKhien.signal });
+                    const dongHo = setTimeout(() => boDieuKhien.abort(), 15000);
+                    const phanHoi = await fetch(linkTruyen, { signal: boDieuKhien.signal });
                     const html = await phanHoi.text();
                     clearTimeout(dongHo);
                     
@@ -170,6 +190,11 @@ DocTruyenSTV_Ext.LuuTruSTV = {
                         if (duongDanAnh.startsWith('//')) duongDanAnh = window.location.protocol + duongDanAnh;
                         else if (duongDanAnh.startsWith('/')) duongDanAnh = window.location.origin + duongDanAnh;
                         else if (!duongDanAnh.startsWith('http')) duongDanAnh = window.location.origin + '/' + duongDanAnh;
+                        
+                        if (duongDanAnh.toLowerCase().startsWith('http://')) {
+                            duongDanAnh = 'https://' + duongDanAnh.substring(7);
+                        }
+
                         chrome.storage.local.set({ [khoa]: duongDanAnh });
                         dongY(duongDanAnh);
                     } else dongY(null);

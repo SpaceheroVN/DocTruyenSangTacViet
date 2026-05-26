@@ -47,15 +47,51 @@ async function tai_tu_fpt(van_ban, cau_hinh, tin_hieu_huy) {
         });
         if (kiem_tra.ok) {
             const loai_noi_dung = kiem_tra.headers.get('Content-Type') || '';
-            if (loai_noi_dung.includes('audio')) return await kiem_tra.blob();
+            if (loai_noi_dung.includes('audio')) {
+                if (tin_hieu_huy.aborted) throw new DOMException('DaHuy', 'AbortError');
+                return await kiem_tra.blob();
+            }
             if (loai_noi_dung.includes('json')) {
                 const json_body = await kiem_tra.json();
+                if (json_body.message && json_body.message.toLowerCase().includes('processing')) {
+                    continue;
+                }
                 throw new Error('Lỗi FPT: ' + (json_body.message || 'Lỗi không xác định'));
+            } else if (!loai_noi_dung.includes('audio')) {
+                throw new Error('FPT trả về định dạng không hợp lệ: ' + loai_noi_dung);
             }
             await kiem_tra.arrayBuffer(); 
         }
     }
     throw new Error('Hết thời gian chờ FPT render');
+}
+
+async function tai_tu_gcp(van_ban, cau_hinh, tin_hieu_huy) {
+    const cac_giong = ['vi-VN-Wavenet-A', 'vi-VN-Wavenet-B', 'vi-VN-Wavenet-C', 'vi-VN-Wavenet-D', 'vi-VN-Standard-A', 'vi-VN-Standard-B', 'vi-VN-Standard-C', 'vi-VN-Standard-D'];
+    const giong = cac_giong[cau_hinh.chi_so_giong] || 'vi-VN-Wavenet-A';
+    const toc_do_an_toan = Number(cau_hinh.toc_do) || 1;
+    
+    const body = {
+        input: { text: van_ban },
+        voice: { languageCode: 'vi-VN', name: giong },
+        audioConfig: { audioEncoding: 'MP3', speakingRate: toc_do_an_toan }
+    };
+    
+    const phan_hoi = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${cau_hinh.khoa_gcp}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: tin_hieu_huy
+    });
+    
+    if (!phan_hoi.ok) throw new Error('Lỗi Google Cloud TTS');
+    const ket_qua = await phan_hoi.json();
+    if (!ket_qua.audioContent) throw new Error('Không nhận được audio từ Google Cloud');
+    
+    const kytu = atob(ket_qua.audioContent);
+    const arr = new Uint8Array(kytu.length);
+    for (let i = 0; i < kytu.length; i++) arr[i] = kytu.charCodeAt(i);
+    return new Blob([arr], { type: 'audio/mp3' });
 }
 
 async function tai_tu_azure(van_ban, cau_hinh, tin_hieu_huy) {
@@ -83,11 +119,12 @@ async function tai_tu_azure(van_ban, cau_hinh, tin_hieu_huy) {
 }
 
 async function lay_cau_hinh_api() {
-    const du_lieu = await chrome.storage.local.get(['fpt_key', 'azure_key', 'azure_region']);
+    const du_lieu = await chrome.storage.local.get(['fpt_key', 'azure_key', 'azure_region', 'gcp_key']);
     return {
         khoa_fpt: (du_lieu.fpt_key || '').replace(/[^a-zA-Z0-9\-_]/g, ''),
         khoa_azure: (du_lieu.azure_key || '').replace(/[^a-zA-Z0-9\-_]/g, ''),
-        vung_azure: du_lieu.azure_region || 'southeastasia'
+        vung_azure: du_lieu.azure_region || 'southeastasia',
+        khoa_gcp: (du_lieu.gcp_key || '').replace(/[^a-zA-Z0-9\-_]/g, '')
     };
 }
 
@@ -98,6 +135,7 @@ async function tai_am_thanh(van_ban, cong_cu, chi_so_giong, toc_do, tin_hieu_huy
     
     if (cong_cu === 'fpt') return await tai_tu_fpt(van_ban, cau_hinh, tin_hieu_huy);
     if (cong_cu === 'azure') return await tai_tu_azure(van_ban, cau_hinh, tin_hieu_huy);
+    if (cong_cu === 'gcp') return await tai_tu_gcp(van_ban, cau_hinh, tin_hieu_huy);
     throw new Error('Công cụ không hợp lệ');
 }
 
@@ -117,31 +155,33 @@ chrome.runtime.onMessage.addListener((tin_nhan, nguoi_gui, gui_phan_hoi) => {
             return true;
         }
         
+        if (cac_tien_trinh_dang_tai.has(maYeuCau)) {
+            cac_tien_trinh_dang_tai.get(maYeuCau).bo_dieu_khien.abort();
+        }
         const bo_dieu_khien = new AbortController();
         cac_tien_trinh_dang_tai.set(maYeuCau, { bo_dieu_khien, id_the: nguoi_gui.tab?.id });
 
-        tai_am_thanh(vanBan, congCu, chiSoGiong, tocDo, bo_dieu_khien.signal)
-            .then(async audio_blob => {
-                cac_tien_trinh_dang_tai.delete(maYeuCau);
-                if (bo_dieu_khien.signal.aborted) return;
+        (async () => {
+            try {
+                const audio_blob = await tai_am_thanh(vanBan, congCu, chiSoGiong, tocDo, bo_dieu_khien.signal);
+                if (bo_dieu_khien.signal.aborted) throw new DOMException('DaHuy', 'AbortError');
                 
                 if (!khoaCache) {
                     gui_phan_hoi_an_toan(gui_phan_hoi, { error: 'Thiếu khóa cache', maYeuCau });
                     return;
                 }
                 
-                try {
-                    const db = await mo_co_so_du_lieu();
-                    await luu_vao_db(db, khoaCache, audio_blob);
-                    gui_phan_hoi_an_toan(gui_phan_hoi, { success: true, maYeuCau });
-                } catch(l) {
-                    gui_phan_hoi_an_toan(gui_phan_hoi, { error: 'Lỗi IndexedDB: ' + l.message, maYeuCau });
-                }
-            })
-            .catch(l => {
-                cac_tien_trinh_dang_tai.delete(maYeuCau);
+                const db = await mo_co_so_du_lieu();
+                await luu_vao_db(db, khoaCache, audio_blob);
+                gui_phan_hoi_an_toan(gui_phan_hoi, { success: true, maYeuCau });
+            } catch(l) {
                 gui_phan_hoi_an_toan(gui_phan_hoi, { error: l.message, biHuy: l.name === 'AbortError', maYeuCau });
-            });
+            } finally {
+                if (cac_tien_trinh_dang_tai.get(maYeuCau)?.bo_dieu_khien === bo_dieu_khien) {
+                    cac_tien_trinh_dang_tai.delete(maYeuCau);
+                }
+            }
+        })();
         
         return true; 
     } else if (tin_nhan.hanhDong === 'huyTaiAmThanh') {
@@ -183,7 +223,10 @@ chrome.tabs.onUpdated.addListener((id_the, thong_tin) => {
     }
 });
 
+let _db_instance = null;
+
 function mo_co_so_du_lieu() {
+    if (_db_instance) return Promise.resolve(_db_instance);
     return new Promise((dong_y, tu_choi) => {
         const yeu_cau = indexedDB.open('STV_TTS_Cache', 1);
         yeu_cau.onupgradeneeded = (su_kien) => {
@@ -191,7 +234,11 @@ function mo_co_so_du_lieu() {
                 su_kien.target.result.createObjectStore('audioBlobs');
             }
         };
-        yeu_cau.onsuccess = (su_kien) => dong_y(su_kien.target.result);
+        yeu_cau.onsuccess = (su_kien) => {
+            _db_instance = su_kien.target.result;
+            _db_instance.onclose = () => { _db_instance = null; };
+            dong_y(_db_instance);
+        };
         yeu_cau.onerror = (su_kien) => tu_choi(su_kien.target.error);
     });
 }
@@ -200,7 +247,7 @@ function luu_vao_db(db, khoa, blob) {
     return new Promise((dong_y, tu_choi) => {
         const giao_dich = db.transaction('audioBlobs', 'readwrite');
         giao_dich.objectStore('audioBlobs').put({ blob: blob, timestamp: Date.now() }, khoa);
-        giao_dich.oncomplete = () => { db.close(); dong_y(); };
-        giao_dich.onerror = (su_kien) => { db.close(); tu_choi(su_kien.target.error); };
+        giao_dich.oncomplete = () => dong_y();
+        giao_dich.onerror = (su_kien) => tu_choi(su_kien.target.error);
     });
 }

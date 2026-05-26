@@ -48,6 +48,8 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
     dongHoDuyTri: null,
     dongHoLuuTrangThai: null,
     idLuotPhat: 0,
+    giayDaTroi: 0,
+    dongHoThoiGian: null,
 
     khoiTao() {
         chrome.storage.sync.get(['speed', 'volume', 'voiceIndex', 'maydoc', 'tudongchuyenchuong', 'smartPauses', 'doctentruyen', 'doctenchuong'], duLieu => {
@@ -69,7 +71,10 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
                 }
                 if (thayDoi.volume) {
                     this.amLuong = thayDoi.volume.newValue;
-                    if (this.doiTuongAmThanh) this.doiTuongAmThanh.volume = this.amLuong;
+                    if (this.doiTuongAmThanh) this.doiTuongAmThanh.volume = Math.min(this.amLuong, 1.0);
+                    if (DocTruyenSTV_Ext.QuanLyDongCoAmThanh && DocTruyenSTV_Ext.QuanLyDongCoAmThanh.bo_chinh_am) {
+                        DocTruyenSTV_Ext.QuanLyDongCoAmThanh.bo_chinh_am.gain.value = this.amLuong;
+                    }
                 }
                 if (thayDoi.maydoc) this.congCu = thayDoi.maydoc.newValue;
                 if (thayDoi.voiceIndex) this.chiSoGiong = thayDoi.voiceIndex.newValue;
@@ -115,8 +120,11 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
                 isPaused: this.dangTamDung,
                 isBuffering: this.dangTai,
                 engine: this.congCu,
+                elapsed: this.giayDaTroi,
                 progress: this.cacDoan.length > 0 ? { current: this.chiSoHienTai + 1, total: this.cacDoan.length } : null
             }
+        }, () => {
+            if (chrome.runtime.lastError) {  }
         });
         DocTruyenSTV_Ext.GiaoDienSTV.capNhatBangDieuKhien(this.chiSoHienTai, this.cacDoan.length, this.dangPhat, this.dangTamDung);
     },
@@ -144,6 +152,15 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
         if (this.cacDoan.length === 0) this.chuanBiCacDoan();
         if (this.cacDoan.length === 0) return;
         
+        if (this.dongHoThoiGian) { clearInterval(this.dongHoThoiGian); this.dongHoThoiGian = null; }
+        this.giayDaTroi = 0;
+        this.dongHoThoiGian = setInterval(() => {
+            if (this.dangPhat && !this.dangTamDung) {
+                this.giayDaTroi++;
+                this.PhatTinNhanTrangThai();
+            }
+        }, 1000);
+        
         if (tuViTri !== null) this.chiSoHienTai = tuViTri;
         
         this.dangPhat = true;
@@ -161,6 +178,8 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
         this.dangTamDung = false;
         this.dangTai = false;
         this.idLuotPhat++;
+        if (this.dongHoThoiGian) { clearInterval(this.dongHoThoiGian); this.dongHoThoiGian = null; }
+        this.giayDaTroi = 0;
         this.huyTaiAPI();
         this.huyAmThanhWeb();
         
@@ -224,6 +243,9 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
     },
 
     phatChuongTiepTheo() {
+        if (DocTruyenSTV_Ext.LuuTruSTV && DocTruyenSTV_Ext.LuuTruSTV.donDepCacheCu) {
+            DocTruyenSTV_Ext.LuuTruSTV.donDepCacheCu();
+        }
         const banChon = ['#navnexttop', '#navnextbot', '#navnext', '#nav_next', '#btnnext', '#btn_next', '.btn-next-chapter', 'a.next', '.chapter-next a', '[data-nav="next"]'];
         let nutTiep = null;
         for (const chon of banChon) {
@@ -249,6 +271,9 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
     },
 
     phatChuongTruoc() {
+        if (DocTruyenSTV_Ext.LuuTruSTV && DocTruyenSTV_Ext.LuuTruSTV.donDepCacheCu) {
+            DocTruyenSTV_Ext.LuuTruSTV.donDepCacheCu();
+        }
         const banChon = ['#navprevtop', '#navprevbot', '#navprev', '#nav_prev', '#btnprev', '#btn_prev', '.btn-prev-chapter', 'a.prev', '.chapter-prev a', '[data-nav="prev"]'];
         let nutTruoc = null;
         for (const chon of banChon) {
@@ -306,7 +331,7 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
         u.lang = 'vi-VN';
         u.rate = this.tocDo;
         u.pitch = 1.0;
-        u.volume = this.amLuong;
+        u.volume = Math.min(this.amLuong, 1.0);
 
         window.speechSynthesis.getVoices().forEach(v => {
             if (v.lang === 'vi-VN' && (v.name.includes('Google') || v.name.includes('Microsoft'))) u.voice = v;
@@ -356,9 +381,10 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
 
     huyTaiAPI() {
         try {
-            chrome.runtime.sendMessage({ hanhDong: 'huyTatCa' });
+            if (chrome.runtime && chrome.runtime.id) {
+                chrome.runtime.sendMessage({ hanhDong: 'huyTatCa' });
+            }
         } catch(e) {
-            console.warn("DocTruyenSTV: Extension context invalidated. Vui lòng tải lại trang (F5).", e);
         }
     },
 
@@ -366,39 +392,27 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
         const cacheBlob = await DocTruyenSTV_Ext.LuuTruSTV.layAmThanh(khoaCache);
         if (cacheBlob) return cacheBlob;
 
-        const phanHoi = await new Promise((dongY, tuChoi) => {
-            try {
-                chrome.runtime.sendMessage({
-                    hanhDong: 'taiAmThanh',
-                    vanBan: vanBan,
-                    congCu: this.congCu,
-                    chiSoGiong: this.chiSoGiong,
-                    tocDo: this.tocDo,
-                    maYeuCau: Date.now().toString() + Math.random(),
-                    khoaCache: khoaCache
-                }, result => {
-                    if (chrome.runtime.lastError) {
-                        tuChoi(new Error(chrome.runtime.lastError.message));
-                    } else {
-                        dongY(result);
-                    }
-                });
-            } catch (e) {
-                console.warn("DocTruyenSTV: Extension context invalidated. Vui lòng tải lại trang (F5).", e);
-                tuChoi(e);
-            }
+        const phanHoi = await chrome.runtime.sendMessage({
+            hanhDong: 'taiAmThanh',
+            vanBan: vanBan,
+            congCu: this.congCu,
+            chiSoGiong: this.chiSoGiong,
+            tocDo: this.tocDo,
+            maYeuCau: Date.now().toString() + Math.random(),
+            khoaCache: khoaCache
+        }).catch(e => { 
+            throw new Error(e.message || "Lỗi kết nối tới extension background"); 
         });
 
-        if (!phanHoi) throw new Error('No response from background');
-        if (phanHoi.error) {
-            const err = new Error(phanHoi.error);
-            err.isAbort = phanHoi.biHuy;
-            throw err;
+        if (phanHoi && phanHoi.error) {
+            const loi = new Error(phanHoi.error);
+            loi.isAbort = phanHoi.biHuy;
+            throw loi;
         }
 
-        const blob = await DocTruyenSTV_Ext.LuuTruSTV.layAmThanh(khoaCache);
-        if (!blob) throw new Error('Lỗi không lấy được Blob từ DB');
-        return blob;
+        const kq = await DocTruyenSTV_Ext.LuuTruSTV.layAmThanh(khoaCache);
+        if (!kq) throw new Error("Chưa lưu cache thành công");
+        return kq;
     },
 
     async phatDoanAPI() {
@@ -435,7 +449,7 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
 
             const { bo_nguon, bo_chinh_am } = DocTruyenSTV_Ext.QuanLyDongCoAmThanh.lay_nguon();
             
-            bo_chinh_am.gain.value = 1.0;
+            bo_chinh_am.gain.value = this.amLuong;
 
             if (this.doiTuongAmThanh) {
                 this.doiTuongAmThanh.pause();
@@ -443,7 +457,7 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
             }
             
             this.doiTuongAmThanh = new Audio(this.duongDanBoNhoDem);
-            this.doiTuongAmThanh.volume = this.amLuong;
+            this.doiTuongAmThanh.volume = Math.min(this.amLuong, 1.0);
             this.doiTuongAmThanh.playbackRate = this.tocDo;
             
             if (this.dangTamDung) this.doiTuongAmThanh.pause();
@@ -468,7 +482,7 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
                         if (!cached && this.idLuotPhat === idLuotHienTai) {
                             this.taiAmThanhTrucTiep(vanBanTiep, khoaTiep).catch(()=>{});
                         }
-                    });
+                    }).catch(() => {});
                 }
             }
         } catch(l) {

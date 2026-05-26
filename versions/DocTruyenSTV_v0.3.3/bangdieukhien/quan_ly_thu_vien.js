@@ -5,8 +5,21 @@ export const QuanLyThuVien = {
     cheDoSapXep: 'recent',
 
     thoatHTML(chuoi) {
-        const banDo = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '/': '&#x2F;', '`': '&#x60;', '=': '&#x3D;' };
-        return String(chuoi).replace(/[&<>"'`=\/]/g, s => banDo[s]);
+        const banDo = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+        return String(chuoi).replace(/[&<>"']/g, s => banDo[s]);
+    },
+
+    urlAnToan(url) {
+        if (!url || typeof url !== 'string') return '';
+        let u = url.trim();
+        if (u.toLowerCase().startsWith('http://')) {
+            u = 'https://' + u.substring(7);
+        }
+        const lowerUrl = u.toLowerCase();
+        if (lowerUrl.startsWith('https://') || lowerUrl.startsWith('data:image/')) {
+            return u;
+        }
+        return '';
     },
 
     khoiTao() {
@@ -40,10 +53,9 @@ export const QuanLyThuVien = {
             return;
         }
 
-        const ANH_KHUYET = 'https://sangtacviet.com/homepage/img/sangtacviet-logo.png';
-        const fragment = document.createDocumentFragment();
+        const ANH_KHUYET = 'icons/icon128.png';
 
-        danhSach.forEach((m, index) => {
+        const mangHTML = danhSach.map((m, index) => {
             let mauNgay = 'var(--text-muted)';
             let textNgay = m.savedAt || '';
             if (m.timestamp) {
@@ -56,20 +68,16 @@ export const QuanLyThuVien = {
             const textNgayAnToan = this.thoatHTML(textNgay);
             const htmlNgay = textNgayAnToan ? `<span style="color:${mauNgay}; font-size:9px; margin-right:6px;">${textNgayAnToan}</span>` : '';
             
-            const item = document.createElement('div');
-            item.className = 'list-item';
-            item.dataset.index = index;
-            item.id = `list-item-${index}`;
-            item.title = 'Nhấn để mở';
+            const anhAnToan = this.thoatHTML(this.urlAnToan(m.imgUrl) || ANH_KHUYET);
             
-            item.innerHTML = `
-                <img class="list-thumb" src="${this.thoatHTML(m.imgUrl || ANH_KHUYET)}" alt="">
+            return `<div class="list-item" data-index="${index}" id="list-item-${index}" title="Nhấn để mở">
+                <img class="list-thumb" src="${anhAnToan}" alt="" referrerpolicy="no-referrer">
                 <div class="list-info">
                     <div class="list-name">${this.thoatHTML(m.title)}</div>
                     <div class="list-chap">
                         ${this.thoatHTML(m.chap || '...')}
                         <span style="color:var(--accent);">
-                            ${m.chunkIndex ? `(Đoạn ${m.chunkIndex})` : ''}
+                            ${m.chunkIndex ? `(Đoạn ${this.thoatHTML(m.chunkIndex)})` : ''}
                         </span>
                     </div>
                 </div>
@@ -77,12 +85,10 @@ export const QuanLyThuVien = {
                 <button class="btn-remove" data-title="${this.thoatHTML(m.title)}" data-index="${index}">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
-            `;
-            fragment.appendChild(item);
+            </div>`;
         });
 
-        vungDanhSach.innerHTML = '';
-        vungDanhSach.appendChild(fragment);
+        vungDanhSach.innerHTML = mangHTML.join('');
 
         if (!this._daGanSuKienDanhSach) {
             this._daGanSuKienDanhSach = true;
@@ -136,7 +142,11 @@ export const QuanLyThuVien = {
 
     xuatDuLieu() {
         chrome.storage.local.get(null, dl => {
-            const blob = new Blob([JSON.stringify(dl, null, 2)], { type: 'application/json' });
+            const copy = { ...dl };
+            delete copy.fpt_key;
+            delete copy.azure_key;
+            delete copy.gcp_key;
+            const blob = new Blob([JSON.stringify(copy, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -151,7 +161,7 @@ export const QuanLyThuVien = {
         const file = e.target.files[0];
         if (!file) return;
         
-        const CAC_KHOA_HOP_LE = ['readingList', 'customDict', 'fpt_key', 'azure_key', 'azure_region', 'miniPlayerMode', 'isMiniPlayerMinimized'];
+        const CAC_KHOA_HOP_LE = ['readingList', 'customDict', 'fpt_key', 'azure_key', 'azure_region', 'gcp_key', 'miniPlayerMode', 'isMiniPlayerMinimized'];
         
         file.text().then(text => {
             try {
@@ -233,7 +243,7 @@ export const QuanLyThuVien = {
         if (btnClear) btnClear.addEventListener('click', () => {
             showConfirm(
                 'Phần mở rộng Đọc Truyện Cho STV cho biết',
-                'BẠN CÓ CHẮC CHẮN MUỐN XÓA TOÀN BỘ DỮ LIỆU?\\n\\nHành động này sẽ làm mất toàn bộ truyện đã lưu và cài đặt!',
+                'BẠN CÓ CHẮC CHẮN MUỐN XÓA TOÀN BỘ DỮ LIỆU?\n\nHành động này sẽ làm mất toàn bộ truyện đã lưu và cài đặt!',
                 () => {
                     chrome.storage.local.clear(() => {
                         this.taiDanhSachDoc();

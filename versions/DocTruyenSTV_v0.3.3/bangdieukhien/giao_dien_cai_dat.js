@@ -6,7 +6,9 @@ export const GiaoDienCaiDat = {
         this.khoiTaoCauHinhGiaoDien();
         this.khoiTaoTuyChon();
         this.khoiTaoTuDongDung();
+        this.khoiTaoDongHoTron();
         this.ganSuKienCaiDat();
+        this.ganSuKienPhimTat();
     },
 
     khoiTaoCauHinhGiaoDien() {
@@ -92,11 +94,11 @@ export const GiaoDienCaiDat = {
         if (engineSelect) {
             engineSelect.addEventListener('change', (e) => {
                 const congcu = e.target.value;
-                const cankey = ['fpt', 'azure'].includes(congcu);
+                const cankey = ['fpt', 'azure', 'gcp'].includes(congcu);
                 if (apiBox) apiBox.style.display = cankey ? 'block' : 'none';
                 if (apiRegionInput) apiRegionInput.style.display = congcu === 'azure' ? 'block' : 'none';
                 if (apiKeyInput) {
-                    const placeholdermap = { fpt: 'Nhập FPT.AI API Key...', azure: 'Nhập Azure Subscription Key...' };
+                    const placeholdermap = { fpt: 'Nhập FPT.AI API Key...', azure: 'Nhập Azure Subscription Key...', gcp: 'Nhập Google Cloud API Key...' };
                     if (placeholdermap[congcu]) apiKeyInput.placeholder = placeholdermap[congcu];
                     if (cankey) apiKeyInput.value = CauHinh.lay(congcu + '_key', false) || '';
                 }
@@ -106,6 +108,19 @@ export const GiaoDienCaiDat = {
                 if (!cankey) {
                     CauHinh.dat('maydoc', congcu, true);
                     DieuKhienTrinhPhat.guiLenh('capNhatCaiDat');
+                }
+                
+                const volSlider = document.getElementById('vol-slider');
+                if (volSlider) {
+                    const maxVol = congcu === 'web' ? 1.0 : 2.0;
+                    volSlider.max = maxVol;
+                    if (parseFloat(volSlider.value) > maxVol) {
+                        volSlider.value = maxVol;
+                        const volVal = document.getElementById('vol-val');
+                        if (volVal) volVal.textContent = Math.round(maxVol * 100) + '%';
+                        CauHinh.dat('volume', maxVol, true);
+                        DieuKhienTrinhPhat.guiLenh('capNhatCaiDat');
+                    }
                 }
             });
             setTimeout(() => {
@@ -176,6 +191,9 @@ export const GiaoDienCaiDat = {
                             headers: { 'Ocp-Apim-Subscription-Key': key, 'Content-Type': 'application/ssml+xml', 'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3' },
                             body: `<speak version='1.0' xml:lang='vi-VN'><voice xml:lang='vi-VN' name='vi-VN-HoaiMyNeural'>Kiểm tra</voice></speak>`
                         });
+                        thanhcong = r.ok;
+                    } else if (congcu === 'gcp') {
+                        const r = await fetch(`https://texttospeech.googleapis.com/v1/voices?key=${key}`);
                         thanhcong = r.ok;
                     }
                     if (thanhcong) {
@@ -308,9 +326,11 @@ export const GiaoDienCaiDat = {
         muc.className = 'custom-option';
         if (coThutLe) muc.style.paddingLeft = '24px';
         if (opt.selected) muc.classList.add('selected');
+        if (opt.disabled) muc.classList.add('disabled');
         muc.textContent = opt.textContent;
         muc.addEventListener('click', (e) => {
             e.stopPropagation();
+            if (opt.disabled) return;
             oChonGoc.value = opt.value;
             oChonGoc.dispatchEvent(new Event('change'));
             khungChon.classList.remove('show');
@@ -349,6 +369,24 @@ export const GiaoDienCaiDat = {
         this.taoInputDieuKien('custom-left-input', '');
         this.taoInputDieuKien('custom-right-input', '');
         
+        this.taiLaiDuLieuTuDongDung();
+    },
+
+    taiLaiDuLieuMayDoc() {
+        const engineSelect = document.getElementById('engine-select');
+        if (engineSelect) {
+            engineSelect.value = CauHinh.lay('maydoc', true) || 'web';
+            engineSelect.dispatchEvent(new Event('change'));
+            
+            const customText = document.getElementById('custom-engine-text');
+            if (customText) {
+                const opt = engineSelect.options[engineSelect.selectedIndex];
+                if (opt) customText.textContent = opt.text;
+            }
+        }
+    },
+
+    taiLaiDuLieuTuDongDung() {
         chrome.storage.local.get(['stopTime', 'stopRealtimeTarget', 'stopAfterChapters', 'customStopConfig'], data => {
             const selectAutoStop = document.getElementById('select-auto-stop');
             if (!selectAutoStop) return;
@@ -368,20 +406,200 @@ export const GiaoDienCaiDat = {
     },
 
     capNhatGiaTriVT(kieu, gt) {
-        if (kieu === 'hour') this.gio_val_vt = gt;
-        if (kieu === 'minute') this.phut_val_vt = gt;
+        if (kieu === 'hour') this.gio_val_vt = Math.min(23, Math.max(0, gt));
+        if (kieu === 'minute') this.phut_val_vt = Math.min(59, Math.max(0, gt));
         
-        let displayH = this.gio_val_vt % 12;
-        if (displayH === 0) displayH = 12;
-        const ampm = this.gio_val_vt >= 12 ? 'PM' : 'AM';
-        
+        const nutgio = document.getElementById('hour-handle');
+        const nutphut = document.getElementById('minute-handle');
+        const sogio = document.getElementById('digit-hours');
+        const sophut = document.getElementById('digit-minutes');
+        const tientringio = document.getElementById('hour-progress');
+        const tientrinphut = document.getElementById('minute-progress');
+        if (!nutgio || !nutphut) return;
+        const CENTER = 120, bankingio = 94, bankinhphut = 60;
+
+        function setvitri(handle, banhkinh, deg) {
+            const rad = (deg - 90) * (Math.PI / 180);
+            handle.setAttribute('cx', CENTER + banhkinh * Math.cos(rad));
+            handle.setAttribute('cy', CENTER + banhkinh * Math.sin(rad));
+        }
+        function settientrinhtronh(progress, banhkinh, deg) {
+            const c = 2 * Math.PI * banhkinh;
+            progress.style.strokeDasharray = `${c * (deg / 360)}, ${c}`;
+        }
+
+        const lay12gio = (h24) => { const h = h24 % 12; return h === 0 ? 12 : h; };
+
+        if (kieu === 'hour') {
+            if (sogio) {
+                const hienthi = lay12gio(this.gio_val_vt);
+                sogio.textContent = String(hienthi).padStart(2, '0');
+            }
+            const deg = (360 / 12) * (lay12gio(this.gio_val_vt) % 12);
+            setvitri(nutgio, bankingio, deg);
+            settientrinhtronh(tientringio, bankingio, deg);
+        } else {
+            if (sophut) sophut.textContent = String(this.phut_val_vt).padStart(2, '0');
+            const deg = (360 / 60) * this.phut_val_vt;
+            setvitri(nutphut, bankinhphut, deg);
+            settientrinhtronh(tientrinphut, bankinhphut, deg);
+        }
+
+        const ampm = this.gio_val_vt >= 12 ? 'CH' : 'SA';
         const ampmText = document.getElementById('ampm-text');
         if (ampmText) ampmText.textContent = ampm;
-        
         document.querySelectorAll('#ampm-dropdown .custom-option').forEach(opt => {
-            if (opt.dataset.val === ampm) opt.classList.add('selected');
-            else opt.classList.remove('selected');
+            opt.classList.toggle('selected', opt.dataset.val === ampm);
         });
+    },
+
+    khoiTaoDongHoTron() {
+        const nutgio = document.getElementById('hour-handle');
+        const nutphut = document.getElementById('minute-handle');
+        if (!nutgio || !nutphut) return;
+
+        const CENTER = 120, HOUR_R = 94, MIN_R = 60;
+        const nhomgioch = document.getElementById('hour-ticks');
+        if (nhomgioch) {
+            nhomgioch.innerHTML = '';
+            for (let i = 0; i < 60; i++) {
+                const deg = i * 6 - 90, rad = deg * Math.PI / 180;
+                const lon = i % 5 === 0;
+                const outer = HOUR_R + 5, inner = HOUR_R - (lon ? 7 : 4);
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', CENTER + outer * Math.cos(rad));
+                line.setAttribute('y1', CENTER + outer * Math.sin(rad));
+                line.setAttribute('x2', CENTER + inner * Math.cos(rad));
+                line.setAttribute('y2', CENTER + inner * Math.sin(rad));
+                line.setAttribute('class', 'tick-mark' + (lon ? ' major' : ''));
+                nhomgioch.appendChild(line);
+            }
+        }
+        const nhomphut = document.getElementById('minute-ticks');
+        if (nhomphut) {
+            nhomphut.innerHTML = '';
+            for (let i = 0; i < 60; i++) {
+                const deg = i * 6 - 90, rad = deg * Math.PI / 180;
+                const lon = i % 15 === 0;
+                const outer = MIN_R + 4, inner = MIN_R - (lon ? 6 : 3);
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', CENTER + outer * Math.cos(rad));
+                line.setAttribute('y1', CENTER + outer * Math.sin(rad));
+                line.setAttribute('x2', CENTER + inner * Math.cos(rad));
+                line.setAttribute('y2', CENTER + inner * Math.sin(rad));
+                line.setAttribute('class', 'tick-mark' + (lon ? ' major' : ''));
+                nhomphut.appendChild(line);
+            }
+        }
+
+        const lay12gio = (h24) => { const h = h24 % 12; return h === 0 ? 12 : h; };
+        const doi24gio = (h12, ampm) => {
+            if (ampm === 'SA') return h12 === 12 ? 0 : h12;
+            return h12 === 12 ? 12 : h12 + 12;
+        };
+        const layampmhientai = () => document.getElementById('ampm-text')?.textContent || 'SA';
+
+        const sogio = document.getElementById('digit-hours');
+        const sophut = document.getElementById('digit-minutes');
+        if (sogio && sophut) {
+            const batdaunhap = (digitEl, type) => {
+                digitEl.classList.add('editing');
+                let dem = '';
+                const xulyban = (e) => {
+                    const key = e.key;
+                    if (key >= '0' && key <= '9') {
+                        dem += key;
+                        digitEl.textContent = dem.length === 1 ? '0' + key : dem.slice(-2);
+                        if (dem.length >= 2) {
+                            let num = parseInt(dem.slice(-2));
+                            if (type === 'hour') {
+                                num = Math.max(1, Math.min(12, num));
+                                this.capNhatGiaTriVT('hour', doi24gio(num, layampmhientai()));
+                            } else {
+                                num = Math.min(59, num);
+                                this.capNhatGiaTriVT('minute', num);
+                            }
+                            dem = '';
+                            digitEl.classList.remove('editing');
+                            if (type === 'hour') setTimeout(() => batdaunhap(sophut, 'minute'), 60);
+                            document.removeEventListener('keydown', xulyban);
+                            document.removeEventListener('mousedown', nhanrangoai);
+                        }
+                    } else if (key === 'Backspace') {
+                        dem = dem.slice(0, -1);
+                        if (!dem) digitEl.textContent = type === 'hour'
+                            ? String(lay12gio(this.gio_val_vt)).padStart(2, '0')
+                            : String(this.phut_val_vt).padStart(2, '0');
+                    } else if (['Enter', 'Tab', 'Escape'].includes(key)) {
+                        const num = dem ? parseInt(dem) : (type === 'hour' ? lay12gio(this.gio_val_vt) : this.phut_val_vt);
+                        if (type === 'hour') this.capNhatGiaTriVT('hour', doi24gio(Math.max(1, Math.min(12, num)), layampmhientai()));
+                        else this.capNhatGiaTriVT('minute', Math.min(59, num));
+                        dem = '';
+                        digitEl.classList.remove('editing');
+                        document.removeEventListener('keydown', xulyban);
+                        document.removeEventListener('mousedown', nhanrangoai);
+                    }
+                };
+                const nhanrangoai = (e) => {
+                    if (e.target !== digitEl) {
+                        const num = dem ? parseInt(dem) : (type === 'hour' ? lay12gio(this.gio_val_vt) : this.phut_val_vt);
+                        if (type === 'hour') this.capNhatGiaTriVT('hour', doi24gio(Math.max(1, Math.min(12, num)), layampmhientai()));
+                        else this.capNhatGiaTriVT('minute', Math.min(59, num));
+                        dem = '';
+                        digitEl.classList.remove('editing');
+                        document.removeEventListener('keydown', xulyban);
+                        document.removeEventListener('mousedown', nhanrangoai);
+                    }
+                };
+                document.addEventListener('keydown', xulyban);
+                setTimeout(() => document.addEventListener('mousedown', nhanrangoai), 0);
+            };
+            sogio.addEventListener('click', () => batdaunhap(sogio, 'hour'));
+            sophut.addEventListener('click', () => batdaunhap(sophut, 'minute'));
+            sogio.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const cur12h = lay12gio(this.gio_val_vt);
+                const next12h = ((cur12h - 1 + (e.deltaY < 0 ? 1 : -1) + 12) % 12) + 1;
+                this.capNhatGiaTriVT('hour', doi24gio(next12h, layampmhientai()));
+            }, { passive: false });
+            sophut.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                this.capNhatGiaTriVT('minute', (this.phut_val_vt + (e.deltaY < 0 ? 1 : -1) + 60) % 60);
+            }, { passive: false });
+        }
+
+        function laygoctoadochuot(clientX, clientY, svgEl, cx, cy) {
+            const r = svgEl.getBoundingClientRect();
+            const sx = 240 / r.width, sy = 240 / r.height;
+            const mx = (clientX - r.left) * sx, my = (clientY - r.top) * sy;
+            return (Math.atan2(my - cy, mx - cx) * (180 / Math.PI) + 90 + 360) % 360;
+        }
+
+        const khoitaokeonut = (handle, loaivong) => {
+            let dangkeo = false;
+            const svgEl = handle.ownerSVGElement;
+            const khididichcuyen = (clientX, clientY) => {
+                const deg = laygoctoadochuot(clientX, clientY, svgEl, CENTER, CENTER);
+                if (loaivong === 'hour') {
+                    const step = Math.round(deg / (360 / 12));
+                    const h12 = step === 0 ? 12 : step;
+                    this.capNhatGiaTriVT('hour', doi24gio(h12, layampmhientai()));
+                } else {
+                    this.capNhatGiaTriVT('minute', Math.round(deg / (360 / 60)) % 60);
+                }
+            };
+            handle.addEventListener('mousedown', (e) => { dangkeo = true; handle.classList.add('dragging'); e.preventDefault(); });
+            window.addEventListener('mousemove', (e) => { if (dangkeo) khididichcuyen(e.clientX, e.clientY); });
+            window.addEventListener('mouseup', () => { dangkeo = false; handle.classList.remove('dragging'); });
+            handle.addEventListener('touchstart', (e) => { dangkeo = true; handle.classList.add('dragging'); e.preventDefault(); }, { passive: false });
+            window.addEventListener('touchmove', (e) => { if (dangkeo) khididichcuyen(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
+            window.addEventListener('touchend', () => { dangkeo = false; handle.classList.remove('dragging'); });
+        };
+
+        khoitaokeonut(nutgio, 'hour');
+        khoitaokeonut(nutphut, 'minute');
+        this.capNhatGiaTriVT('hour', this.gio_val_vt);
+        this.capNhatGiaTriVT('minute', this.phut_val_vt);
     },
 
     ganSuKienAMPM() {
@@ -390,7 +608,7 @@ export const GiaoDienCaiDat = {
             ampmContainer.addEventListener('click', (e) => {
                 const opt = e.target.closest('.custom-option');
                 if (opt) {
-                    const isPM = opt.dataset.val === 'PM';
+                    const isPM = opt.dataset.val === 'CH';
                     if (isPM && this.gio_val_vt < 12) this.gio_val_vt += 12;
                     else if (!isPM && this.gio_val_vt >= 12) this.gio_val_vt -= 12;
                     this.capNhatGiaTriVT('hour', this.gio_val_vt);
@@ -399,10 +617,6 @@ export const GiaoDienCaiDat = {
                 }
             });
         }
-        const hInput = document.getElementById('input-realtime-hour');
-        const mInput = document.getElementById('input-realtime-min');
-        if (hInput) hInput.addEventListener('change', (e) => this.capNhatGiaTriVT('hour', parseInt(e.target.value) || 0));
-        if (mInput) mInput.addEventListener('change', (e) => this.capNhatGiaTriVT('minute', parseInt(e.target.value) || 0));
     },
 
     anTatNhomTuDongDung() {
@@ -425,17 +639,34 @@ export const GiaoDienCaiDat = {
 
             if (v === 'time') {
                 const n = document.getElementById('group-stop-time');
-                if (n) n.style.display = 'flex';
+                if (n) {
+                    n.style.display = 'flex';
+                    chrome.storage.local.get('stopTime', d => {
+                        let h = 0, m = 30;
+                        if (d.stopTime) {
+                            h = Math.floor(d.stopTime / 60);
+                            m = d.stopTime % 60;
+                        }
+                        const hInput = document.getElementById('input-stop-hours');
+                        const mInput = document.getElementById('input-stop-minutes');
+                        if (hInput) hInput.value = h;
+                        if (mInput) mInput.value = m;
+                    });
+                }
             } else if (v === 'chapters') {
                 const n = document.getElementById('group-stop-chapters');
-                if (n) n.style.display = 'flex';
+                if (n) {
+                    n.style.display = 'flex';
+                    chrome.storage.local.get('stopAfterChapters', d => {
+                        const cInput = document.getElementById('input-stop-chapters');
+                        if (cInput) cInput.value = d.stopAfterChapters || 1;
+                    });
+                }
             } else if (v === 'realtime') {
                 const n = document.getElementById('group-stop-realtime');
                 if (n) {
                     n.style.display = 'flex';
                     chrome.storage.local.get('stopRealtimeTarget', d => {
-                        const hInput = document.getElementById('input-realtime-hour');
-                        const mInput = document.getElementById('input-realtime-min');
                         let mucTieuGio = 12, mucTieuPhut = 0;
                         if (d.stopRealtimeTarget) {
                             const [hStr, mStr] = d.stopRealtimeTarget.split(':');
@@ -449,17 +680,44 @@ export const GiaoDienCaiDat = {
                         this.capNhatGiaTriVT('hour', mucTieuGio);
                         this.capNhatGiaTriVT('minute', mucTieuPhut);
                         
-                        if (hInput) {
-                            let displayH = mucTieuGio % 12;
-                            if(displayH === 0) displayH = 12;
-                            hInput.value = displayH;
-                        }
-                        if (mInput) mInput.value = String(mucTieuPhut).padStart(2, '0');
                     });
                 }
             } else if (v === 'custom') {
                 const n = document.getElementById('group-stop-custom');
-                if (n) n.style.display = 'flex';
+                if (n) {
+                    n.style.display = 'flex';
+                    chrome.storage.local.get('customStopConfig', d => {
+                        if (d.customStopConfig) {
+                            const op = document.getElementById('custom-operator');
+                            if (op) op.value = d.customStopConfig.operator || 'AND';
+                            const lt = document.getElementById('custom-left-type');
+                            if (lt) { lt.value = d.customStopConfig.left?.type || 'time'; lt.dispatchEvent(new Event('change')); }
+                            const rt = document.getElementById('custom-right-type');
+                            if (rt) { rt.value = d.customStopConfig.right?.type || 'chapters'; rt.dispatchEvent(new Event('change')); }
+                            setTimeout(() => {
+                                const li = document.getElementById('custom-left-input');
+                                const ri = document.getElementById('custom-right-input');
+                                const fill = (container, conf) => {
+                                    if (!container || !conf) return;
+                                    if (conf.type === 'time') {
+                                        const hc = container.querySelector('.cc-hours');
+                                        const mc = container.querySelector('.cc-minutes');
+                                        if (hc) hc.value = Math.floor(conf.minutes / 60);
+                                        if (mc) mc.value = conf.minutes % 60;
+                                    } else if (conf.type === 'realtime') {
+                                        const tc = container.querySelector('.cc-time');
+                                        if (tc) tc.value = conf.displayTime;
+                                    } else if (conf.type === 'chapters') {
+                                        const cc = container.querySelector('.cc-chapters');
+                                        if (cc) cc.value = conf.count;
+                                    }
+                                };
+                                fill(li, d.customStopConfig.left);
+                                fill(ri, d.customStopConfig.right);
+                            }, 50);
+                        }
+                    });
+                }
             } else if (v === 'off') {
                 DieuKhienTrinhPhat.guiLenh('henGioNgu', { minutes: 0 });
                 DieuKhienTrinhPhat.guiLenh('dungSauChuong', { count: 0 });
@@ -471,8 +729,145 @@ export const GiaoDienCaiDat = {
 
         const customLeftType = document.getElementById('custom-left-type');
         const customRightType = document.getElementById('custom-right-type');
-        if (customLeftType) customLeftType.addEventListener('change', e => this.taoInputDieuKien('custom-left-input', e.target.value));
-        if (customRightType) customRightType.addEventListener('change', e => this.taoInputDieuKien('custom-right-input', e.target.value));
+        
+        const capNhatKhoaTuyChinh = () => {
+            if (!customLeftType || !customRightType) return;
+            const leftVal = customLeftType.value;
+            const rightVal = customRightType.value;
+            
+            Array.from(customLeftType.options).forEach(opt => {
+                if (opt.value && opt.value !== '' && opt.value === rightVal) opt.disabled = true;
+                else opt.disabled = false;
+            });
+            Array.from(customRightType.options).forEach(opt => {
+                if (opt.value && opt.value !== '' && opt.value === leftVal) opt.disabled = true;
+                else opt.disabled = false;
+            });
+            
+            if (customLeftType._capNhatGiaoDien) customLeftType._capNhatGiaoDien();
+            if (customRightType._capNhatGiaoDien) customRightType._capNhatGiaoDien();
+        };
+
+        if (customLeftType) customLeftType.addEventListener('change', e => {
+            this.taoInputDieuKien('custom-left-input', e.target.value);
+            capNhatKhoaTuyChinh();
+        });
+        if (customRightType) customRightType.addEventListener('change', e => {
+            this.taoInputDieuKien('custom-right-input', e.target.value);
+            capNhatKhoaTuyChinh();
+        });
+    },
+
+    ganSuKienPhimTat() {
+        const btnSettings = document.getElementById('btn-shortcuts-settings');
+        const dropdown = document.getElementById('shortcuts-dropdown');
+        if (btnSettings && dropdown) {
+            btnSettings.addEventListener('click', () => {
+                dropdown.style.display = dropdown.style.display === 'none' ? 'flex' : 'none';
+            });
+            
+            const defaultShortcuts = {
+                playPause: 'K',
+                replay: 'R',
+                prevChap: 'ArrowLeft',
+                nextChap: 'ArrowRight',
+                volUp: 'ArrowUp',
+                volDown: 'ArrowDown',
+                speedUp: ']',
+                speedDown: '[',
+                nextSeg: '.',
+                prevSeg: ','
+            };
+            
+            const inputs = {
+                playPause: document.getElementById('shortcut-play-pause'),
+                replay: document.getElementById('shortcut-replay'),
+                prevChap: document.getElementById('shortcut-prev-chap'),
+                nextChap: document.getElementById('shortcut-next-chap'),
+                volUp: document.getElementById('shortcut-vol-up'),
+                volDown: document.getElementById('shortcut-vol-down'),
+                speedUp: document.getElementById('shortcut-speed-up'),
+                speedDown: document.getElementById('shortcut-speed-down'),
+                nextSeg: document.getElementById('shortcut-next-seg'),
+                prevSeg: document.getElementById('shortcut-prev-seg')
+            };
+
+            const renderKey = (key) => {
+                if (!key) return '';
+                if (key === 'ArrowUp') return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>`;
+                if (key === 'ArrowDown') return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>`;
+                if (key === 'ArrowLeft') return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>`;
+                if (key === 'ArrowRight') return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
+                if (key === ',' || key === '.') {
+                    return `<span style="font-size: 15px; font-weight: 900; line-height: 1; padding-bottom: 4px; display: inline-block;">${key}</span>`;
+                }
+                return key;
+            };
+
+            chrome.storage.local.get('customShortcuts', data => {
+                const shortcuts = data.customShortcuts || defaultShortcuts;
+                if (inputs.playPause) { inputs.playPause.dataset.key = shortcuts.playPause || defaultShortcuts.playPause; inputs.playPause.innerHTML = renderKey(inputs.playPause.dataset.key); }
+                if (inputs.replay) { inputs.replay.dataset.key = shortcuts.replay || defaultShortcuts.replay; inputs.replay.innerHTML = renderKey(inputs.replay.dataset.key); }
+                if (inputs.prevChap) { inputs.prevChap.dataset.key = shortcuts.prevChap || defaultShortcuts.prevChap; inputs.prevChap.innerHTML = renderKey(inputs.prevChap.dataset.key); }
+                if (inputs.nextChap) { inputs.nextChap.dataset.key = shortcuts.nextChap || defaultShortcuts.nextChap; inputs.nextChap.innerHTML = renderKey(inputs.nextChap.dataset.key); }
+                if (inputs.volUp) { inputs.volUp.dataset.key = shortcuts.volUp || defaultShortcuts.volUp; inputs.volUp.innerHTML = renderKey(inputs.volUp.dataset.key); }
+                if (inputs.volDown) { inputs.volDown.dataset.key = shortcuts.volDown || defaultShortcuts.volDown; inputs.volDown.innerHTML = renderKey(inputs.volDown.dataset.key); }
+                if (inputs.speedUp) { inputs.speedUp.dataset.key = shortcuts.speedUp || defaultShortcuts.speedUp; inputs.speedUp.innerHTML = renderKey(inputs.speedUp.dataset.key); }
+                if (inputs.speedDown) { inputs.speedDown.dataset.key = shortcuts.speedDown || defaultShortcuts.speedDown; inputs.speedDown.innerHTML = renderKey(inputs.speedDown.dataset.key); }
+                if (inputs.nextSeg) { inputs.nextSeg.dataset.key = shortcuts.nextSeg || defaultShortcuts.nextSeg; inputs.nextSeg.innerHTML = renderKey(inputs.nextSeg.dataset.key); }
+                if (inputs.prevSeg) { inputs.prevSeg.dataset.key = shortcuts.prevSeg || defaultShortcuts.prevSeg; inputs.prevSeg.innerHTML = renderKey(inputs.prevSeg.dataset.key); }
+            });
+
+            const setupInput = (keyName) => {
+                const el = inputs[keyName];
+                if (!el) return;
+                
+                el.addEventListener('focus', () => {
+                    el.innerHTML = '...';
+                });
+                
+                el.addEventListener('blur', () => {
+                    el.innerHTML = renderKey(el.dataset.key);
+                });
+
+                el.addEventListener('keydown', e => {
+                    e.preventDefault();
+                    let key = e.key;
+                    if (key === 'Escape') {
+                        el.blur();
+                        return;
+                    }
+                    if (key === ' ') key = 'Space';
+                    if (key.length === 1) key = key.toUpperCase();
+                    if (['Control', 'Alt', 'Shift', 'Meta', 'Tab'].includes(key)) return;
+                    
+                    el.dataset.key = key;
+                    el.innerHTML = renderKey(key);
+                    el.blur();
+                    
+                    chrome.storage.local.get('customShortcuts', data => {
+                        const shortcuts = data.customShortcuts || defaultShortcuts;
+                        shortcuts[keyName] = key;
+                        chrome.storage.local.set({ customShortcuts: shortcuts }, () => {
+                            if (typeof window.showToast === 'function') {
+                                window.showToast('Đã lưu phím tắt', 'success');
+                            }
+                        });
+                    });
+                });
+            };
+
+            setupInput('playPause');
+            setupInput('replay');
+            setupInput('prevChap');
+            setupInput('nextChap');
+            setupInput('volUp');
+            setupInput('volDown');
+            setupInput('speedUp');
+            setupInput('speedDown');
+            setupInput('nextSeg');
+            setupInput('prevSeg');
+        }
     },
 
     taoInputDieuKien(containerid, kieu) {
@@ -480,7 +875,7 @@ export const GiaoDienCaiDat = {
         if (!container) return;
         container.innerHTML = '';
         if (kieu === 'time') container.innerHTML = `<input type="number" value="0" min="0" style="width:34px;" class="auto-stop-input cc-hours"><span class="auto-stop-unit">giờ</span><input type="number" value="30" min="0" max="59" style="width:34px;" class="auto-stop-input cc-minutes"><span class="auto-stop-unit">phút</span>`;
-        else if (kieu === 'realtime') container.innerHTML = `<input type="time" class="auto-stop-input cc-time" style="width:70px; padding: 2px 4px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--accent); outline: none;">`;
+        else if (kieu === 'realtime') container.innerHTML = `<input type="time" class="auto-stop-input cc-time" style="width:105px; padding: 2px 4px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--accent); outline: none; font-size: 11px;">`;
         else if (kieu === 'chapters') container.innerHTML = `<input type="number" value="1" min="1" style="width:46px;" class="auto-stop-input cc-chapters"><span class="auto-stop-unit">chương</span>`;
     },
 
@@ -546,17 +941,8 @@ export const GiaoDienCaiDat = {
 
         const btnRealtime = document.getElementById('btn-apply-stop-realtime');
         if (btnRealtime) btnRealtime.addEventListener('click', () => {
-            const hInp = document.getElementById('input-realtime-hour');
-            const mInp = document.getElementById('input-realtime-min');
-            let h12 = hInp ? parseInt(hInp.value) || 12 : 12;
-            let m = mInp ? parseInt(mInp.value) || 0 : 0;
-            const isPM = document.getElementById('ampm-text')?.textContent === 'PM';
-            
-            let h24 = h12 % 12;
-            if (isPM) h24 += 12;
-            this.gio_val_vt = h24;
-            this.phut_val_vt = m;
-
+            let h24 = this.gio_val_vt;
+            let m = this.phut_val_vt;
             const gioTruc = `${String(h24).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
             const bayGio = new Date();
             const mucTieu = new Date();

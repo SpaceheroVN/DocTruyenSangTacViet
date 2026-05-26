@@ -534,6 +534,23 @@
               ô thiết lập tương ứng trong tiện ích.</li>
           </ol>
         </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">3. Dành cho Google Cloud TTS</div>
+            <span class="badge warning">Cần thẻ VISA</span>
+          </div>
+          <div class="card-desc">Giọng đọc Google Cloud (đặc biệt các giọng Wavenet/Standard) rất đa dạng và đọc rất hay. 
+            Google cung cấp hạn mức miễn phí <strong>lên tới 1 triệu ký tự/tháng</strong> đối với giọng Standard, nhưng yêu cầu liên kết thẻ thanh toán để thiết lập Billing Account.</div>
+          <ol class="steps-list">
+            <li>Truy cập <a href="https://console.cloud.google.com/" target="_blank" class="link-text">Google Cloud Console</a> và đăng nhập bằng tài khoản Google. Tiến hành liên kết thẻ thanh toán nếu chưa có.</li>
+            <li>Tại thanh trên cùng, bấm chọn <strong>Select a project</strong> và tạo mới một dự án (VD: <code>Doc-Truyen-STV</code>).</li>
+            <li>Trên thanh tìm kiếm, gõ <strong>Cloud Text-to-Speech API</strong> và chọn nó. Bấm nút <strong>Enable (Bật)</strong>.</li>
+            <li>Truy cập menu bên trái: <strong>APIs & Services &gt; Credentials</strong>.</li>
+            <li>Nhấn <strong>Create Credentials</strong> trên cùng và chọn <strong>API key</strong>.</li>
+            <li>Copy API key vừa tạo, mở lại bảng <strong>Auto Đọc STV</strong> &gt; Tab <strong>Cài đặt</strong> &gt; Chọn nguồn <strong>Google Cloud TTS</strong>, dán khóa vào ô trống và bấm <strong>Lưu API Key</strong>.</li>
+          </ol>
+        </div>
       </section>
 
       <section id="tab-info" class="content-section">

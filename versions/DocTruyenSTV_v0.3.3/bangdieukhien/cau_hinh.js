@@ -4,6 +4,7 @@ export const CauHinh = {
     _syncTimeout: null,
     _localTimeout: null,
     _pendingSyncKeys: new Set(),
+    _pendingLocalKeys: new Set(),
 
     async khoiTao() {
         return Promise.all([
@@ -39,9 +40,13 @@ export const CauHinh = {
             }, 300);
         } else {
             this.duLieuCucBo[khoa] = giaTri;
+            this._pendingLocalKeys.add(khoa);
             if (this._localTimeout) clearTimeout(this._localTimeout);
             this._localTimeout = setTimeout(() => {
-                chrome.storage.local.set({ [khoa]: giaTri });
+                const data = {};
+                this._pendingLocalKeys.forEach(k => data[k] = this.duLieuCucBo[k]);
+                chrome.storage.local.set(data);
+                this._pendingLocalKeys.clear();
             }, 300);
         }
     },

@@ -10,8 +10,8 @@ export function showConfirm(tieuDe, noiDung, hanhDongXacNhan) {
     const btnCancel = document.getElementById('modal-cancel');
     if (!modal || !title || !body || !btnConfirm || !btnCancel) return;
 
-    title.textContent = tieuDe;
-    body.textContent = noiDung;
+    title.innerText = tieuDe;
+    body.innerText = noiDung;
     modal.style.display = 'flex';
 
     const btnConfirmMoi = btnConfirm.cloneNode(true);
@@ -55,6 +55,16 @@ export const DieuKhienTrinhPhat = {
         if (versionBadge) versionBadge.textContent = 'v' + chrome.runtime.getManifest().version;
 
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        
+        const coverImg = document.getElementById('cover-img');
+        if (coverImg) {
+            coverImg.addEventListener('error', function() {
+                if (this.src !== 'icons/icon128.png') {
+                    this.src = 'icons/icon128.png';
+                }
+            });
+        }
+
         if (tab && tab.url && tab.url.includes('sangtacviet.com')) {
             this.idTabHienTai = tab.id;
             this.yeuCauTrangThaiBanDau();
@@ -79,6 +89,12 @@ export const DieuKhienTrinhPhat = {
         chrome.runtime.onMessage.addListener((tinNhan) => {
             if (tinNhan.hanhDong === 'thayDoiTrangThai' && tinNhan.trangThai) {
                 this.capNhatTrangThaiPhat(tinNhan.trangThai);
+            } else if (tinNhan.hanhDong === 'capNhatAnhBia' && tinNhan.imgUrl) {
+                const coverImg = document.getElementById('cover-img');
+                if (coverImg) coverImg.src = tinNhan.imgUrl;
+                if (this.thongTinTruyenHienTai) {
+                    this.thongTinTruyenHienTai.imgUrl = tinNhan.imgUrl;
+                }
             }
         });
 
@@ -104,7 +120,8 @@ export const DieuKhienTrinhPhat = {
                 theChon.innerHTML = phanHoi.voices.map(v => {
                     let ten = v.name.replace(/ - Vietnamese \(Vietnam\)/i, '').replace(/ \(Vietnam\)/i, '').replace(/Microsoft /i, 'MS ').replace(/Google /i, 'GG ');
                     if (ten.length > 22) ten = ten.substring(0, 20) + '...';
-                    return `<option value="${v.index}" ${v.index == giaTriCu ? 'selected' : ''}>${ten}</option>`;
+                    const tenAnToan = ten.replace(/[&<>"'`=\/]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'}[s]));
+                    return `<option value="${v.index}" ${v.index == giaTriCu ? 'selected' : ''}>${tenAnToan}</option>`;
                 }).join('');
                 GiaoDienCaiDat.capNhatGiaoDien('voice-select');
             }
@@ -125,6 +142,15 @@ export const DieuKhienTrinhPhat = {
         const dangTamDung = trangThai.isPaused;
         const isBuffering = trangThai.isBuffering;
         const dangHoatDong = dangPhat && !dangTamDung;
+
+        const elapsed = trangThai.elapsed || 0;
+        const ptGio = Math.floor(elapsed / 3600);
+        const ptPhut = Math.floor((elapsed % 3600) / 60).toString().padStart(2, '0');
+        const ptGiay = (elapsed % 60).toString().padStart(2, '0');
+        const timerText = document.getElementById('timer-text');
+        if (timerText) {
+            timerText.textContent = ptGio > 0 ? `${ptGio}:${ptPhut}:${ptGiay}` : `${ptPhut}:${ptGiay}`;
+        }
 
         const bieuTuong = document.getElementById('btn-play-icon');
         const vanBanNut = document.getElementById('btn-play-text');
@@ -166,13 +192,15 @@ export const DieuKhienTrinhPhat = {
         if (trangThai.progress) {
             const input = document.getElementById('progress-input');
             const total = document.getElementById('progress-total');
-            const bar = document.getElementById('progress-bar');
+            const bar = document.getElementById('progress-bar-fill') || document.getElementById('progress-bar');
             const percent = document.getElementById('progress-percent');
             if(input) input.value = trangThai.progress.current;
             if(total) total.textContent = trangThai.progress.total;
             if(bar && percent) {
                 const phanTram = Math.round((trangThai.progress.current / trangThai.progress.total) * 100);
-                bar.style.width = phanTram + '%';
+                bar.style.width = '100%';
+                bar.style.transformOrigin = 'left';
+                bar.style.transform = `scaleX(${trangThai.progress.current / trangThai.progress.total})`;
                 percent.textContent = phanTram + '%';
             }
         }
@@ -248,17 +276,31 @@ export const DieuKhienTrinhPhat = {
             chapEl.textContent = '—';
         }
         
-        if (thongTin.imgUrl) document.getElementById('cover-img').src = thongTin.imgUrl;
+        if (thongTin.imgUrl) {
+            document.getElementById('cover-img').src = thongTin.imgUrl;
+        }
         
         if (QuanLyThuVien.danhSachDoc) {
             const danhSach = QuanLyThuVien.danhSachDoc;
             const vt = danhSach.findIndex(i => (i.title || '').trim().toLowerCase() === (thongTin.bookTitle || '').trim().toLowerCase());
+            
+            if (!thongTin.imgUrl && vt !== -1 && danhSach[vt].imgUrl) {
+                document.getElementById('cover-img').src = danhSach[vt].imgUrl;
+            }
+
             if (vt !== -1) {
                 this.datTrangThaiLuu(true);
                 let daCapNhat = false;
                 const docHienTai = danhSach[vt];
                 if (thongTin.pageUrl && docHienTai.url !== thongTin.pageUrl) { docHienTai.url = thongTin.pageUrl; daCapNhat = true; }
                 if (thongTin.chapTitle && docHienTai.chap !== thongTin.chapTitle) { docHienTai.chap = thongTin.chapTitle; daCapNhat = true; }
+                if (thongTin.imgUrl && docHienTai.imgUrl !== thongTin.imgUrl) {
+                    let safeImg = thongTin.imgUrl;
+                    if (safeImg.startsWith('data:')) safeImg = '';
+                    if (safeImg.toLowerCase().startsWith('http://')) safeImg = 'https://' + safeImg.substring(7);
+                    docHienTai.imgUrl = safeImg;
+                    daCapNhat = true;
+                }
                 if (daCapNhat) {
                     chrome.storage.local.set({ readingList: danhSach }, () => {
                         QuanLyThuVien.hienThiDanhSach(QuanLyThuVien.sapXepDanhSach(danhSach));
@@ -274,6 +316,7 @@ export const DieuKhienTrinhPhat = {
             isPaused: thongTin.isPaused,
             isBuffering: thongTin.isBuffering,
             engine: thongTin.ttsEngine,
+            elapsed: thongTin.elapsed || 0,
             progress: thongTin.progress
         });
     },
@@ -322,10 +365,13 @@ export const DieuKhienTrinhPhat = {
                     });
                 } else {
                     if (danhSach.length >= 50) danhSach.shift();
+                    let safeImg = hienTai.imgUrl || '';
+                    if (safeImg.startsWith('data:')) safeImg = '';
+                    if (safeImg.toLowerCase().startsWith('http://')) safeImg = 'https://' + safeImg.substring(7);
                     danhSach.push({
                         title: hienTai.bookTitle,
                         url: hienTai.pageUrl || hienTai.bookUrl,
-                        imgUrl: hienTai.imgUrl,
+                        imgUrl: safeImg,
                         timestamp: Date.now(),
                         savedAt: new Date().toLocaleDateString('vi-VN'),
                         chap: hienTai.chapTitle || 'Chưa đọc chương nào',
@@ -368,6 +414,14 @@ export const DieuKhienTrinhPhat = {
                     e.currentTarget.classList.add('active');
                     const panel = document.getElementById('panel-' + e.currentTarget.dataset.tab);
                     if (panel) panel.classList.add('active');
+                }
+                
+                if (typeof window.GiaoDienCaiDat !== 'undefined') {
+                    window.GiaoDienCaiDat.taiLaiDuLieuTuDongDung();
+                    window.GiaoDienCaiDat.taiLaiDuLieuMayDoc();
+                } else if (typeof GiaoDienCaiDat !== 'undefined') {
+                    GiaoDienCaiDat.taiLaiDuLieuTuDongDung();
+                    GiaoDienCaiDat.taiLaiDuLieuMayDoc();
                 }
             });
         });
