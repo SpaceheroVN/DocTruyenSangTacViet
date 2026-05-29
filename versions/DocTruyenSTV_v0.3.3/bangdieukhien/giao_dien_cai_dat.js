@@ -1,4 +1,4 @@
-import { CauHinh } from './cau_hinh.js';
+import { CauHinh } from './quan_ly_cau_hinh.js';
 import { DieuKhienTrinhPhat, showToast } from './dieu_khien_trinh_phat.js';
 
 export const GiaoDienCaiDat = {
@@ -7,6 +7,7 @@ export const GiaoDienCaiDat = {
         this.khoiTaoTuyChon();
         this.khoiTaoTuDongDung();
         this.khoiTaoDongHoTron();
+        this.khoiTaoTuDien();
         this.ganSuKienCaiDat();
         this.ganSuKienPhimTat();
     },
@@ -88,6 +89,14 @@ export const GiaoDienCaiDat = {
         const apiBox = document.getElementById('api-settings-box');
         const apiKeyInput = document.getElementById('api-key-input');
         const apiRegionInput = document.getElementById('api-region-input');
+        
+        if (apiBox && !document.getElementById('api-warning')) {
+            const warning = document.createElement('div');
+            warning.id = 'api-warning';
+            warning.style.cssText = 'color: #ff9800; font-size: 11.5px; margin-top: 8px; line-height: 1.3; border-top: 1px solid rgba(255, 152, 0, 0.2); padding-top: 6px;';
+            warning.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:2px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> <b>Bảo mật:</b> API Key của bạn được lưu cục bộ trên máy tính này. Vui lòng không chia sẻ máy tính hoặc để lộ khóa cho người khác.`;
+            apiBox.appendChild(warning);
+        }
         
         const xoaDuLieuRong = () => { if (apiKeyInput) apiKeyInput.value = ''; };
         
@@ -193,7 +202,9 @@ export const GiaoDienCaiDat = {
                         });
                         thanhcong = r.ok;
                     } else if (congcu === 'gcp') {
-                        const r = await fetch(`https://texttospeech.googleapis.com/v1/voices?key=${key}`);
+                        const r = await fetch(`https://texttospeech.googleapis.com/v1/voices`, {
+                            headers: { 'X-Goog-Api-Key': key }
+                        });
                         thanhcong = r.ok;
                     }
                     if (thanhcong) {
@@ -244,6 +255,78 @@ export const GiaoDienCaiDat = {
                 const isHidden = noteContent.style.display === 'none';
                 noteContent.style.display = isHidden ? 'block' : 'none';
                 btnNote.textContent = isHidden ? 'Ẩn lưu ý' : 'Xem lưu ý';
+            });
+        }
+    },
+
+    hienThiTuDien() {
+        const dictList = document.getElementById('dict-list');
+        if (!dictList) return;
+        const dict = CauHinh.lay('customDict') || [];
+        dictList.innerHTML = '';
+        if (dict.length === 0) {
+            dictList.innerHTML = '<div style="font-size: 11px; color: var(--text-muted); text-align: center; padding: 10px 0; font-style: italic;">Chưa có quy tắc nào</div>';
+            return;
+        }
+        
+        dict.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.style.display = 'flex';
+            div.style.alignItems = 'center';
+            div.style.gap = '6px';
+            div.style.padding = '4px 8px';
+            div.style.background = 'rgba(255,255,255,0.02)';
+            div.style.border = '1px solid rgba(255,255,255,0.05)';
+            div.style.borderRadius = '6px';
+            div.innerHTML = `
+                <div style="flex: 1; min-width: 0; font-size: 11px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600;" title="${item[0]}">${item[0]}</div>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; opacity: 0.7;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                <div style="flex: 1; min-width: 0; font-size: 11px; color: var(--accent2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600;" title="${item[1]}">${item[1]}</div>
+                <div style="width: 44px; display: flex; justify-content: flex-end; flex-shrink: 0;">
+                    <button class="btn-ctrl btn-sm btn-del-dict" data-idx="${index}" style="height: 24px; width: 28px; padding: 0; display: flex; align-items: center; justify-content: center; background: rgba(224, 92, 110, 0.1); color: #e05c6e; border: none; border-radius: 4px;" title="Xóa">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                    </button>
+                </div>
+            `;
+            dictList.appendChild(div);
+        });
+        
+        dictList.querySelectorAll('.btn-del-dict').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(e.currentTarget.getAttribute('data-idx'));
+                let currentDict = CauHinh.lay('customDict') || [];
+                currentDict.splice(idx, 1);
+                CauHinh.luuTuDien(currentDict);
+                this.hienThiTuDien();
+                showToast('Đã xóa quy tắc!', 'success');
+            });
+        });
+    },
+
+    khoiTaoTuDien() {
+        this.hienThiTuDien();
+        const btnAddDict = document.getElementById('btn-add-dict');
+        if (btnAddDict) {
+            btnAddDict.addEventListener('click', () => {
+                const originEl = document.getElementById('dict-origin');
+                const replaceEl = document.getElementById('dict-replace');
+                if (!originEl || !replaceEl) return;
+                const origin = originEl.value.trim();
+                const replace = replaceEl.value.trim();
+                if (!origin) {
+                    showToast('Vui lòng nhập từ lỗi cần sửa!', 'warning');
+                    return;
+                }
+                let dict = CauHinh.lay('customDict') || [];
+                const idx = dict.findIndex(item => item[0].toLowerCase() === origin.toLowerCase());
+                if (idx !== -1) dict[idx][1] = replace;
+                else dict.push([origin, replace]);
+                
+                CauHinh.luuTuDien(dict);
+                originEl.value = '';
+                replaceEl.value = '';
+                this.hienThiTuDien();
+                showToast('Đã lưu quy tắc thành công!', 'success');
             });
         }
     },
@@ -576,7 +659,6 @@ export const GiaoDienCaiDat = {
         }
 
         const khoitaokeonut = (handle, loaivong) => {
-            let dangkeo = false;
             const svgEl = handle.ownerSVGElement;
             const khididichcuyen = (clientX, clientY) => {
                 const deg = laygoctoadochuot(clientX, clientY, svgEl, CENTER, CENTER);
@@ -588,12 +670,34 @@ export const GiaoDienCaiDat = {
                     this.capNhatGiaTriVT('minute', Math.round(deg / (360 / 60)) % 60);
                 }
             };
-            handle.addEventListener('mousedown', (e) => { dangkeo = true; handle.classList.add('dragging'); e.preventDefault(); });
-            window.addEventListener('mousemove', (e) => { if (dangkeo) khididichcuyen(e.clientX, e.clientY); });
-            window.addEventListener('mouseup', () => { dangkeo = false; handle.classList.remove('dragging'); });
-            handle.addEventListener('touchstart', (e) => { dangkeo = true; handle.classList.add('dragging'); e.preventDefault(); }, { passive: false });
-            window.addEventListener('touchmove', (e) => { if (dangkeo) khididichcuyen(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
-            window.addEventListener('touchend', () => { dangkeo = false; handle.classList.remove('dragging'); });
+            
+            const onMouseMove = (e) => khididichcuyen(e.clientX, e.clientY);
+            const onMouseUp = () => {
+                handle.classList.remove('dragging');
+                window.removeEventListener('mousemove', onMouseMove);
+                window.removeEventListener('mouseup', onMouseUp);
+            };
+
+            handle.addEventListener('mousedown', (e) => {
+                handle.classList.add('dragging');
+                e.preventDefault();
+                window.addEventListener('mousemove', onMouseMove);
+                window.addEventListener('mouseup', onMouseUp);
+            });
+
+            const onTouchMove = (e) => khididichcuyen(e.touches[0].clientX, e.touches[0].clientY);
+            const onTouchEnd = () => {
+                handle.classList.remove('dragging');
+                window.removeEventListener('touchmove', onTouchMove, { passive: false });
+                window.removeEventListener('touchend', onTouchEnd);
+            };
+
+            handle.addEventListener('touchstart', (e) => {
+                handle.classList.add('dragging');
+                e.preventDefault();
+                window.addEventListener('touchmove', onTouchMove, { passive: false });
+                window.addEventListener('touchend', onTouchEnd);
+            }, { passive: false });
         };
 
         khoitaokeonut(nutgio, 'hour');
@@ -798,10 +902,13 @@ export const GiaoDienCaiDat = {
                 if (key === 'ArrowDown') return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>`;
                 if (key === 'ArrowLeft') return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>`;
                 if (key === 'ArrowRight') return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
+                
+                const span = document.createElement('span');
+                span.textContent = key;
                 if (key === ',' || key === '.') {
-                    return `<span style="font-size: 15px; font-weight: 900; line-height: 1; padding-bottom: 4px; display: inline-block;">${key}</span>`;
+                    span.style.cssText = "font-size: 15px; font-weight: 900; line-height: 1; padding-bottom: 4px; display: inline-block;";
                 }
-                return key;
+                return span.outerHTML;
             };
 
             chrome.storage.local.get('customShortcuts', data => {

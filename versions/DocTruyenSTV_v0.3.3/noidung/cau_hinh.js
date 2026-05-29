@@ -25,9 +25,13 @@ DocTruyenSTV_Ext.LuuTruSTV = {
     capNhatTuDien(tuDien) {
         this.tuDienDaBienDich = tuDien.slice(0, 50).map(quyTac => {
             try {
+                let theHienRe = this.thoatKyTuRegex(quyTac[0]);
+                if (!theHienRe.startsWith('^') && !theHienRe.endsWith('$')) {
+                    theHienRe = '(^|[^\\p{L}\\p{N}_])' + theHienRe + '(?=[^\\p{L}\\p{N}_]|$)';
+                }
                 return {
-                    regex: new RegExp(this.thoatKyTuRegex(quyTac.origin), 'gi'),
-                    thayThe: quyTac.replace.replace(/\$/g, '$$$$')
+                    regex: new RegExp(theHienRe, 'giu'),
+                    thayThe: '$1' + quyTac[1].replace(/\$/g, '$$$$')
                 };
             } catch(l) { return null; }
         }).filter(Boolean);
@@ -39,11 +43,14 @@ DocTruyenSTV_Ext.LuuTruSTV = {
 
     anToanUrl(url) {
         const u = String(url).trim();
-        if (/^(https?|data):/i.test(u)) return u;
+        if (/^(https?:\/\/|data:image\/)/i.test(u)) return u;
         return 'https://sangtacviet.com/homepage/img/sangtacviet-logo.png';
     },
 
+    _db_instance: null,
+
     layKetNoiDB() {
+        if (this._db_instance) return Promise.resolve(this._db_instance);
         return new Promise((dongY, tuChoi) => {
             const yeuCau = indexedDB.open('STV_TTS_Cache', 1);
             yeuCau.onupgradeneeded = (suKien) => {
@@ -51,8 +58,12 @@ DocTruyenSTV_Ext.LuuTruSTV = {
                     suKien.target.result.createObjectStore('audioBlobs');
                 }
             };
-            yeuCau.onsuccess = (suKien) => dongY(suKien.target.result);
-            yeuCau.onerror = (suKien) => tuChoi(suKien);
+            yeuCau.onsuccess = (suKien) => {
+                this._db_instance = suKien.target.result;
+                this._db_instance.onclose = () => { this._db_instance = null; };
+                dongY(this._db_instance);
+            };
+            yeuCau.onerror = (suKien) => tuChoi(suKien.target.error);
         });
     },
 
@@ -63,22 +74,20 @@ DocTruyenSTV_Ext.LuuTruSTV = {
                 const giaoDich = db.transaction('audioBlobs', 'readwrite');
                 giaoDich.objectStore('audioBlobs').put({ blob: blob, timestamp: Date.now() }, khoa);
                 giaoDich.oncomplete = () => {
-                    db.close();
                     if (!this.boNhoDemDB.includes(khoa)) {
                         this.boNhoDemDB.push(khoa);
                         sessionStorage.setItem('STV_bo_nho_dem_db', JSON.stringify(this.boNhoDemDB));
                     }
                     dongY();
                 };
-                giaoDich.onerror = (suKien) => { db.close(); tuChoi(suKien.target.error); };
+                giaoDich.onerror = (suKien) => tuChoi(suKien.target.error);
             });
         } catch (l) { console.warn('Lỗi ghi IDB:', l); }
     },
 
     async layAmThanh(khoa) {
-        let db;
         try {
-            db = await this.layKetNoiDB();
+            const db = await this.layKetNoiDB();
             return await new Promise((dongY) => {
                 const giaoDich = db.transaction('audioBlobs', 'readonly');
                 const yeuCau = giaoDich.objectStore('audioBlobs').get(khoa);
@@ -89,42 +98,50 @@ DocTruyenSTV_Ext.LuuTruSTV = {
                 yeuCau.onerror = () => dongY(null);
             });
         } catch (l) { return null; }
-        finally { if (db) db.close(); }
     },
 
     async donDepCacheCu() {
-        let db;
         try {
-            db = await this.layKetNoiDB();
+            const db = await this.layKetNoiDB();
             return await new Promise((dongY) => {
                 const giaoDich = db.transaction('audioBlobs', 'readwrite');
                 const khoChua = giaoDich.objectStore('audioBlobs');
                 const yeuCau = khoChua.openCursor();
                 const bayGio = Date.now();
                 const thoiGianHetHan = 12 * 60 * 60 * 1000;
+                let tatCaBanGhi = [];
                 
                 yeuCau.onsuccess = (suKien) => {
                     const conTro = suKien.target.result;
                     if (conTro) {
                         const giaTri = conTro.value;
                         if (!(giaTri instanceof Blob) && giaTri.timestamp) {
-                            if (bayGio - giaTri.timestamp > thoiGianHetHan) conTro.delete();
+                            if (bayGio - giaTri.timestamp > thoiGianHetHan) {
+                                conTro.delete();
+                            } else {
+                                tatCaBanGhi.push({ khoa: conTro.key, thoiGian: giaTri.timestamp });
+                            }
                         }
                         conTro.continue();
                     } else {
+                        if (tatCaBanGhi.length > 500) {
+                            tatCaBanGhi.sort((a, b) => a.thoiGian - b.thoiGian);
+                            const soLuongCanXoa = tatCaBanGhi.length - 500;
+                            for (let i = 0; i < soLuongCanXoa; i++) {
+                                khoChua.delete(tatCaBanGhi[i].khoa);
+                            }
+                        }
                         dongY();
                     }
                 };
                 yeuCau.onerror = () => dongY();
             });
         } catch (l) {}
-        finally { if (db) db.close(); }
     },
 
     async xoaToanBoDuLieu() {
-        let db;
         try {
-            db = await this.layKetNoiDB();
+            const db = await this.layKetNoiDB();
             return await new Promise((dongY) => {
                 const giaoDich = db.transaction('audioBlobs', 'readwrite');
                 giaoDich.objectStore('audioBlobs').clear();
@@ -139,7 +156,6 @@ DocTruyenSTV_Ext.LuuTruSTV = {
             this.boNhoDemDB = [];
             sessionStorage.removeItem('STV_bo_nho_dem_db');
         }
-        finally { if (db) db.close(); }
     },
 
     async layAnhBia() {
@@ -206,11 +222,13 @@ DocTruyenSTV_Ext.LuuTruSTV = {
     async luuTienTrinhDoc(trangThai) {
         if (!trangThai.tenTruyen || trangThai.tongSoDoan === 0) return;
 
+        const chunkHienTai = trangThai.chiSoTuyetDoi || trangThai.tienDoHienTai;
+
         const duLieuGoc = {
             isPlaying: trangThai.dangPhat,
             isPaused: trangThai.dangTamDung,
             engine: trangThai.congCu,
-            progress: { current: trangThai.tienDoHienTai, total: trangThai.tongSoDoan },
+            progress: { current: chunkHienTai, total: trangThai.tongSoDoan },
             bookTitle: trangThai.tenTruyen,
             chapTitle: trangThai.tenChuong,
             pageUrl: trangThai.duongDanTrang
@@ -236,26 +254,39 @@ DocTruyenSTV_Ext.LuuTruSTV = {
     },
 
     _thucHienLuuDanhSach(duLieuGoc) {
+        if (this._debounceTimer) {
+            clearTimeout(this._debounceTimer);
+            if (this._debounceResolve) {
+                this._debounceResolve();
+            }
+        }
         return new Promise(dongY => {
-            if (this._debounceTimer) clearTimeout(this._debounceTimer);
+            this._debounceResolve = dongY;
             this._debounceTimer = setTimeout(() => {
-                chrome.storage.local.get('readingList', duLieu => {
-                    let danhSach = duLieu.readingList || [];
-                    let viTri = danhSach.findIndex(i => (i.title || '').trim().toLowerCase() === (duLieuGoc.bookTitle || '').trim().toLowerCase());
-                    
-                    if (viTri !== -1) {
-                        let canCapNhat = false;
-                        if (danhSach[viTri].url !== duLieuGoc.pageUrl) { danhSach[viTri].url = duLieuGoc.pageUrl; canCapNhat = true; }
-                        if (danhSach[viTri].chap !== duLieuGoc.chapTitle) { danhSach[viTri].chap = duLieuGoc.chapTitle; canCapNhat = true; }
-                        if (danhSach[viTri].chunkIndex !== duLieuGoc.progress.current || danhSach[viTri].chunkTotal !== duLieuGoc.progress.total) {
-                            danhSach[viTri].chunkIndex = duLieuGoc.progress.current;
-                            danhSach[viTri].chunkTotal = duLieuGoc.progress.total;
-                            canCapNhat = true;
-                        }
-                        
-                        if (canCapNhat) chrome.storage.local.set({ readingList: danhSach }, dongY);
-                        else dongY();
-                    } else dongY();
+                this._debounceResolve = null;
+                navigator.locks.request('stv_readingList_lock', () => {
+                    return new Promise(moKhoa => {
+                        chrome.storage.local.get('readingList', duLieu => {
+                            let danhSach = duLieu.readingList || [];
+                            let viTri = danhSach.findIndex(i => (i.title || '').trim().toLowerCase() === (duLieuGoc.bookTitle || '').trim().toLowerCase());
+                            
+                            const hoanTat = () => { moKhoa(); dongY(); };
+                            
+                            if (viTri !== -1) {
+                                let canCapNhat = false;
+                                if (danhSach[viTri].url !== duLieuGoc.pageUrl) { danhSach[viTri].url = duLieuGoc.pageUrl; canCapNhat = true; }
+                                if (danhSach[viTri].chap !== duLieuGoc.chapTitle) { danhSach[viTri].chap = duLieuGoc.chapTitle; canCapNhat = true; }
+                                const chunkMoi = duLieuGoc.progress.current;
+                                if (danhSach[viTri].chunkIndex !== chunkMoi) {
+                                    danhSach[viTri].chunkIndex = chunkMoi;
+                                    canCapNhat = true;
+                                }
+                                
+                                if (canCapNhat) chrome.storage.local.set({ readingList: danhSach }, hoanTat);
+                                else hoanTat();
+                            } else hoanTat();
+                        });
+                    });
                 });
             }, 3000);
         });

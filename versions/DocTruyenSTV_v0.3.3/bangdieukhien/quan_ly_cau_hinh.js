@@ -31,22 +31,22 @@ export const CauHinh = {
         if (laDongBo) {
             this.duLieuDongBo[khoa] = giaTri;
             this._pendingSyncKeys.add(khoa);
-            if (this._syncTimeout) clearTimeout(this._syncTimeout);
+            clearTimeout(this._syncTimeout);
             this._syncTimeout = setTimeout(() => {
                 const data = {};
-                this._pendingSyncKeys.forEach(k => data[k] = this.duLieuDongBo[k]);
-                chrome.storage.sync.set(data);
+                for (const k of this._pendingSyncKeys) data[k] = this.duLieuDongBo[k];
                 this._pendingSyncKeys.clear();
+                chrome.storage.sync.set(data);
             }, 300);
         } else {
             this.duLieuCucBo[khoa] = giaTri;
             this._pendingLocalKeys.add(khoa);
-            if (this._localTimeout) clearTimeout(this._localTimeout);
+            clearTimeout(this._localTimeout);
             this._localTimeout = setTimeout(() => {
                 const data = {};
-                this._pendingLocalKeys.forEach(k => data[k] = this.duLieuCucBo[k]);
-                chrome.storage.local.set(data);
+                for (const k of this._pendingLocalKeys) data[k] = this.duLieuCucBo[k];
                 this._pendingLocalKeys.clear();
+                chrome.storage.local.set(data);
             }, 300);
         }
     },

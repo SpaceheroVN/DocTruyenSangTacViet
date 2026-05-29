@@ -1,4 +1,4 @@
-import { CauHinh } from './cau_hinh.js';
+import { CauHinh } from './quan_ly_cau_hinh.js';
 import { QuanLyThuVien } from './quan_ly_thu_vien.js';
 import { GiaoDienCaiDat } from './giao_dien_cai_dat.js';
 
@@ -121,7 +121,8 @@ export const DieuKhienTrinhPhat = {
                     let ten = v.name.replace(/ - Vietnamese \(Vietnam\)/i, '').replace(/ \(Vietnam\)/i, '').replace(/Microsoft /i, 'MS ').replace(/Google /i, 'GG ');
                     if (ten.length > 22) ten = ten.substring(0, 20) + '...';
                     const tenAnToan = ten.replace(/[&<>"'`=\/]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'}[s]));
-                    return `<option value="${v.index}" ${v.index == giaTriCu ? 'selected' : ''}>${tenAnToan}</option>`;
+                    const anToanIndex = String(v.index).replace(/[^0-9]/g, '');
+                    return `<option value="${anToanIndex}" ${anToanIndex == giaTriCu ? 'selected' : ''}>${tenAnToan}</option>`;
                 }).join('');
                 GiaoDienCaiDat.capNhatGiaoDien('voice-select');
             }
@@ -183,9 +184,9 @@ export const DieuKhienTrinhPhat = {
             chuTrangThai.style.color = 'var(--accent)';
         } else {
             bieuTuong.innerHTML = SVG_PHAT;
-            vanBanNut.textContent = 'Nghe';
+            vanBanNut.textContent = trangThai.coDocDo ? 'Tiếp tục' : 'Nghe';
             chamTrangThai.className = 'status-dot';
-            chuTrangThai.textContent = 'Sẵn sàng';
+            chuTrangThai.textContent = trangThai.coDocDo ? 'Đã lưu vị trí' : 'Sẵn sàng';
             chuTrangThai.style.color = 'var(--text-muted)';
         }
 
@@ -194,7 +195,7 @@ export const DieuKhienTrinhPhat = {
             const total = document.getElementById('progress-total');
             const bar = document.getElementById('progress-bar-fill') || document.getElementById('progress-bar');
             const percent = document.getElementById('progress-percent');
-            if(input) input.value = trangThai.progress.current;
+            if(input && !input.dataset.dangSua) input.value = trangThai.progress.current;
             if(total) total.textContent = trangThai.progress.total;
             if(bar && percent) {
                 const phanTram = Math.round((trangThai.progress.current / trangThai.progress.total) * 100);
@@ -281,34 +282,52 @@ export const DieuKhienTrinhPhat = {
         }
         
         if (QuanLyThuVien.danhSachDoc) {
-            const danhSach = QuanLyThuVien.danhSachDoc;
-            const vt = danhSach.findIndex(i => (i.title || '').trim().toLowerCase() === (thongTin.bookTitle || '').trim().toLowerCase());
-            
-            if (!thongTin.imgUrl && vt !== -1 && danhSach[vt].imgUrl) {
-                document.getElementById('cover-img').src = danhSach[vt].imgUrl;
-            }
+            navigator.locks.request('stv_readingList_lock', () => {
+                return new Promise(moKhoa => {
+                    chrome.storage.local.get('readingList', duLieu => {
+                        const danhSach = duLieu.readingList || [];
+                        const vt = danhSach.findIndex(i => (i.title || '').trim().toLowerCase() === (thongTin.bookTitle || '').trim().toLowerCase());
+                        
+                        if (!thongTin.imgUrl && vt !== -1 && danhSach[vt].imgUrl) {
+                            document.getElementById('cover-img').src = danhSach[vt].imgUrl;
+                        }
 
-            if (vt !== -1) {
-                this.datTrangThaiLuu(true);
-                let daCapNhat = false;
-                const docHienTai = danhSach[vt];
-                if (thongTin.pageUrl && docHienTai.url !== thongTin.pageUrl) { docHienTai.url = thongTin.pageUrl; daCapNhat = true; }
-                if (thongTin.chapTitle && docHienTai.chap !== thongTin.chapTitle) { docHienTai.chap = thongTin.chapTitle; daCapNhat = true; }
-                if (thongTin.imgUrl && docHienTai.imgUrl !== thongTin.imgUrl) {
-                    let safeImg = thongTin.imgUrl;
-                    if (safeImg.startsWith('data:')) safeImg = '';
-                    if (safeImg.toLowerCase().startsWith('http://')) safeImg = 'https://' + safeImg.substring(7);
-                    docHienTai.imgUrl = safeImg;
-                    daCapNhat = true;
-                }
-                if (daCapNhat) {
-                    chrome.storage.local.set({ readingList: danhSach }, () => {
-                        QuanLyThuVien.hienThiDanhSach(QuanLyThuVien.sapXepDanhSach(danhSach));
+                        if (vt !== -1) {
+                            this.datTrangThaiLuu(true);
+                            let daCapNhat = false;
+                            const docHienTai = danhSach[vt];
+                            if (thongTin.pageUrl && docHienTai.url !== thongTin.pageUrl) { docHienTai.url = thongTin.pageUrl; daCapNhat = true; }
+                            if (thongTin.chapTitle && docHienTai.chap !== thongTin.chapTitle) { docHienTai.chap = thongTin.chapTitle; daCapNhat = true; }
+                            if (thongTin.imgUrl && docHienTai.imgUrl !== thongTin.imgUrl) {
+                                let safeImg = thongTin.imgUrl;
+                                if (safeImg.startsWith('data:')) safeImg = '';
+                                if (safeImg.toLowerCase().startsWith('http://')) safeImg = 'https://' + safeImg.substring(7);
+                                docHienTai.imgUrl = safeImg;
+                                daCapNhat = true;
+                            }
+                            const chunkMoi = (thongTin.absoluteProgress && thongTin.absoluteProgress.current)
+                                ? thongTin.absoluteProgress.current
+                                : (thongTin.progress && thongTin.progress.current ? thongTin.progress.current : null);
+                            if (chunkMoi !== null && docHienTai.chunkIndex !== chunkMoi) {
+                                docHienTai.chunkIndex = chunkMoi;
+                                daCapNhat = true;
+                            }
+                            if (daCapNhat) {
+                                chrome.storage.local.set({ readingList: danhSach }, () => {
+                                    QuanLyThuVien.danhSachDoc = danhSach;
+                                    QuanLyThuVien.hienThiDanhSach(QuanLyThuVien.sapXepDanhSach(danhSach));
+                                    moKhoa();
+                                });
+                            } else {
+                                moKhoa();
+                            }
+                        } else {
+                            this.datTrangThaiLuu(false);
+                            moKhoa();
+                        }
                     });
-                }
-            } else {
-                this.datTrangThaiLuu(false);
-            }
+                });
+            });
         }
         
         this.capNhatTrangThaiPhat({
@@ -350,42 +369,50 @@ export const DieuKhienTrinhPhat = {
                     return;
                 }
                 
-                const danhSach = QuanLyThuVien.danhSachDoc || [];
-                const vitri = danhSach.findIndex(i => (i.title || '').trim().toLowerCase() === hienTai.bookTitle.trim().toLowerCase());
-                
-                if (vitri !== -1) {
-                    danhSach.splice(vitri, 1);
-                    chrome.storage.local.set({ readingList: danhSach }, () => {
-                        QuanLyThuVien.danhSachDoc = danhSach;
-                        QuanLyThuVien.hienThiDanhSach(QuanLyThuVien.sapXepDanhSach(danhSach));
-                        this.datTrangThaiLuu(false);
-                        const infoCount = document.getElementById('info-count');
-                        if (infoCount) infoCount.textContent = `${danhSach.length} truyện`;
-                        showToast('Đã bỏ lưu truyện', 'info');
+                navigator.locks.request('stv_readingList_lock', () => {
+                    return new Promise(moKhoa => {
+                        chrome.storage.local.get('readingList', duLieu => {
+                            const danhSach = duLieu.readingList || [];
+                            const vitri = danhSach.findIndex(i => (i.title || '').trim().toLowerCase() === hienTai.bookTitle.trim().toLowerCase());
+                            
+                            if (vitri !== -1) {
+                                danhSach.splice(vitri, 1);
+                                chrome.storage.local.set({ readingList: danhSach }, () => {
+                                    QuanLyThuVien.danhSachDoc = danhSach;
+                                    QuanLyThuVien.hienThiDanhSach(QuanLyThuVien.sapXepDanhSach(danhSach));
+                                    this.datTrangThaiLuu(false);
+                                    const infoCount = document.getElementById('info-count');
+                                    if (infoCount) infoCount.textContent = `${danhSach.length} truyện`;
+                                    showToast('Đã bỏ lưu truyện', 'info');
+                                    moKhoa();
+                                });
+                            } else {
+                                if (danhSach.length >= 50) danhSach.shift();
+                                let safeImg = hienTai.imgUrl || '';
+                                if (safeImg.startsWith('data:')) safeImg = '';
+                                if (safeImg.toLowerCase().startsWith('http://')) safeImg = 'https://' + safeImg.substring(7);
+                                danhSach.push({
+                                    title: hienTai.bookTitle,
+                                    url: hienTai.pageUrl || hienTai.bookUrl,
+                                    imgUrl: safeImg,
+                                    timestamp: Date.now(),
+                                    savedAt: new Date().toLocaleDateString('vi-VN'),
+                                    chap: hienTai.chapTitle || 'Chưa đọc chương nào',
+                                    chunkIndex: (hienTai.absoluteProgress && hienTai.absoluteProgress.current) ? hienTai.absoluteProgress.current : ((hienTai.progress && hienTai.progress.current) ? hienTai.progress.current : 0)
+                                });
+                                chrome.storage.local.set({ readingList: danhSach }, () => {
+                                    QuanLyThuVien.danhSachDoc = danhSach;
+                                    QuanLyThuVien.hienThiDanhSach(QuanLyThuVien.sapXepDanhSach(danhSach));
+                                    this.datTrangThaiLuu(true);
+                                    const infoCount = document.getElementById('info-count');
+                                    if (infoCount) infoCount.textContent = `${danhSach.length} truyện`;
+                                    showToast('Đã lưu truyện thành công!', 'success');
+                                    moKhoa();
+                                });
+                            }
+                        });
                     });
-                } else {
-                    if (danhSach.length >= 50) danhSach.shift();
-                    let safeImg = hienTai.imgUrl || '';
-                    if (safeImg.startsWith('data:')) safeImg = '';
-                    if (safeImg.toLowerCase().startsWith('http://')) safeImg = 'https://' + safeImg.substring(7);
-                    danhSach.push({
-                        title: hienTai.bookTitle,
-                        url: hienTai.pageUrl || hienTai.bookUrl,
-                        imgUrl: safeImg,
-                        timestamp: Date.now(),
-                        savedAt: new Date().toLocaleDateString('vi-VN'),
-                        chap: hienTai.chapTitle || 'Chưa đọc chương nào',
-                        chunkIndex: (hienTai.progress && hienTai.progress.current) ? hienTai.progress.current : 0
-                    });
-                    chrome.storage.local.set({ readingList: danhSach }, () => {
-                        QuanLyThuVien.danhSachDoc = danhSach;
-                        QuanLyThuVien.hienThiDanhSach(QuanLyThuVien.sapXepDanhSach(danhSach));
-                        this.datTrangThaiLuu(true);
-                        const infoCount = document.getElementById('info-count');
-                        if (infoCount) infoCount.textContent = `${danhSach.length} truyện`;
-                        showToast('Đã lưu truyện thành công!', 'success');
-                    });
-                }
+                });
             });
         }
 
@@ -434,12 +461,25 @@ export const DieuKhienTrinhPhat = {
         document.addEventListener('contextmenu', e => { if (e.target.tagName !== 'INPUT') e.preventDefault(); });
         document.addEventListener('dragstart', e => { if (e.target.tagName !== 'INPUT') e.preventDefault(); });
 
-        const btnAddDict = document.getElementById('btn-add-dict');
-        if (btnAddDict) btnAddDict.addEventListener('click', () => showToast('Đã lưu quy tắc (đang phát triển)', 'info'));
-        
         const btnNextChunk = document.getElementById('btn-next-chunk');
         if (btnNextChunk) btnNextChunk.addEventListener('click', () => this.guiLenh('doanTiep'));
         const btnPrevChunk = document.getElementById('btn-prev-chunk');
         if (btnPrevChunk) btnPrevChunk.addEventListener('click', () => this.guiLenh('doanTruoc'));
+
+        const progressInput = document.getElementById('progress-input');
+        if (progressInput) {
+            progressInput.addEventListener('focus', () => { progressInput.dataset.dangSua = '1'; });
+            progressInput.addEventListener('blur', () => { progressInput.dataset.dangSua = ''; });
+            progressInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const val = parseInt(progressInput.value);
+                    const total = parseInt(document.getElementById('progress-total')?.textContent || '0');
+                    if (val >= 1 && val <= total) {
+                        this.guiLenh('nhayDenDoan', { chiSo: val - 1 });
+                    }
+                    progressInput.blur();
+                }
+            });
+        }
     }
 };

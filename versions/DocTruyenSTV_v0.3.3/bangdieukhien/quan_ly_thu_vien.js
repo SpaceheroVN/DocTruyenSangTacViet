@@ -1,25 +1,16 @@
-import { showToast, showConfirm } from './dieu_khien_trinh_phat.js';
+import { showToast, showConfirm, DieuKhienTrinhPhat } from './dieu_khien_trinh_phat.js';
 
 export const QuanLyThuVien = {
     danhSachDoc: [],
     cheDoSapXep: 'recent',
 
-    thoatHTML(chuoi) {
-        const banDo = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
-        return String(chuoi).replace(/[&<>"']/g, s => banDo[s]);
-    },
-
     urlAnToan(url) {
         if (!url || typeof url !== 'string') return '';
-        let u = url.trim();
-        if (u.toLowerCase().startsWith('http://')) {
-            u = 'https://' + u.substring(7);
-        }
-        const lowerUrl = u.toLowerCase();
-        if (lowerUrl.startsWith('https://') || lowerUrl.startsWith('data:image/')) {
-            return u;
-        }
-        return '';
+        try {
+            const parsed = new URL(url.trim());
+            if (parsed.protocol === 'http:' || parsed.protocol === 'https:') return parsed.href;
+            return '';
+        } catch(e) { return ''; }
     },
 
     khoiTao() {
@@ -55,7 +46,9 @@ export const QuanLyThuVien = {
 
         const ANH_KHUYET = 'icons/icon128.png';
 
-        const mangHTML = danhSach.map((m, index) => {
+        const fragment = document.createDocumentFragment();
+
+        danhSach.forEach((m, index) => {
             let mauNgay = 'var(--text-muted)';
             let textNgay = m.savedAt || '';
             if (m.timestamp) {
@@ -65,30 +58,62 @@ export const QuanLyThuVien = {
                 else if (soNgay > 15) mauNgay = 'var(--warning)';
                 if (!textNgay) textNgay = new Date(m.timestamp).toLocaleDateString('vi-VN');
             }
-            const textNgayAnToan = this.thoatHTML(textNgay);
-            const htmlNgay = textNgayAnToan ? `<span style="color:${mauNgay}; font-size:9px; margin-right:6px;">${textNgayAnToan}</span>` : '';
             
-            const anhAnToan = this.thoatHTML(this.urlAnToan(m.imgUrl) || ANH_KHUYET);
+            const anhAnToan = this.urlAnToan(m.imgUrl) || ANH_KHUYET;
             
-            return `<div class="list-item" data-index="${index}" id="list-item-${index}" title="Nhấn để mở">
-                <img class="list-thumb" src="${anhAnToan}" alt="" referrerpolicy="no-referrer">
-                <div class="list-info">
-                    <div class="list-name">${this.thoatHTML(m.title)}</div>
-                    <div class="list-chap">
-                        ${this.thoatHTML(m.chap || '...')}
-                        <span style="color:var(--accent);">
-                            ${m.chunkIndex ? `(Đoạn ${this.thoatHTML(m.chunkIndex)})` : ''}
-                        </span>
-                    </div>
-                </div>
-                ${htmlNgay}
-                <button class="btn-remove" data-title="${this.thoatHTML(m.title)}" data-index="${index}">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>
-            </div>`;
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'list-item';
+            itemDiv.dataset.url = m.url || '';
+            itemDiv.id = `list-item-${index}`;
+            itemDiv.title = 'Nhấn để mở';
+
+            const img = document.createElement('img');
+            img.className = 'list-thumb';
+            img.src = anhAnToan;
+            img.alt = '';
+            img.referrerPolicy = 'no-referrer';
+            itemDiv.appendChild(img);
+
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'list-info';
+
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'list-name';
+            nameDiv.textContent = m.title;
+            infoDiv.appendChild(nameDiv);
+
+            const chapDiv = document.createElement('div');
+            chapDiv.className = 'list-chap';
+            chapDiv.textContent = m.chap || '...';
+            if (m.chunkIndex) {
+                const span = document.createElement('span');
+                span.style.color = 'var(--accent)';
+                span.textContent = ` (Đoạn ${m.chunkIndex})`;
+                chapDiv.appendChild(span);
+            }
+            infoDiv.appendChild(chapDiv);
+
+            itemDiv.appendChild(infoDiv);
+
+            if (textNgay) {
+                const dateSpan = document.createElement('span');
+                dateSpan.style.color = mauNgay;
+                dateSpan.style.fontSize = '9px';
+                dateSpan.style.marginRight = '6px';
+                dateSpan.textContent = textNgay;
+                itemDiv.appendChild(dateSpan);
+            }
+
+            const btnRemove = document.createElement('button');
+            btnRemove.className = 'btn-remove';
+            btnRemove.dataset.title = m.title || '';
+            btnRemove.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+            itemDiv.appendChild(btnRemove);
+
+            fragment.appendChild(itemDiv);
         });
 
-        vungDanhSach.innerHTML = mangHTML.join('');
+        vungDanhSach.replaceChildren(fragment);
 
         if (!this._daGanSuKienDanhSach) {
             this._daGanSuKienDanhSach = true;
@@ -96,36 +121,30 @@ export const QuanLyThuVien = {
                 const btnRemove = e.target.closest('.btn-remove');
                 if (btnRemove) {
                     e.stopPropagation();
-                    this.xoaKhoiDanhSach(btnRemove.dataset.title, btnRemove.dataset.index);
+                    this.xoaKhoiDanhSach(btnRemove.dataset.title);
                     return;
                 }
                 const item = e.target.closest('.list-item');
                 if (item) {
-                    const idx = item.dataset.index;
-                    const muc = this.danhSachDoc[idx];
-                    if (muc && muc.url && /^https?:\/\//.test(muc.url)) window.open(muc.url, '_blank');
+                    const url = item.dataset.url;
+                    if (url && /^https?:\/\//.test(url)) window.open(url, '_blank');
                 }
             });
         }
     },
 
-    xoaKhoiDanhSach(tieuDe, index) {
+    xoaKhoiDanhSach(tieuDe) {
         chrome.storage.local.get('readingList', d => {
             let mang = d.readingList || [];
-            mang = mang.filter(m => m.title !== tieuDe);
+            const viTri = mang.findIndex(m => m.title === tieuDe);
+            if (viTri !== -1) mang.splice(viTri, 1);
             chrome.storage.local.set({ readingList: mang }, () => {
                 this.danhSachDoc = mang;
-                const itemEl = document.getElementById(`list-item-${index}`);
-                if (itemEl) itemEl.remove();
-                
-                const soLuong = document.getElementById('info-count');
-                if (soLuong) soLuong.textContent = `${mang.length} truyện`;
-                
-                if (mang.length === 0) {
-                    const vungDanhSach = document.getElementById('list-container');
-                    if (vungDanhSach) vungDanhSach.innerHTML = '<div class="list-empty">Chưa có truyện nào được lưu.</div>';
+                this.taiDanhSachDoc();
+                if (DieuKhienTrinhPhat.thongTinTruyenHienTai &&
+                    (DieuKhienTrinhPhat.thongTinTruyenHienTai.bookTitle || '').trim().toLowerCase() === (tieuDe || '').trim().toLowerCase()) {
+                    DieuKhienTrinhPhat.datTrangThaiLuu(false);
                 }
-                
                 showToast('Đã xóa khỏi thư viện', 'success');
             });
         });
@@ -214,8 +233,13 @@ export const QuanLyThuVien = {
                     cacMuc.forEach(muc => {
                         const ten = (muc.querySelector('.list-name')?.textContent || '').toLowerCase();
                         const chuong = (muc.querySelector('.list-chap')?.textContent || '').toLowerCase();
-                        if (ten.includes(tuKhoa) || chuong.includes(tuKhoa)) muc.style.display = 'flex';
-                        else muc.style.display = 'none';
+                        if (ten.includes(tuKhoa) || chuong.includes(tuKhoa)) {
+                            muc.style.display = 'flex';
+                            muc.classList.remove('hidden-by-search');
+                        } else {
+                            muc.style.display = 'none';
+                            muc.classList.add('hidden-by-search');
+                        }
                     });
                 }, 200);
             });
@@ -242,8 +266,8 @@ export const QuanLyThuVien = {
         const btnClear = document.getElementById('btn-clear-all');
         if (btnClear) btnClear.addEventListener('click', () => {
             showConfirm(
-                'Phần mở rộng Đọc Truyện Cho STV cho biết',
-                'BẠN CÓ CHẮC CHẮN MUỐN XÓA TOÀN BỘ DỮ LIỆU?\n\nHành động này sẽ làm mất toàn bộ truyện đã lưu và cài đặt!',
+                'Xác nhận xóa toàn bộ dữ liệu',
+                'Hành động này sẽ xóa vĩnh viễn:\n• Danh sách truyện đã lưu\n• Từ điển tùy chỉnh\n• Toàn bộ cài đặt\n\nKhông thể hoàn tác!',
                 () => {
                     chrome.storage.local.clear(() => {
                         this.taiDanhSachDoc();

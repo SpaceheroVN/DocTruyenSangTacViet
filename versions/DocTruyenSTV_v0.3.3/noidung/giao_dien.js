@@ -25,10 +25,13 @@ DocTruyenSTV_Ext.GiaoDienSTV = {
             el.classList.add('tts-reading');
             this._theBoiDenTruoc = el;
             if (dangPhat && !dangTamDung) {
-                const rect = el.getBoundingClientRect();
-                if (rect.top < 80 || rect.bottom > window.innerHeight - 80) {
-                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
+                const observer = new IntersectionObserver(entries => {
+                    if (!entries[0].isIntersecting) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    observer.disconnect();
+                }, { rootMargin: '-80px 0px -80px 0px' });
+                observer.observe(el);
             }
         }
         
@@ -248,8 +251,17 @@ DocTruyenSTV_Ext.GiaoDienSTV = {
 
         const nguonChuong = document.getElementById('bookchapnameholder');
         const theChuong = document.getElementById('stv-mp-chap');
-        if (theChuong && nguonChuong) {
-            theChuong.textContent = nguonChuong.innerText.trim() || 'Đang đọc...';
+        if (theChuong) {
+            let noiDungHienThi = '';
+            if (DocTruyenSTV_Ext.TrinhPhatAmThanh.cacDoan && DocTruyenSTV_Ext.TrinhPhatAmThanh.cacDoan[chiSoHienTai]) {
+                noiDungHienThi = DocTruyenSTV_Ext.TrinhPhatAmThanh.cacDoan[chiSoHienTai].text;
+            }
+            if (!noiDungHienThi || noiDungHienThi.length < 5) {
+                noiDungHienThi = (nguonChuong ? nguonChuong.innerText.trim() : '');
+            }
+            if (noiDungHienThi === '-' || !noiDungHienThi) noiDungHienThi = 'Đang tải nội dung...';
+            
+            theChuong.textContent = noiDungHienThi;
         }
 
         const thanhDay = document.getElementById('stv-mp-bar-fill');
@@ -328,7 +340,10 @@ DocTruyenSTV_Ext.ChinhSTV = {
                 this.batPhimTat = thayDoi.batphimtat.newValue;
             }
             if (vungChon === 'local') {
-                if (thayDoi.customDict) DocTruyenSTV_Ext.LuuTruSTV.capNhatTuDien(thayDoi.customDict.newValue || []);
+                if (thayDoi.customDict) {
+                    DocTruyenSTV_Ext.LuuTruSTV.capNhatTuDien(thayDoi.customDict.newValue || []);
+                    DocTruyenSTV_Ext.TrinhPhatAmThanh.capNhatTuDienDong();
+                }
                 if (thayDoi.customStopConfig) this.cauHinhDungTuyChon = thayDoi.customStopConfig.newValue;
                 if (thayDoi.customShortcuts) this.phimTatTCH = thayDoi.customShortcuts.newValue;
             }
@@ -346,11 +361,8 @@ DocTruyenSTV_Ext.ChinhSTV = {
                 DocTruyenSTV_Ext.TrinhPhatAmThanh.dungPhat();
                 if (chrome.runtime && chrome.runtime.id) {
                     chrome.runtime.sendMessage({ hanhDong: 'huyTatCa' });
-                    chrome.storage.local.get('last_active_state', duLieu => {
-                        if (duLieu.last_active_state) {
-                            duLieu.last_active_state.isPlaying = false;
-                            chrome.storage.local.set({ last_active_state: duLieu.last_active_state });
-                        }
+                    chrome.storage.local.set({ 
+                        last_active_state: { isPlaying: false, isPaused: false } 
                     });
                 }
             } catch (e) {
@@ -438,13 +450,15 @@ DocTruyenSTV_Ext.ChinhSTV = {
                 }
             }
             
+            const _pt = DocTruyenSTV_Ext.TrinhPhatAmThanh;
             guiPhanHoi({ 
                 bookTitle: tenTruyen, chapTitle: tenChuong, stats: thongKe, imgUrl: '', bookUrl: linkTruyen, pageUrl: window.location.href, 
-                isPlaying: DocTruyenSTV_Ext.TrinhPhatAmThanh.dangPhat, 
-                isPaused: DocTruyenSTV_Ext.TrinhPhatAmThanh.dangTamDung, 
-                isBuffering: DocTruyenSTV_Ext.TrinhPhatAmThanh.dangTai,
-                ttsEngine: DocTruyenSTV_Ext.TrinhPhatAmThanh.congCu, 
-                progress: DocTruyenSTV_Ext.TrinhPhatAmThanh.cacDoan.length > 0 ? { current: DocTruyenSTV_Ext.TrinhPhatAmThanh.chiSoHienTai + 1, total: DocTruyenSTV_Ext.TrinhPhatAmThanh.cacDoan.length } : null 
+                isPlaying: _pt.dangPhat, 
+                isPaused: _pt.dangTamDung, 
+                isBuffering: _pt.dangTai,
+                ttsEngine: _pt.congCu, 
+                progress: _pt.cacDoan.length > 0 ? { current: _pt.chiSoHienTai + 1, total: _pt.cacDoan.length } : null,
+                absoluteProgress: _pt._cacTheDaLuu ? { current: _pt.layChiSoToanCuc() + 1 } : (_pt.cacDoan.length > 0 ? { current: _pt.chiSoHienTai + 1 } : null)
             });
             
             DocTruyenSTV_Ext.LuuTruSTV.layAnhBia().then(linkAnh => {
@@ -477,6 +491,12 @@ DocTruyenSTV_Ext.ChinhSTV = {
             guiPhanHoi({ success: true });
         } else if (tinNhan.hanhDong === 'doanTruoc') {
             DocTruyenSTV_Ext.TrinhPhatAmThanh.nhayDoan('truoc');
+            guiPhanHoi({ success: true });
+        } else if (tinNhan.hanhDong === 'nhayDenDoan') {
+            const chiSo = Number(tinNhan.chiSo);
+            if (!isNaN(chiSo) && chiSo >= 0 && chiSo < DocTruyenSTV_Ext.TrinhPhatAmThanh.cacDoan.length) {
+                DocTruyenSTV_Ext.TrinhPhatAmThanh.batDauPhat(chiSo);
+            }
             guiPhanHoi({ success: true });
         }
     },
@@ -545,7 +565,7 @@ DocTruyenSTV_Ext.ChinhSTV = {
         } else if (key === this.phimTatTCH.volUp) {
             suKien.preventDefault();
             chrome.storage.sync.get(['volume'], data => {
-                let v = (data.volume !== undefined ? data.volume : 1) + 0.1;
+                let v = Math.round(((data.volume !== undefined ? data.volume : 1) + 0.1) * 10) / 10;
                 const maxVol = DocTruyenSTV_Ext.TrinhPhatAmThanh.congCu === 'web' ? 1.0 : 2.0;
                 if (v > maxVol) v = maxVol;
                 chrome.storage.sync.set({ volume: v });
@@ -554,7 +574,7 @@ DocTruyenSTV_Ext.ChinhSTV = {
         } else if (key === this.phimTatTCH.volDown) {
             suKien.preventDefault();
             chrome.storage.sync.get(['volume'], data => {
-                let v = (data.volume !== undefined ? data.volume : 1) - 0.1;
+                let v = Math.round(((data.volume !== undefined ? data.volume : 1) - 0.1) * 10) / 10;
                 if (v < 0) v = 0;
                 chrome.storage.sync.set({ volume: v });
                 this.hienThongBaoToast(`Âm lượng: ${Math.round(v * 100)}%`);
@@ -562,7 +582,7 @@ DocTruyenSTV_Ext.ChinhSTV = {
         } else if (key === this.phimTatTCH.speedUp) {
             suKien.preventDefault();
             chrome.storage.sync.get(['speed'], data => {
-                let s = (data.speed !== undefined ? data.speed : 1) + 0.1;
+                let s = Math.round(((data.speed !== undefined ? data.speed : 1) + 0.1) * 10) / 10;
                 if (s > 3.0) s = 3.0;
                 chrome.storage.sync.set({ speed: s });
                 this.hienThongBaoToast(`Tốc độ: ${s.toFixed(1)}x`);
@@ -570,7 +590,7 @@ DocTruyenSTV_Ext.ChinhSTV = {
         } else if (key === this.phimTatTCH.speedDown) {
             suKien.preventDefault();
             chrome.storage.sync.get(['speed'], data => {
-                let s = (data.speed !== undefined ? data.speed : 1) - 0.1;
+                let s = Math.round(((data.speed !== undefined ? data.speed : 1) - 0.1) * 10) / 10;
                 if (s < 0.5) s = 0.5;
                 chrome.storage.sync.set({ speed: s });
                 this.hienThongBaoToast(`Tốc độ: ${s.toFixed(1)}x`);
@@ -593,7 +613,7 @@ DocTruyenSTV_Ext.ChinhSTV = {
     },
 
     kiemTraTuDongPhat() {
-        chrome.storage.local.get(['autoStartOnLoad', 'customStopConfig', 'sleepTargetTimestamp'], duLieu => {
+        chrome.storage.local.get(['customStopConfig', 'sleepTargetTimestamp'], duLieu => {
             if (duLieu.customStopConfig) this.cauHinhDungTuyChon = duLieu.customStopConfig;
             
             if (duLieu.sleepTargetTimestamp) {
@@ -602,52 +622,83 @@ DocTruyenSTV_Ext.ChinhSTV = {
                 else chrome.storage.local.remove('sleepTargetTimestamp');
             }
 
-            if (duLieu.autoStartOnLoad) {
-                chrome.storage.local.remove('autoStartOnLoad');
-                
-                let soLanKiem = 20;
-                const dongHoKiem = setInterval(() => {
-                    const theChua = document.querySelector('.contentbox');
-                    if (theChua && !theChua.innerText.includes('Đang tải nội dung') && theChua.innerText.trim().length >= 50) {
-                        clearInterval(dongHoKiem);
-                        
-                        if (this.dungSauChuong > 0) {
-                            this.dungSauChuong--;
-                            chrome.storage.local.set({ stopAfterChapters: this.dungSauChuong });
-                            if (this.dungSauChuong === 0) return;
-                        }
-                        
-                        DocTruyenSTV_Ext.TrinhPhatAmThanh.chuanBiCacDoan();
-                        DocTruyenSTV_Ext.PhanTichSTV.kiemTraMaHoa();
-                        
-                        let tuViTri = 0;
-                        chrome.storage.local.get('readingList', dsDuLieu => {
-                            let danhSach = dsDuLieu.readingList || [];
-                            let tieuDe = document.getElementById('booknameholder')?.innerText.trim();
-                            let muc = danhSach.find(i => (i.title || '').trim().toLowerCase() === (tieuDe || '').trim().toLowerCase());
-                            if (muc && muc.url === window.location.href && muc.chunkIndex > 1) {
-                                tuViTri = muc.chunkIndex - 1;
-                            }
-                            DocTruyenSTV_Ext.TrinhPhatAmThanh.batDauPhat(tuViTri);
-                        });
-                        
-                    } else if (--soLanKiem <= 0) {
-                        clearInterval(dongHoKiem);
-                    }
-                }, 1000);
-            } else {
-                let soLanKiem = 40;
-                const dongHoKiem = setInterval(() => {
+            const doiNoiDung = (callback) => {
+                let daGoi = false;
+                const kiemTra = () => {
                     const el = document.querySelector('.contentbox');
-                    if (el && !el.innerText.includes('Đang tải nội dung') && el.innerText.trim().length >= 50) {
-                        clearInterval(dongHoKiem);
-                        DocTruyenSTV_Ext.TrinhPhatAmThanh.chuanBiCacDoan();
-                        DocTruyenSTV_Ext.PhanTichSTV.kiemTraMaHoa();
-                        DocTruyenSTV_Ext.GiaoDienSTV.capNhatBangDieuKhien(0, DocTruyenSTV_Ext.TrinhPhatAmThanh.cacDoan.length, false, false);
-                    } else if (--soLanKiem <= 0) {
-                        clearInterval(dongHoKiem);
+                    const chuoiTho = el ? el.innerText.replace(/@Bạn đang đọc bản lưu.*/gi, '').trim() : '';
+                    return (el && !el.innerText.includes('Đang tải nội dung') && chuoiTho.length > 50);
+                };
+                
+                const thuGoi = () => {
+                    if (!daGoi && kiemTra()) {
+                        daGoi = true;
+                        callback();
                     }
-                }, 500);
+                };
+
+                setTimeout(thuGoi, 500);
+                
+                const observer = new MutationObserver(() => {
+                    if (!daGoi) thuGoi();
+                });
+                observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+                
+                setTimeout(() => { if(!daGoi) { daGoi = true; callback(); } observer.disconnect(); }, 15000);
+            };
+
+            if (sessionStorage.getItem('autoStartOnLoad') === 'true') {
+                sessionStorage.removeItem('autoStartOnLoad');
+                
+                doiNoiDung(() => {
+                    if (this.dungSauChuong > 0) {
+                        this.dungSauChuong--;
+                        chrome.storage.local.set({ stopAfterChapters: this.dungSauChuong });
+                        if (this.dungSauChuong === 0) return;
+                    }
+                    
+                    DocTruyenSTV_Ext.TrinhPhatAmThanh.chuanBiCacDoan();
+                    DocTruyenSTV_Ext.PhanTichSTV.kiemTraMaHoa();
+                    
+                    let tuViTri = 0;
+                    chrome.storage.local.get('readingList', dsDuLieu => {
+                        let danhSach = dsDuLieu.readingList || [];
+                        let tieuDe = document.getElementById('booknameholder')?.innerText.trim();
+                        let muc = danhSach.find(i => (i.title || '').trim().toLowerCase() === (tieuDe || '').trim().toLowerCase());
+                        const urlKhop = muc && muc.url && (
+                            muc.url === window.location.href ||
+                            new URL(muc.url).pathname === window.location.pathname
+                        );
+                        if (urlKhop && muc.chunkIndex > 1) {
+                            tuViTri = DocTruyenSTV_Ext.TrinhPhatAmThanh.tinhChiSoThuc(muc.chunkIndex - 1);
+                        }
+                        DocTruyenSTV_Ext.TrinhPhatAmThanh.batDauPhat(tuViTri);
+                    });
+                });
+            } else {
+                doiNoiDung(() => {
+                    DocTruyenSTV_Ext.TrinhPhatAmThanh.chuanBiCacDoan();
+                    DocTruyenSTV_Ext.PhanTichSTV.kiemTraMaHoa();
+
+                    chrome.storage.local.get('readingList', dsDuLieu => {
+                        const danhSach = dsDuLieu.readingList || [];
+                        const tieuDe = document.getElementById('booknameholder')?.innerText.trim();
+                        const muc = danhSach.find(i => (i.title || '').trim().toLowerCase() === (tieuDe || '').trim().toLowerCase());
+                        const urlKhop = muc && muc.url && (
+                            muc.url === window.location.href ||
+                            new URL(muc.url).pathname === window.location.pathname
+                        );
+                        let viTriKhoiPhuc = 0;
+                        if (urlKhop && muc.chunkIndex > 1) {
+                            viTriKhoiPhuc = DocTruyenSTV_Ext.TrinhPhatAmThanh.tinhChiSoThuc(muc.chunkIndex - 1);
+                        }
+                        DocTruyenSTV_Ext.TrinhPhatAmThanh.chiSoHienTai = viTriKhoiPhuc;
+                        DocTruyenSTV_Ext.GiaoDienSTV.capNhatBangDieuKhien(viTriKhoiPhuc, DocTruyenSTV_Ext.TrinhPhatAmThanh.cacDoan.length, false, false);
+                        if (viTriKhoiPhuc > 0) {
+                            DocTruyenSTV_Ext.GiaoDienSTV.boiDenDoan(viTriKhoiPhuc, DocTruyenSTV_Ext.TrinhPhatAmThanh.cacDoan, false, false);
+                        }
+                    });
+                });
             }
         });
     }
