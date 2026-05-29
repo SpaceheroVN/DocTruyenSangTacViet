@@ -540,6 +540,7 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
                     this._mediaSource = null;
                 }
             } else {
+                this.doiTuongAmThanh.onended = null;
                 this.doiTuongAmThanh.pause();
             }
             this.doiTuongAmThanh.src = this.duongDanBoNhoDem;
@@ -580,9 +581,22 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
                 URL.revokeObjectURL(this.duongDanBoNhoDem);
                 this.duongDanBoNhoDem = null;
             }
-            
+
             if (this.idLuotPhat !== idLuot || !this.dangPhat) return;
             if (l.name === 'AbortError') return;
+
+            const thongBaoLoi = (l.message || '').toLowerCase();
+            const laLoiQuota = thongBaoLoi.includes('quota') || thongBaoLoi.includes('429')
+                || thongBaoLoi.includes('401') || thongBaoLoi.includes('403')
+                || thongBaoLoi.includes('unauthorized') || thongBaoLoi.includes('forbidden')
+                || thongBaoLoi.includes('exceeded') || thongBaoLoi.includes('hết');
+            if (laLoiQuota) {
+                this.congCu = 'web';
+                DocTruyenSTV_Ext.GiaoDienSTV.hienThiThongBao('Hết lượt API — đã chuyển sang Web Speech');
+                this.phatDoanWeb();
+                return;
+            }
+
             setTimeout(() => {
                 if (this.idLuotPhat === idLuot && this.dangPhat) {
                     this.chiSoHienTai++;
