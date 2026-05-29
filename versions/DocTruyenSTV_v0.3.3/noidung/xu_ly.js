@@ -229,14 +229,15 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
         this.huyTaiAPI();
         this.huyAmThanhWeb();
         
-        if (this._mediaSource) {
-            this._mediaSource.disconnect();
-            this._mediaSource = null;
-        }
         if (this.doiTuongAmThanh) {
+            this.doiTuongAmThanh.onended = null;
             this.doiTuongAmThanh.pause();
             this.doiTuongAmThanh.src = '';
             this.doiTuongAmThanh = null;
+        }
+        if (this._mediaSource) {
+            this._mediaSource.disconnect();
+            this._mediaSource = null;
         }
         DocTruyenSTV_Ext.QuanLyDongCoAmThanh.dong_nguon();
         if (this.duongDanBoNhoDem) {
@@ -370,7 +371,7 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
         
         if (nutTruoc) {
             this.dungPhat();
-            chrome.storage.local.set({ autoStartOnLoad: true });
+            sessionStorage.setItem('autoStartOnLoad', 'true');
             nutTruoc.click();
         } else {
             DocTruyenSTV_Ext.GiaoDienSTV.hienThiThongBao('Không có chương trước');
@@ -488,11 +489,12 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
             if (e.name === 'AbortError') throw e;
         }
 
+        const idLuotKhoiTao = this.idLuotPhat;
         for (let i = 0; i < 20; i++) {
             const kq = await DocTruyenSTV_Ext.LuuTruSTV.layAmThanh(khoaCache);
             if (kq) return kq;
-            if (this.huy) throw new DOMException('DaHuy', 'AbortError');
-            await new Promise(r => setTimeout(r, 1000));
+            if (this.idLuotPhat !== idLuotKhoiTao || !this.dangPhat) throw new DOMException('DaHuy', 'AbortError');
+            await new Promise(r => setTimeout(r, i < 3 ? 200 : 1000));
         }
         throw new Error("Tải âm thanh thất bại do quá thời gian chờ (Timeout)");
     },
@@ -533,6 +535,10 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
 
             if (!this.doiTuongAmThanh) {
                 this.doiTuongAmThanh = new Audio();
+                if (this._mediaSource) {
+                    this._mediaSource.disconnect();
+                    this._mediaSource = null;
+                }
             } else {
                 this.doiTuongAmThanh.pause();
             }
@@ -609,10 +615,6 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
         }, 5000);
     }
 };
-
-
-'use strict';
-var DocTruyenSTV_Ext = window.DocTruyenSTV_Ext || {};
 
 DocTruyenSTV_Ext.PhanTichSTV = {
     lamTranhVanBan(vanBan) {

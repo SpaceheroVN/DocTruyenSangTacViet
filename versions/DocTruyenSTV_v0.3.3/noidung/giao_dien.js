@@ -304,8 +304,6 @@ DocTruyenSTV_Ext.GiaoDienSTV = {
         }
     }
 };
-'use strict';
-var DocTruyenSTV_Ext = window.DocTruyenSTV_Ext || {};
 
 DocTruyenSTV_Ext.ChinhSTV = {
     batPhimTat: true,
