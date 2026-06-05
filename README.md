@@ -1,10 +1,10 @@
 # Tạm dừng dự án vô thời hạn. Bận!
 <div align="center">
-  <img src="docs/icons/logo.svg" alt="Auto Đọc STV" width="200" />
+  <img src="docs/icons/logo.svg" alt="Đọc Truyện Cho Sáng Tác Việt" width="200" />
   <p>Tiện ích trình duyệt tự động đọc truyện trên <a href="https://sangtacviet.com">Sáng Tác Việt</a>, hỗ trợ nhiều engine TTS với giọng đọc tự nhiên.</p>
 </div>
 
-[![Version](https://img.shields.io/badge/version-0.3.3-orange)](#)
+[![Version](https://img.shields.io/badge/version-0.3.4-orange)](#)
 [![License](https://img.shields.io/badge/license-MIT-blue)](#)
 [![Edge Add-on](https://img.shields.io/badge/Microsoft%20Edge-Add--on-0078d4?logo=microsoftedge)](https://microsoftedge.microsoft.com/addons/detail/mabgcghglcjheefkkicmkpmlhaooiiae)
 
@@ -25,6 +25,7 @@
 - Phím tắt bàn phím: `K` (phát/dừng), `R` (đọc lại), `←` / `→` (chuyển chương), `[` / `]` (tốc độ), `,` / `.` (nhảy đoạn)
 
 **Tính năng nâng cao**
+- **Giao diện hiện đại** — Thiết kế tiện ích đẹp mắt với các hiệu ứng tương tác (glow/hover) mượt mà.
 - **Mini Player** — Thanh điều khiển thu gọn nổi trên trang, hỗ trợ chế độ CHƯƠNG / ĐOẠN
 - **Tự động dừng** — Hẹn giờ theo thời lượng, giờ thực, số chương, hoặc kết hợp tùy chỉnh
 - **Từ điển tùy chỉnh** — Thay thế/phát âm lại từ ngữ theo ý muốn, hỗ trợ regex Unicode
@@ -64,8 +65,8 @@ Hướng dẫn lấy key chi tiết có trong tab **Hướng dẫn lấy API** n
 
 ```
 ├── manifest.json
-├── popup_v0.3.3.html          # Giao diện popup chính
-├── chayngam_v0.3.3.js         # Service worker xử lý API nền
+├── popup_v0.3.4.html          # Giao diện popup chính
+├── chayngam_v0.3.4.js         # Service worker xử lý API nền
 ├── noidung/
 │   ├── cau_hinh.js            # Cấu hình, cache IDB, từ điển
 │   ├── xu_ly.js               # Logic phát âm thanh (Web Speech & API)
@@ -75,8 +76,8 @@ Hướng dẫn lấy key chi tiết có trong tab **Hướng dẫn lấy API** n
 ├── giao_dien_cai_dat.js       # Giao diện cài đặt popup
 ├── quan_ly_thu_vien.js        # Quản lý danh sách đọc
 ├── quan_ly_cau_hinh.js        # Đọc/ghi storage tập trung
-├── guide_v0.3.3.html          # Trang hướng dẫn & thông tin
-├── guide_v0.3.3.js            # Logic trang hướng dẫn
+├── guide_v0.3.4.html          # Trang hướng dẫn & thông tin
+├── guide_v0.3.4.js            # Logic trang hướng dẫn
 └── icons/
     ├── icon16.png
     ├── icon32.png

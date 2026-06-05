@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Auto Đọc STV — Tiện ích đọc truyện tự động</title>
+  <title>Đọc Truyện Cho Sáng Tác Việt — Tiện ích đọc truyện tự động</title>
   <link rel="icon" type="image/png" href="icons/icon128.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1553,7 +1553,7 @@
         <img src="icons/logo.svg" width="120" height="52" alt="STV Logo">
       </div>
       <div class="header-title">
-        <h1>Auto Đọc STV</h1>
+        <h1>Đọc Truyện Cho Sáng Tác Việt</h1>
         <p>SpaceheroVN / DocTruyenSangTacViet</p>
       </div>
       <div class="header-actions">
@@ -1755,8 +1755,8 @@
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
             </svg>
           </div>
-          <div class="ext-icon active" title="Auto Đọc STV — đang hoạt động">
-            <img src="icons/icon128.png" alt="Auto Đọc STV" style="width: 17px; height: 17px; border-radius: 3px;">
+          <div class="ext-icon active" title="Đọc Truyện Cho Sáng Tác Việt — đang hoạt động">
+            <img src="icons/icon128.png" alt="Đọc Truyện Cho Sáng Tác Việt" style="width: 17px; height: 17px; border-radius: 3px;">
           </div>
           <div class="ext-icon">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1787,12 +1787,8 @@
     <div class="modal-version-overlay">
       <div class="version-label">Xem trước phiên bản:</div>
       <div class="custom-select-container">
-        <div class="custom-select-trigger" id="version-select-trigger">v0.3.1</div>
+        <div class="custom-select-trigger" id="version-select-trigger">Đang tải...</div>
         <div class="custom-select-dropdown" id="version-select-dropdown">
-          <div class="custom-option selected" data-version="v0.3.1">v0.3.1</div>
-          <div class="custom-option" data-version="v0.3">v0.3</div>
-          <div class="custom-option" data-version="v0.2">v0.2</div>
-          <div class="custom-option" data-version="v0.1">v0.1</div>
         </div>
       </div>
     </div>
@@ -2079,6 +2075,7 @@
 
         phienBanDaTai = phienBan;
         noiDungHtmlHienTai = noiDungHtml;
+        window.__previewVersion = phienBan;
         khungPreview.srcdoc = noiDungHtml;
 
         window.setDemoChapter = (num) => {
@@ -2126,8 +2123,9 @@
 
     function moModal() {
       taiTrangMau();
+      taiDanhSachPhienBan();
       const selectedOpt = document.querySelector('.custom-option.selected');
-      taiXemTruoc(selectedOpt ? selectedOpt.dataset.version : 'v0.3.1');
+      taiXemTruoc(selectedOpt ? selectedOpt.dataset.version : phienBanMoiNhatPreview || 'v0.3.4');
       nenModal.classList.add('open');
       document.body.style.overflow = 'hidden';
     }
@@ -2139,22 +2137,72 @@
 
     const trigger = document.getElementById('version-select-trigger');
     const dropdown = document.getElementById('version-select-dropdown');
+    let phienBanMoiNhatPreview = null;
+    let daTaiDanhSachPhienBan = false;
+
+    function ganSuKienOption() {
+      document.querySelectorAll('.custom-option').forEach(opt => {
+        opt.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const phienBan = opt.dataset.version;
+          trigger.textContent = phienBan;
+          document.querySelectorAll('.custom-option').forEach(o => o.classList.remove('selected'));
+          opt.classList.add('selected');
+          dropdown.classList.remove('show');
+          taiXemTruoc(phienBan);
+        });
+      });
+    }
+
+    async function taiDanhSachPhienBan() {
+      if (daTaiDanhSachPhienBan) return;
+      try {
+        const ketQua = await fetch(`https://api.github.com/repos/${REPO}/contents/versions`, {
+          headers: { 'Accept': 'application/vnd.github+json' }
+        });
+        if (!ketQua.ok) throw new Error('Không tải được');
+        const danhSach = await ketQua.json();
+        const cacPhienBan = danhSach
+          .filter(item => item.type === 'dir' && item.name.startsWith('DocTruyenSTV_v'))
+          .map(item => item.name.replace('DocTruyenSTV_', ''))
+          .sort((a, b) => {
+            const partsA = a.replace('v', '').split('.').map(Number);
+            const partsB = b.replace('v', '').split('.').map(Number);
+            for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
+              const diff = (partsB[i] || 0) - (partsA[i] || 0);
+              if (diff !== 0) return diff;
+            }
+            return 0;
+          });
+
+        if (cacPhienBan.length === 0) throw new Error('Không có phiên bản');
+
+        phienBanMoiNhatPreview = cacPhienBan[0];
+        dropdown.innerHTML = cacPhienBan.map((v, i) =>
+          `<div class="custom-option${i === 0 ? ' selected' : ''}" data-version="${thoatHtml(v)}">${thoatHtml(v)}</div>`
+        ).join('');
+        trigger.textContent = phienBanMoiNhatPreview;
+        ganSuKienOption();
+        daTaiDanhSachPhienBan = true;
+
+        const selectedOpt = document.querySelector('.custom-option.selected');
+        if (selectedOpt && !phienBanDaTai) {
+          taiXemTruoc(selectedOpt.dataset.version);
+        }
+      } catch (e) {
+        console.error('Lỗi tải danh sách phiên bản:', e);
+        if (!daTaiDanhSachPhienBan) {
+          dropdown.innerHTML = '<div class="custom-option selected" data-version="v0.3.4">v0.3.4</div>';
+          trigger.textContent = 'v0.3.4';
+          phienBanMoiNhatPreview = 'v0.3.4';
+          ganSuKienOption();
+        }
+      }
+    }
 
     trigger.addEventListener('click', (e) => {
       e.stopPropagation();
       dropdown.classList.toggle('show');
-    });
-
-    document.querySelectorAll('.custom-option').forEach(opt => {
-      opt.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const phienBan = opt.dataset.version;
-        trigger.textContent = phienBan;
-        document.querySelectorAll('.custom-option').forEach(o => o.classList.remove('selected'));
-        opt.classList.add('selected');
-        dropdown.classList.remove('show');
-        taiXemTruoc(phienBan);
-      });
     });
 
     document.addEventListener('click', () => dropdown.classList.remove('show'));

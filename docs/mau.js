@@ -2,46 +2,71 @@ function layIsCh2() {
   try { return window.parent.demoCurrentChapter === 2; } catch (e) { return false; }
 }
 
+function layThongTinMau() {
+  const isCh2 = layIsCh2();
+  const urlCh = isCh2
+    ? "https://sangtacviet.com/truyen/fanqie/1/7578918840482942014/7578919302108037694/"
+    : "https://sangtacviet.com/truyen/fanqie/1/7578918840482942014/7578918873747964478/";
+  return {
+    voices: [
+      { name: "Hoai My (FPT)", value: "0", index: 0, engine: "fpt" },
+      { name: "Ban Mai (FPT)", value: "1", index: 1, engine: "fpt" },
+      { name: "Microsoft Hoai My (Azure)", value: "vi-VN-HoaiMyNeural", index: 2, engine: "azure" },
+      { name: "Google Tieng Viet", value: "vietnamese", index: 3, engine: "web" }
+    ],
+    isPlaying: false, isPaused: false, isBuffering: false,
+    bookTitle: "Bat dau vo han phan than, mot minh ta vay quanh toan tong mon",
+    chapTitle: isCh2
+      ? "Thu 2 chuong Ao lot dai quan, moi nguoi giu dung vi tri cua minh"
+      : "Thu 1 chuong Khac kim cai menh, co thu nhat phan than",
+    imgUrl: "https://p6-novel.byteimg.com/novel-pic/7a4843d945562c7de76f4104e5fde2b1~tplv-shrink:640:0.image",
+    pageUrl: urlCh,
+    ttsEngine: "fpt",
+    elapsed: 0,
+    coDocDo: false,
+    progress: { current: 0, total: 140 }
+  };
+}
+
+function xuLyTinNhan(tinNhan, hamGoi) {
+  const thucHien = (cb) => {
+    setTimeout(() => {
+      const info = layThongTinMau();
+      const action = tinNhan.action || tinNhan.hanhDong;
+      if (action === 'getVoices' || action === 'layGiongDoc') {
+        cb({ voices: info.voices });
+      } else if (action === 'getStatus' || action === 'getInfo' || action === 'layThongTin') {
+        cb(info);
+      } else {
+        cb({});
+      }
+    }, 10);
+  };
+
+  if (typeof hamGoi === 'function') { thucHien(hamGoi); return true; }
+  return new Promise(r => thucHien(r));
+}
+
+if (!navigator.locks) {
+  navigator.locks = {
+    request: (name, cb) => cb()
+  };
+}
+
 if (typeof window.chrome === 'undefined' || !window.chrome.__isEdgeMock) {
   window.chrome = {
     __isEdgeMock: true,
 
     runtime: {
-      getManifest: () => ({ version: "0.3" }),
-      onMessage: { addListener: () => { } },
-
-      sendMessage: (tinNhan, hamGoi) => {
-        const getInfo = () => {
-          const isCh2 = layIsCh2();
-          return {
-            voices: [
-              { name: "Hoai My (FPT)", value: "0", engine: "fpt" },
-              { name: "Ban Mai (FPT)", value: "1", engine: "fpt" },
-              { name: "Microsoft Hoai My (Azure)", value: "vi-VN-HoaiMyNeural", engine: "azure" },
-              { name: "Google Tieng Viet", value: "vietnamese", engine: "web" }
-            ],
-            isPlaying: false, isPaused: false,
-            bookTitle: "Bat dau vo han phan than, mot minh ta vay quanh toan tong mon",
-            chapTitle: isCh2
-              ? "Thu 2 chuong Ao lot dai quan, moi nguoi giu dung vi tri cua minh"
-              : "Thu 1 chuong Khac kim cai menh, co thu nhat phan than",
-            imgUrl: "https://p6-novel.byteimg.com/novel-pic/7a4843d945562c7de76f4104e5fde2b1~tplv-shrink:640:0.image"
-          };
-        };
-
-        const thucHien = (cb) => {
-          setTimeout(() => {
-            const info = getInfo();
-            if (tinNhan.action === 'getVoices') cb({ voices: info.voices });
-            else if (tinNhan.action === 'getStatus' || tinNhan.action === 'getInfo') cb(info);
-            else cb({});
-          }, 10);
-        };
-
-        if (typeof hamGoi === 'function') { thucHien(hamGoi); return true; }
-        return new Promise(r => thucHien(r));
+      getManifest: () => {
+        try {
+          const v = window.parent && window.parent.__previewVersion;
+          if (v) return { version: v.replace('v', '') };
+        } catch (_) {}
+        return { version: "0.3" };
       },
-
+      onMessage: { addListener: () => { } },
+      sendMessage: (tinNhan, hamGoi) => xuLyTinNhan(tinNhan, hamGoi),
       lastError: null
     },
 
@@ -59,7 +84,7 @@ if (typeof window.chrome === 'undefined' || !window.chrome.__isEdgeMock) {
         return Promise.resolve([tabGia]);
       },
 
-      sendMessage: (idTab, tinNhan, hamGoi) => window.chrome.runtime.sendMessage(tinNhan, hamGoi),
+      sendMessage: (idTab, tinNhan, hamGoi) => xuLyTinNhan(tinNhan, hamGoi),
       create: (obj) => console.log("Mock tabs.create:", obj.url)
     },
 
