@@ -55,7 +55,7 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
         chrome.storage.sync.get(['speed', 'volume', 'voiceIndex', 'maydoc', 'tudongchuyenchuong', 'smartPauses', 'doctentruyen', 'doctenchuong'], duLieu => {
             this.tocDo = duLieu.speed !== undefined ? duLieu.speed : 1;
             this.amLuong = duLieu.volume !== undefined ? duLieu.volume : 1;
-            this.chiSoGiong = duLieu.voiceIndex !== undefined ? duLieu.voiceIndex : 0;
+            this.chiSoGiong = duLieu.voiceIndex !== undefined ? parseInt(duLieu.voiceIndex, 10) : 0;
             this.congCu = duLieu.maydoc || 'auto';
             this.tuDongChuyenChuong = duLieu.tudongchuyenchuong !== undefined ? duLieu.tudongchuyenchuong : true;
             this.thoiGianNghi = duLieu.smartPauses !== undefined ? duLieu.smartPauses : 1000;
@@ -77,7 +77,7 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
                     }
                 }
                 if (thayDoi.maydoc) this.congCu = thayDoi.maydoc.newValue;
-                if (thayDoi.voiceIndex) this.chiSoGiong = thayDoi.voiceIndex.newValue;
+                if (thayDoi.voiceIndex) this.chiSoGiong = parseInt(thayDoi.voiceIndex.newValue, 10);
                 if (thayDoi.tudongchuyenchuong) this.tuDongChuyenChuong = thayDoi.tudongchuyenchuong.newValue;
                 if (thayDoi.smartPauses) this.thoiGianNghi = thayDoi.smartPauses.newValue;
                 if (thayDoi.doctentruyen !== undefined || thayDoi.doctenchuong !== undefined) {
@@ -109,6 +109,7 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
     },
 
     layCongCuThucTe() {
+        if (this.congCu && this.congCu.startsWith('khac_')) return this.congCu;
         return (this.congCu === 'auto' || this.congCu === 'google') ? 'web' : this.congCu;
     },
 
@@ -279,6 +280,8 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
         const chiSoCu = this.chiSoHienTai;
         const dangPhatTruocDo = this.dangPhat && !this.dangTamDung;
         
+        this.huyTaiAPI();
+
         if (this.dangPhat || this.dangTamDung) {
             this.huyAmThanhWeb();
             if (this.doiTuongAmThanh) {
@@ -412,9 +415,10 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
         u.pitch = 1.0;
         u.volume = Math.min(this.amLuong, 1.0);
 
-        window.speechSynthesis.getVoices().forEach(v => {
-            if (v.lang === 'vi-VN' && (v.name.includes('Google') || v.name.includes('Microsoft'))) u.voice = v;
-        });
+        const dsGiong = window.speechSynthesis.getVoices();
+        const giong = dsGiong.find(v => v.lang === 'vi-VN' && v.name.includes('Google')) || 
+                      dsGiong.find(v => v.lang === 'vi-VN' && v.name.includes('Microsoft'));
+        if (giong) u.voice = giong;
 
         const idLuot = this.idLuotPhat;
         
@@ -487,14 +491,21 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
             }
         } catch (e) {
             if (e.name === 'AbortError') throw e;
+            throw e; 
         }
 
         const idLuotKhoiTao = this.idLuotPhat;
-        for (let i = 0; i < 20; i++) {
+        for (let i = 0; i < 10; i++) {
+            if (this.idLuotPhat !== idLuotKhoiTao || !this.dangPhat) throw new DOMException('DaHuy', 'AbortError');
             const kq = await DocTruyenSTV_Ext.LuuTruSTV.layAmThanh(khoaCache);
             if (kq) return kq;
-            if (this.idLuotPhat !== idLuotKhoiTao || !this.dangPhat) throw new DOMException('DaHuy', 'AbortError');
-            await new Promise(r => setTimeout(r, i < 3 ? 200 : 1000));
+            
+            const waitTime = i < 3 ? 200 : 1000;
+            const steps = waitTime / 100;
+            for (let j = 0; j < steps; j++) {
+                if (this.idLuotPhat !== idLuotKhoiTao || !this.dangPhat) throw new DOMException('DaHuy', 'AbortError');
+                await new Promise(r => setTimeout(r, 100));
+            }
         }
         throw new Error("Tải âm thanh thất bại do quá thời gian chờ (Timeout)");
     },
@@ -535,10 +546,8 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
 
             if (!this.doiTuongAmThanh) {
                 this.doiTuongAmThanh = new Audio();
-                if (this._mediaSource) {
-                    this._mediaSource.disconnect();
-                    this._mediaSource = null;
-                }
+                this._mediaSource = bo_nguon.createMediaElementSource(this.doiTuongAmThanh);
+                this._mediaSource.connect(bo_chinh_am);
             } else {
                 this.doiTuongAmThanh.onended = null;
                 this.doiTuongAmThanh.pause();
@@ -547,20 +556,17 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
             this.doiTuongAmThanh.volume = Math.min(this.amLuong, 1.0);
             this.doiTuongAmThanh.playbackRate = this.tocDo;
             
-            if (this.dangTamDung) this.doiTuongAmThanh.pause();
-            
             this.doiTuongAmThanh.onended = () => {
                 if (this.idLuotPhat !== idLuot) return;
                 this.chiSoHienTai++;
                 setTimeout(() => this.phatDoanAPI(), this.thoiGianNghi);
             };
 
-            if (!this._mediaSource) {
-                this._mediaSource = bo_nguon.createMediaElementSource(this.doiTuongAmThanh);
-                this._mediaSource.connect(bo_chinh_am);
+            try {
+                await this.doiTuongAmThanh.play();
+                if (this.dangTamDung) this.doiTuongAmThanh.pause();
+            } catch (e) {
             }
-
-            await this.doiTuongAmThanh.play();
 
             if (this.chiSoHienTai + 1 < this.cacDoan.length) {
                 const idLuotHienTai = this.idLuotPhat;
@@ -586,23 +592,31 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
             if (l.name === 'AbortError') return;
 
             const thongBaoLoi = (l.message || '').toLowerCase();
+            console.error('[DocTruyenSTV] Lỗi API bắt được:', l);
             const laLoiQuota = thongBaoLoi.includes('quota') || thongBaoLoi.includes('429')
                 || thongBaoLoi.includes('401') || thongBaoLoi.includes('403')
                 || thongBaoLoi.includes('unauthorized') || thongBaoLoi.includes('forbidden')
                 || thongBaoLoi.includes('exceeded') || thongBaoLoi.includes('hết');
-            if (laLoiQuota) {
-                this.congCu = 'web';
-                DocTruyenSTV_Ext.GiaoDienSTV.hienThiThongBao('Hết lượt API — đã chuyển sang Web Speech');
-                this.phatDoanWeb();
-                return;
+            
+            if (laLoiQuota && this.congCu && this.congCu !== 'web') {
+                chrome.storage.local.get('customEngines', (data) => {
+                    let engines = data.customEngines || [];
+                    let engine = engines.find(e => e.id === this.congCu);
+                    if (engine && !engine.isQuotaExceeded) {
+                        engine.isQuotaExceeded = true;
+                        chrome.storage.local.set({ customEngines: engines });
+                    }
+                });
             }
 
-            setTimeout(() => {
-                if (this.idLuotPhat === idLuot && this.dangPhat) {
-                    this.chiSoHienTai++;
-                    this.phatDoanAPI();
-                }
-            }, 3000);
+            this.congCu = 'web';
+            chrome.storage.sync.set({ maydoc: 'web' });
+            if (laLoiQuota) {
+                DocTruyenSTV_Ext.GiaoDienSTV.hienThiThongBao('Hết lượt API — đã chuyển sang Web Speech');
+            } else {
+                DocTruyenSTV_Ext.GiaoDienSTV.hienThiThongBao('Lỗi tải API — đã chuyển sang Web Speech');
+            }
+            this.phatDoanWeb();
         }
     },
 
@@ -744,7 +758,7 @@ DocTruyenSTV_Ext.PhanTichSTV = {
 
     chiaDoanVanBan(vanBan, doDaiToiDa) {
         const cacDoan = [];
-        const cacCau = vanBan.split(/(?<=[.!?。])\s+/);
+        const cacCau = vanBan.split(/(?<=[.!?。…]+["']?)\s+/);
         let hienTai = '';
         
         for (const cau of cacCau) {

@@ -235,60 +235,38 @@ DocTruyenSTV_Ext.LuuTruSTV = {
         };
         chrome.storage.local.set({ last_active_state: duLieuGoc });
 
-        if (this.dangLuuTrangThai) {
-            this.dangChoLuu = true;
-            return;
-        }
-
-        this.dangLuuTrangThai = true;
-        try {
-            await this._thucHienLuuDanhSach(duLieuGoc);
-        } catch (l) {
-        } finally {
-            this.dangLuuTrangThai = false;
-            if (this.dangChoLuu) {
-                this.dangChoLuu = false;
-                this.luuTienTrinhDoc(trangThai);
-            }
-        }
+        this._thucHienLuuDanhSach(duLieuGoc);
     },
 
     _thucHienLuuDanhSach(duLieuGoc) {
         if (this._debounceTimer) {
             clearTimeout(this._debounceTimer);
-            if (this._debounceResolve) {
-                this._debounceResolve();
-            }
         }
-        return new Promise(dongY => {
-            this._debounceResolve = dongY;
-            this._debounceTimer = setTimeout(() => {
-                this._debounceResolve = null;
-                navigator.locks.request('stv_readingList_lock', () => {
-                    return new Promise(moKhoa => {
-                        chrome.storage.local.get('readingList', duLieu => {
-                            let danhSach = duLieu.readingList || [];
-                            let viTri = danhSach.findIndex(i => (i.title || '').trim().toLowerCase() === (duLieuGoc.bookTitle || '').trim().toLowerCase());
+        this._debounceTimer = setTimeout(() => {
+            navigator.locks.request('stv_readingList_lock', () => {
+                return new Promise(moKhoa => {
+                    chrome.storage.local.get('readingList', duLieu => {
+                        let danhSach = duLieu.readingList || [];
+                        let viTri = danhSach.findIndex(i => (i.title || '').trim().toLowerCase() === (duLieuGoc.bookTitle || '').trim().toLowerCase());
+                        
+                        const hoanTat = () => { moKhoa(); };
+                        
+                        if (viTri !== -1) {
+                            let canCapNhat = false;
+                            if (danhSach[viTri].url !== duLieuGoc.pageUrl) { danhSach[viTri].url = duLieuGoc.pageUrl; canCapNhat = true; }
+                            if (danhSach[viTri].chap !== duLieuGoc.chapTitle) { danhSach[viTri].chap = duLieuGoc.chapTitle; canCapNhat = true; }
+                            const chunkMoi = duLieuGoc.progress.current;
+                            if (danhSach[viTri].chunkIndex !== chunkMoi) {
+                                danhSach[viTri].chunkIndex = chunkMoi;
+                                canCapNhat = true;
+                            }
                             
-                            const hoanTat = () => { moKhoa(); dongY(); };
-                            
-                            if (viTri !== -1) {
-                                let canCapNhat = false;
-                                if (danhSach[viTri].url !== duLieuGoc.pageUrl) { danhSach[viTri].url = duLieuGoc.pageUrl; canCapNhat = true; }
-                                if (danhSach[viTri].chap !== duLieuGoc.chapTitle) { danhSach[viTri].chap = duLieuGoc.chapTitle; canCapNhat = true; }
-                                const chunkMoi = duLieuGoc.progress.current;
-                                if (danhSach[viTri].chunkIndex !== chunkMoi) {
-                                    danhSach[viTri].chunkIndex = chunkMoi;
-                                    canCapNhat = true;
-                                }
-                                
-                                if (canCapNhat) chrome.storage.local.set({ readingList: danhSach }, hoanTat);
-                                else hoanTat();
-                            } else hoanTat();
-                        });
+                            if (canCapNhat) chrome.storage.local.set({ readingList: danhSach }, hoanTat);
+                            else hoanTat();
+                        } else hoanTat();
                     });
                 });
-            }, 3000);
-        });
+            });
+        }, 3000);
     }
 };

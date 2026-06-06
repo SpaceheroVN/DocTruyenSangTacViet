@@ -17,6 +17,7 @@ export const CauHinh = {
             new Promise(dongY => {
                 chrome.storage.local.get(null, duLieu => {
                     this.duLieuCucBo = duLieu;
+                    if (!this.duLieuCucBo.customEngines) this.duLieuCucBo.customEngines = [];
                     dongY();
                 });
             })
@@ -54,6 +55,5 @@ export const CauHinh = {
     luuTuDien(tuDien) {
         this.duLieuCucBo.customDict = tuDien;
         chrome.storage.local.set({ customDict: tuDien });
-        chrome.storage.sync.set({ customDict: tuDien });
     }
 };

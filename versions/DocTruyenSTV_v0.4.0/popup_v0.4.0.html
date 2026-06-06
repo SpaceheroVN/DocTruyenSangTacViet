@@ -30,6 +30,7 @@
       -webkit-user-select: none;
       -moz-user-select: none;
       user-select: none;
+      outline: none;
     }
 
     html {
@@ -67,7 +68,7 @@
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.25s, transform 0.25s;
-      z-index: 9999;
+      z-index: 99999;
       max-width: 280px;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -738,6 +739,13 @@
       border: none;
     }
 
+    #btn-play:hover {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%) !important;
+      opacity: 0.85 !important;
+      color: #fff !important;
+      border: none !important;
+    }
+
     .sliders-row {
       display: flex;
       gap: 16px;
@@ -1076,13 +1084,16 @@
     }
 
     .footer {
-      padding: 8px 14px;
-      text-align: center;
-      font-size: 9px;
-      color: var(--text-muted);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.55);
       border-top: 1px solid var(--border);
       background: var(--surface);
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
       flex-shrink: 0;
     }
 
@@ -1244,16 +1255,18 @@
     }
 
     .custom-select-dropdown::-webkit-scrollbar {
-      width: 4px;
+      width: 8px;
     }
 
     .custom-select-dropdown::-webkit-scrollbar-track {
       background: transparent;
+      margin: 4px 0;
     }
 
     .custom-select-dropdown::-webkit-scrollbar-thumb {
-      background: var(--border);
+      background: rgba(232, 160, 69, 0.5);
       border-radius: 99px;
+      border: 2px solid var(--surface2);
     }
 
     .custom-select-dropdown.show {
@@ -1274,6 +1287,12 @@
     .custom-option:hover {
       background: rgba(232, 160, 69, 0.15);
       color: var(--accent);
+    }
+
+    .custom-option.disabled {
+      opacity: 0.4;
+      pointer-events: none;
+      background: none;
     }
 
     .custom-option.selected {
@@ -1617,11 +1636,11 @@
 
     .picker-number {
       fill: var(--text);
-      font-size: 9px;
+      font-size: 13px;
+      font-weight: 700;
       text-anchor: middle;
       dominant-baseline: middle;
-      opacity: 0.55;
-      font-weight: 700;
+      opacity: 0.65;
     }
 
     .picker-number.sm {
@@ -1722,11 +1741,67 @@
       font-size: 14px;
       line-height: 1;
     }
+
+    /* Hiệu ứng bổ sung (hover/focus) */
+    .btn-ctrl:hover {
+      filter: brightness(1.2);
+    }
+
+    .toggle:hover .toggle-slider {
+      box-shadow: 0 0 6px rgba(232, 160, 69, 0.3);
+      border-color: rgba(232, 160, 69, 0.6);
+    }
+
+    a[href*="guide"]:hover {
+      text-decoration: underline !important;
+      filter: brightness(1.2);
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="number"] {
+      transition: all 0.2s ease;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus,
+    input[type="number"]:focus {
+      border-color: var(--accent) !important;
+      box-shadow: 0 0 0 2px rgba(232, 160, 69, 0.15) !important;
+    }
+
+    input[type="text"]:hover:not(:focus),
+    input[type="password"]:hover:not(:focus),
+    input[type="number"]:hover:not(:focus) {
+      border-color: rgba(232, 160, 69, 0.5) !important;
+    }
+
+    /* Nút GitHub footer */
+    .github-btn {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .github-btn:hover {
+      background: rgba(232, 160, 69, 0.25);
+      color: #fff;
+      border-color: var(--accent);
+      box-shadow: 0 0 8px rgba(232, 160, 69, 0.4);
+    }
   </style>
 </head>
 
 <body style="opacity: 0; transition: opacity 0.1s ease-out;">
-  <div class="toast" id="toast"></div>
+
   <div class="header">
     <div class="header-logo tab" data-tab="main" style="cursor: pointer; pointer-events: auto;" title="Về trang chủ">
       <svg xmlns="http://www.w3.org/2000/svg" width="78" height="52" viewBox="0 0 120 80"
@@ -1779,7 +1854,7 @@
   </div>
   <div class="panel active" id="panel-main" style="padding:0; border:none; max-height:none; overflow:visible;">
     <div class="book-card" id="book-card-content">
-      <img id="cover-img" alt="Bìa truyện" style="display: none;">
+      <img id="cover-img" alt="Bìa truyện" style="display: none;" referrerpolicy="no-referrer">
       <div class="book-meta" id="book-meta">
         <div class="book-label">Đang mở</div>
         <div id="current-title">Đang kiểm tra trang...</div>
@@ -1922,7 +1997,7 @@
             </span>
             <span id="vol-val">100%</span>
           </div>
-          <input type="range" id="vol-slider" class="vol-range" min="0" max="1" step="0.05" value="1">
+          <input type="range" id="vol-slider" class="vol-range" min="0" max="2" step="0.05" value="1">
         </div>
       </div>
       <div class="options-row" style="display: flex; align-items: center; gap: 8px;">
@@ -1947,9 +2022,7 @@
         style="color: var(--danger); font-size: 10px; text-align: center; margin-top: 6px; display: none;">
         Hệ điều hành chưa có giọng Tiếng Việt.
       </div>
-      <div class="kbd-hint">
-        <kbd>K</kbd> Phát/Dừng &nbsp; <kbd>←</kbd><kbd>→</kbd> Chương &nbsp; <kbd>R</kbd> Lại &nbsp; <kbd>Esc</kbd> Tắt
-      </div>
+
     </div>
   </div>
   <div class="panel" id="panel-reading-list">
@@ -1997,7 +2070,13 @@
 
         <div class="setting-row"
           style="flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--border);">
-          <span class="setting-label" style="font-size: 11px;">Nguồn giọng đọc (TTS Engine)</span>
+          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <span class="setting-label" style="font-size: 11px;">Nguồn giọng đọc (TTS Engine)</span>
+            <span id="btn-delete-engine" style="display: none; cursor: pointer; color: var(--danger); font-size: 11px; align-items: center; gap: 4px;" title="Xóa nguồn đọc này">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+              Xóa
+            </span>
+          </div>
           <div class="custom-select-container" style="width: 100%;">
             <div class="custom-select-trigger" style="border-radius: 8px; background-color: var(--surface2);">
               <span id="custom-engine-text">Web Speech API (Miễn phí)</span>
@@ -2005,49 +2084,7 @@
             <div class="custom-select-dropdown" id="custom-engine-dropdown"></div>
             <select class="voice-select" id="engine-select" style="display: none;">
               <option value="web">Web Speech API (Miễn phí)</option>
-              <optgroup label="API Cao Cấp (Cần Key)">
-                <option value="fpt">FPT.AI TTS (Việt Nam)</option>
-                <option value="azure">Microsoft Azure TTS</option>
-              </optgroup>
             </select>
-          </div>
-
-          <div id="api-settings-box"
-            style="display:none; width: 100%; background: var(--surface2); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); margin-top: 4px; box-sizing: border-box;">
-            <input type="password" id="api-key-input" placeholder="Nhập API Key vào đây..."
-              style="width: 100%; margin-bottom: 8px; padding: 8px 10px; font-size: 11px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); outline: none; box-sizing: border-box;">
-            <input type="text" id="api-region-input" placeholder="Azure Region (VD: southeastasia)"
-              style="display:none; width: 100%; margin-bottom: 8px; padding: 8px 10px; font-size: 11px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); outline: none; box-sizing: border-box;">
-            <div style="display: flex; gap: 8px;">
-              <button class="btn-ctrl btn-sm" id="btn-save-api"
-                style="flex: 1; height: 30px; font-size: 11px; background: rgba(232, 160, 69, 0.15); color: var(--accent); border-color: var(--accent); border-radius: 6px;">
-                <svg id="btn-save-api-icon" xmlns="http://www.w3.org/2000/svg" width="13" height="13"
-                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                  stroke-linejoin="round" style="margin-right: 4px; vertical-align: text-top;">
-                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-                  <polyline points="17 21 17 13 7 13 7 21" />
-                  <polyline points="7 3 7 8 15 8" />
-                </svg>
-                <span id="btn-save-api-text">Lưu API Key</span>
-              </button>
-              <button class="btn-ctrl btn-sm" id="btn-test-api"
-                style="width: auto; padding: 0 12px; height: 30px; font-size: 11px; border-color: var(--accent2); color: var(--accent2); background: transparent; border-radius: 6px;"
-                title="Kiểm tra Key này có hoạt động không">
-                Thử Key
-              </button>
-            </div>
-            <div style="margin-top: 10px; text-align: center;">
-              <a href="guide_v0.3.1.html" target="_blank"
-                style="color: var(--accent); text-decoration: none; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                  <line x1="12" y1="17" x2="12.01" y2="17" />
-                </svg>
-                Hướng dẫn cách lấy API Key
-              </a>
-            </div>
           </div>
         </div>
 
@@ -2110,10 +2147,17 @@
               Xem lưu ý
             </button>
             <div id="pause-note-content"
-              style="display: none; font-size: 12px; color: var(--warning); margin-top: 8px; line-height: 1.5; padding: 10px; border: 1px dashed var(--warning); border-radius: 8px; background: rgba(240, 192, 64, 0.02);">
-              <strong style="font-weight: 700;">* Lưu ý:</strong> Khoảng nghỉ dấu câu (phẩy/chấm) chỉ hoạt động tại các
-              điểm nối khi văn bản quá dài bị cắt nhỏ, hoặc khi chuyển đoạn. Không áp dụng cho mọi dấu câu do giới hạn
-              API.
+              style="display: none; font-size: 12px; margin-top: 8px; line-height: 1.5; padding: 10px; border: 1px dashed var(--warning); border-radius: 8px; background: rgba(240, 192, 64, 0.02);">
+              <span style="color: var(--warning);"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" style="vertical-align:-4px;">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg> <strong style="font-weight: 700;">Lưu ý:</strong></span> <span style="color: var(--text);">Khoảng
+                nghỉ dấu câu (phẩy/chấm) chỉ hoạt động tại các
+                điểm nối khi văn bản quá dài bị cắt nhỏ, hoặc khi chuyển đoạn. Không áp dụng cho mọi dấu câu do giới hạn
+                API.</span>
             </div>
           </div>
         </div>
@@ -2150,7 +2194,7 @@
     <div style="display: flex; flex-direction: column; gap: 6px;">
       <div
         style="font-size: 10px; font-weight: 700; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; padding-left: 4px;">
-        Phát lại
+        Công cụ nhanh
       </div>
 
       <div
@@ -2199,38 +2243,43 @@
 
           <div id="group-stop-realtime" class="auto-stop-input-group"
             style="display: none; width: 100%; flex-direction: column; align-items: center; gap: 10px; margin-top: 2px; position: relative;">
-            <div class="digital-clock-display" id="realtime-digital-display" style="margin-bottom: 2px;">
+
+            <div class="digital-clock-display" id="realtime-digital-display"
+              style="margin-bottom: 2px; width: 100%; justify-content: center;">
               <input class="digit-input-overlay" id="digit-input-hidden" type="number" min="0" max="59"
                 inputmode="numeric">
               <span class="digital-digit" id="digit-hours" title="Nhấn để nhập giờ">00</span>
               <span class="digital-separator">:</span>
               <span class="digital-digit" id="digit-minutes" title="Nhấn để nhập phút">00</span>
-              <div class="custom-select-container ampm-select-wrap" id="ampm-container">
-                <div class="custom-select-trigger"><span id="ampm-text">AM</span></div>
+              <div class="custom-select-container ampm-select-wrap" id="ampm-container"
+                style="flex: none; width: 56px;">
+                <div class="custom-select-trigger"><span id="ampm-text">SA</span></div>
                 <div class="custom-select-dropdown" id="ampm-dropdown">
-                  <div class="custom-option selected" data-val="AM">AM</div>
-                  <div class="custom-option" data-val="PM">PM</div>
+                  <div class="custom-option selected" data-val="SA">SA</div>
+                  <div class="custom-option" data-val="CH">CH</div>
                 </div>
               </div>
             </div>
+
             <div class="digital-clock-hint" style="margin-bottom: 0;">Nhấn vào số để gõ trực tiếp · Kéo vòng tròn để
               chọn</div>
 
-            <div class="circular-picker-container" style="position: relative;">
-              <svg width="190" height="190" viewBox="0 0 190 190" class="circular-picker-svg">
+            <div class="circular-picker-container"
+              style="width: 240px; height: 240px; margin: 10px auto; position: relative;">
+              <svg width="240" height="240" viewBox="0 0 240 240">
                 <defs>
-                  <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stop-color="#222136" stop-opacity="0.9" />
-                    <stop offset="100%" stop-color="#0f0e17" stop-opacity="0" />
-                  </radialGradient>
-                  <filter id="glow-h">
-                    <feGaussianBlur stdDeviation="2.5" result="blur" />
+                  <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="rgba(255,255,255,0.06)" />
+                    <stop offset="100%" stop-color="rgba(255,255,255,0.01)" />
+                  </linearGradient>
+                  <filter id="glow-h" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
                     <feMerge>
                       <feMergeNode in="blur" />
                       <feMergeNode in="SourceGraphic" />
                     </feMerge>
                   </filter>
-                  <filter id="glow-m">
+                  <filter id="glow-m" x="-20%" y="-20%" width="140%" height="140%">
                     <feGaussianBlur stdDeviation="2.5" result="blur" />
                     <feMerge>
                       <feMergeNode in="blur" />
@@ -2238,33 +2287,38 @@
                     </feMerge>
                   </filter>
                 </defs>
-                <circle cx="95" cy="95" r="90" fill="url(#bgGrad)" />
-                <circle class="base-circle" cx="95" cy="95" r="89"></circle>
+                <circle cx="120" cy="120" r="115" fill="url(#bgGrad)" />
+                <circle class="base-circle" cx="120" cy="120" r="114"></circle>
 
                 <g class="ring-group" id="hour-ring-group">
                   <g id="hour-ticks"></g>
-                  <circle class="ring-path" cx="95" cy="95" r="82"></circle>
-                  <circle class="active-progress" cx="95" cy="95" r="82" id="hour-progress"></circle>
-                  <text class="picker-number" x="95" y="28">12</text>
-                  <text class="picker-number" x="158" y="99">3</text>
-                  <text class="picker-number" x="95" y="168">6</text>
-                  <text class="picker-number" x="32" y="99">9</text>
-                  <circle class="drag-handle" cx="95" cy="13" r="10" id="hour-handle"></circle>
-                  <text class="picker-ring-label" x="95" y="87" style="fill:var(--accent);opacity:0.5;">GIỜ</text>
+                  <circle class="ring-path" cx="120" cy="120" r="94"></circle>
+                  <circle class="active-progress" cx="120" cy="120" r="94" id="hour-progress" filter="url(#glow-h)">
+                  </circle>
+                  <text class="picker-number" x="120" y="10">12</text>
+                  <text class="picker-number" x="230" y="120">3</text>
+                  <text class="picker-number" x="120" y="230">6</text>
+                  <text class="picker-number" x="10" y="120">9</text>
+                  <circle class="drag-handle" cx="120" cy="26" r="11" id="hour-handle" filter="url(#glow-h)"></circle>
+                  <text class="picker-ring-label" x="120" y="112"
+                    style="fill:var(--accent);opacity:1; font-size:12px; font-weight:800; text-anchor:middle; pointer-events:none; text-shadow: 0 0 8px rgba(255, 171, 64, 0.5);">GIỜ</text>
                 </g>
 
                 <g class="ring-group" id="minute-ring-group">
                   <g id="minute-ticks"></g>
-                  <circle class="ring-path" cx="95" cy="95" r="56"></circle>
-                  <circle class="active-progress minute-prog" cx="95" cy="95" r="56" id="minute-progress"></circle>
-                  <text class="picker-number sm" x="95" y="52">00</text>
-                  <text class="picker-number sm" x="138" y="98">15</text>
-                  <text class="picker-number sm" x="95" y="144">30</text>
-                  <text class="picker-number sm" x="52" y="98">45</text>
-                  <circle class="drag-handle minute-handle" cx="95" cy="39" r="9" id="minute-handle"></circle>
-                  <text class="picker-ring-label" x="95" y="103" style="fill:var(--accent2);opacity:0.5;">PHÚT</text>
+                  <circle class="ring-path" cx="120" cy="120" r="60"></circle>
+                  <circle class="active-progress minute-prog" cx="120" cy="120" r="60" id="minute-progress"
+                    filter="url(#glow-m)"></circle>
+                  <text class="picker-number sm" x="120" y="66">00</text>
+                  <text class="picker-number sm" x="174" y="120">15</text>
+                  <text class="picker-number sm" x="120" y="174">30</text>
+                  <text class="picker-number sm" x="66" y="120">45</text>
+                  <circle class="drag-handle minute-handle" cx="120" cy="60" r="9" id="minute-handle"
+                    filter="url(#glow-m)"></circle>
+                  <text class="picker-ring-label" x="120" y="128"
+                    style="fill:var(--accent2);opacity:1; font-size:12px; font-weight:800; text-anchor:middle; pointer-events:none; text-shadow: 0 0 8px rgba(233, 30, 99, 0.5);">PHÚT</text>
                 </g>
-                <circle cx="95" cy="95" r="3" fill="var(--border)" opacity="0.6" />
+                <circle cx="120" cy="120" r="3" fill="var(--border)" opacity="0.6" style="pointer-events:none;" />
               </svg>
             </div>
             <button class="btn-ctrl btn-sm" id="btn-apply-stop-realtime"
@@ -2329,11 +2383,122 @@
         </div>
 
         <div class="setting-row" style="padding: 12px 0; border-bottom: none;">
-          <span class="setting-label" style="font-size: 11px;">Phím tắt (K, R, mũi tên)</span>
-          <label class="toggle">
-            <input type="checkbox" id="chk-shortcuts" checked>
-            <span class="toggle-slider"></span>
-          </label>
+          <span class="setting-label" style="font-size: 11px; flex: 1;">Phím tắt</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button class="btn-ctrl btn-sm" id="btn-shortcuts-settings"
+              style="background: transparent; border: none; padding: 4px; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center;"
+              title="Cài đặt phím tắt">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path
+                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                </path>
+              </svg>
+            </button>
+            <label class="toggle">
+              <input type="checkbox" id="chk-shortcuts" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        <div id="shortcuts-dropdown"
+          style="display: none; flex-direction: column; gap: 8px; padding: 10px 12px; background: var(--surface2); border-radius: 8px; font-size: 11px; margin-bottom: 12px;">
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 8px;">
+            <span style="font-weight: 600; color: #fff;">Phát | Dừng</span>
+            <div id="shortcut-play-pause" tabindex="0" class="shortcut-input"
+              style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
+              K</div>
+          </div>
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 8px;">
+            <span style="font-weight: 600; color: #fff;">Đọc lại từ đầu</span>
+            <div id="shortcut-replay" tabindex="0" class="shortcut-input"
+              style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
+              R</div>
+          </div>
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 8px;">
+            <span style="font-weight: 600; color: #fff;">Âm lượng</span>
+            <div style="display: flex; gap: 12px;">
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <span
+                  style="font-size: 9px; color: var(--text-muted); width: 32px; text-align: right; display: inline-block;">Giảm</span>
+                <div id="shortcut-vol-down" tabindex="0" class="shortcut-input"
+                  style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <span
+                  style="font-size: 9px; color: var(--text-muted); width: 32px; text-align: right; display: inline-block;">Tăng</span>
+                <div id="shortcut-vol-up" tabindex="0" class="shortcut-input"
+                  style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 8px;">
+            <span style="font-weight: 600; color: #fff;">Tốc độ</span>
+            <div style="display: flex; gap: 12px;">
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <span
+                  style="font-size: 9px; color: var(--text-muted); width: 32px; text-align: right; display: inline-block;">Giảm</span>
+                <div id="shortcut-speed-down" tabindex="0" class="shortcut-input"
+                  style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
+                  [</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <span
+                  style="font-size: 9px; color: var(--text-muted); width: 32px; text-align: right; display: inline-block;">Tăng</span>
+                <div id="shortcut-speed-up" tabindex="0" class="shortcut-input"
+                  style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
+                  ]</div>
+              </div>
+            </div>
+          </div>
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 8px;">
+            <span style="font-weight: 600; color: #fff;">Chuyển đoạn</span>
+            <div style="display: flex; gap: 12px;">
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <span
+                  style="font-size: 9px; color: var(--text-muted); width: 32px; text-align: right; display: inline-block;">Trước</span>
+                <div id="shortcut-prev-seg" tabindex="0" class="shortcut-input"
+                  style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
+                  ,</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <span
+                  style="font-size: 9px; color: var(--text-muted); width: 32px; text-align: right; display: inline-block;">Sau</span>
+                <div id="shortcut-next-seg" tabindex="0" class="shortcut-input"
+                  style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
+                  .</div>
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 2px 0;">
+            <span style="font-weight: 600; color: #fff;">Chuyển chương</span>
+            <div style="display: flex; gap: 12px;">
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <span
+                  style="font-size: 9px; color: var(--text-muted); width: 32px; text-align: right; display: inline-block;">Trước</span>
+                <div id="shortcut-prev-chap" tabindex="0" class="shortcut-input"
+                  style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <span
+                  style="font-size: 9px; color: var(--text-muted); width: 32px; text-align: right; display: inline-block;">Sau</span>
+                <div id="shortcut-next-chap" tabindex="0" class="shortcut-input"
+                  style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="font-size: 9px; color: var(--text-muted); text-align: center; margin-top: 4px;">Nhấn vào ô và gõ
+            phím để đổi phím tắt. Phím Space luôn kích hoạt Phát/Dừng.</div>
         </div>
 
       </div>
@@ -2430,7 +2595,18 @@ https://microsoftedge.microsoft.com/addons/detail/mabgcghglcjheefkkicmkpmlhaooii
     </div>
 
   </div>
-  <div class="footer">Auto Đọc STV · Sử dụng <span id="footer-engine">Web Speech API</span></div>
+  <div class="footer">
+    <a class="github-btn" href="https://github.com/SpaceheroVN/DocTruyenSangTacViet" target="_blank"
+      title="Mã nguồn GitHub">
+      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path
+          d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
+        <path d="M9 18c-4.51 2-5-2-7-2" />
+      </svg>
+    </a>
+    <div>Đọc Truyện Cho STV · Sử dụng <span id="footer-engine" style="font-weight: 600;">Web Speech API</span></div>
+  </div>
   <div class="modal-overlay" id="confirm-modal">
     <div class="modal">
       <div class="modal-title" id="modal-title">Xác nhận</div>
@@ -2443,7 +2619,7 @@ https://microsoftedge.microsoft.com/addons/detail/mabgcghglcjheefkkicmkpmlhaooii
       </div>
     </div>
   </div>
-  <script src="popup_v0.3.1.js"></script>
+  <script type="module" src="bangdieukhien/chinh.js"></script>
 </body>
 
 </html>

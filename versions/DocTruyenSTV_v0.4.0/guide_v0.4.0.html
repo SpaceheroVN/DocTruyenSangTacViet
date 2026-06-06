@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Cài đặt & Thông tin - Auto Đọc STV</title>
+  <title>Cài đặt & Thông tin - Đọc Truyện Cho Sáng Tác Việt</title>
   <link rel="icon" href="icons/icon128.png" type="image/png">
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap"
     rel="stylesheet">
@@ -500,7 +500,7 @@
               hoặc tên bất kỳ rồi bấm <strong>Tạo</strong>.</li>
             <li>Nhìn sang cột menu bên trái màn hình, nhấp vào mục <strong>API Keys</strong>.</li>
             <li>Tìm dãy mã vừa được tạo, bấm vào <strong>Biểu tượng Copy</strong> (Hình 2 tờ giấy) ngay bên cạnh.</li>
-            <li>Mở lại bảng <strong>Auto Đọc STV</strong> > Chuyển sang Tab <strong>Cài đặt</strong> > Chọn Nguồn giọng
+            <li>Mở lại bảng <strong>Đọc Truyện Cho Sáng Tác Việt</strong> > Chuyển sang Tab <strong>Cài đặt</strong> > Chọn Nguồn giọng
               đọc là <strong>FPT.AI</strong> > Dán dãy mã vào ô trống và bấm <strong>Lưu API Key</strong>.</li>
           </ol>
         </div>
@@ -534,6 +534,46 @@
               ô thiết lập tương ứng trong tiện ích.</li>
           </ol>
         </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">3. Dành cho Google Cloud TTS</div>
+            <span class="badge warning">Cần thẻ VISA</span>
+          </div>
+          <div class="card-desc">Giọng đọc Google Cloud (đặc biệt các giọng Wavenet/Standard) rất đa dạng và đọc rất hay. 
+            Google cung cấp hạn mức miễn phí <strong>lên tới 1 triệu ký tự/tháng</strong> đối với giọng Standard, nhưng yêu cầu liên kết thẻ thanh toán để thiết lập Billing Account.</div>
+          <ol class="steps-list">
+            <li>Truy cập <a href="https://console.cloud.google.com/" target="_blank" class="link-text">Google Cloud Console</a> và đăng nhập bằng tài khoản Google. Tiến hành liên kết thẻ thanh toán nếu chưa có.</li>
+            <li>Tại thanh trên cùng, bấm chọn <strong>Select a project</strong> và tạo mới một dự án (VD: <code>Doc-Truyen-STV</code>).</li>
+            <li>Trên thanh tìm kiếm, gõ <strong>Cloud Text-to-Speech API</strong> và chọn nó. Bấm nút <strong>Enable (Bật)</strong>.</li>
+            <li>Truy cập menu bên trái: <strong>APIs & Services &gt; Credentials</strong>.</li>
+            <li>Nhấn <strong>Create Credentials</strong> trên cùng và chọn <strong>API key</strong>.</li>
+            <li>Copy API key vừa tạo, mở lại bảng <strong>Đọc Truyện Cho Sáng Tác Việt</strong> &gt; Tab <strong>Cài đặt</strong> &gt; Chọn nguồn <strong>Google Cloud TTS</strong>, dán khóa vào ô trống và bấm <strong>Lưu API Key</strong>.</li>
+          </ol>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">4. Dành cho Nguồn Khác (Tùy chỉnh API)</div>
+            <span class="badge recommend" style="background: rgba(196, 92, 138, 0.15); color: var(--accent2); border-color: rgba(196, 92, 138, 0.3);">Nâng cao</span>
+          </div>
+          <div class="card-desc">Phần này dành cho những bạn muốn tự kết nối với các nguồn giọng đọc khác trên mạng (Ví dụ: Zalo TTS, Viettel AI...) hoặc máy chủ do bạn tự tạo. Bạn chỉ cần "dạy" cho tiện ích biết cách giao tiếp với nguồn đọc đó.</div>
+          <ol class="steps-list">
+            <li>Nhập <strong>Đường dẫn (API URL)</strong> của nguồn đọc. Thường nhà cung cấp sẽ cho bạn biết nên chọn <strong>GET</strong> hay <strong>POST</strong>.</li>
+            <li>Tại <strong>Headers JSON</strong>, đây giống như "thẻ căn cước" để chứng minh bạn có quyền sử dụng (Ví dụ: mã xác thực API Key).
+              <div class="note"><strong>Ví dụ:</strong><br><code>{"apikey": "mã_bí_mật_của_bạn"}</code></div>
+            </li>
+            <li>Tại <strong>Body Template</strong>, đây là nơi bạn gửi nội dung cho họ đọc. Bạn hãy tạo sẵn một khung mẫu, tiện ích sẽ tự động chèn đoạn văn bản đang đọc vào đúng vị trí có chữ <code>{{van_ban}}</code>.
+              <div class="note"><strong>Ví dụ:</strong><br><code>{"text": "{{van_ban}}", "voice": "hn-quynhanh", "speed": 1}</code></div>
+            </li>
+            <li>Tại <strong>Audio Path</strong>, sau khi hệ thống kia đọc xong, họ sẽ trả kết quả về. Bạn cần chỉ đường cho tiện ích biết cái "Link âm thanh" nằm ở đâu trong gói kết quả đó.
+              <div class="note">
+                <div style="margin-bottom: 8px;"><strong>Ví dụ:</strong> Nếu kết quả trả về là <code>{"data": {"audioUrl": "https://..."}}</code>, bạn điền <code>data.audioUrl</code></div>
+                <div style="color: var(--warning);"><strong>Lưu ý:</strong> Nếu hệ thống kia trả về trực tiếp một file âm thanh nghe được luôn (Audio Blob), hãy <strong>Bỏ trống</strong> ô này.</div>
+              </div>
+            </li>
+          </ol>
+        </div>
       </section>
 
       <section id="tab-info" class="content-section">
@@ -544,7 +584,11 @@
           <div class="info-grid">
             <div class="info-row">
               <strong>Tên tiện ích</strong>
-              <span>Auto Đọc STV (Đọc Truyện Sáng Tác Việt)</span>
+              <span>Đọc Truyện Cho Sáng Tác Việt (Đọc Truyện Cho Sáng Tác Việt)</span>
+            </div>
+            <div class="info-row">
+              <strong>Mô tả</strong>
+              <span>Tự động đọc truyện trên Sáng Tác Việt. Hỗ trợ Web Speech, FPT.AI, Azure, Google Cloud TTS. (Unofficial)</span>
             </div>
             <div class="info-row">
               <strong>Tác giả</strong>
@@ -602,8 +646,8 @@ https://microsoftedge.microsoft.com/addons/detail/mabgcghglcjheefkkicmkpmlhaooii
               <div>
                 <strong>Đóng góp (Donate)</strong><br>
                 <span style="color: #fff;">Sự ủng hộ của bạn là động lực rất lớn. Nếu bạn thích, hãy</span> <a
-                  href="https://biolink.com.vn/autostv" target="_blank" class="link-donate">mời mình một ly cafe ❤️</a>
-                <span style="color: #fff;">nhé.</span>
+                  href="https://biolink.com.vn/autostv" target="_blank" class="link-donate">mời mình một ly cafe</a>
+                <span style="color: #fff;"> nhé.</span>
               </div>
             </div>
           </div>
@@ -613,7 +657,7 @@ https://microsoftedge.microsoft.com/addons/detail/mabgcghglcjheefkkicmkpmlhaooii
     </div>
   </main>
 
-  <script src="guide_v0.3.0.js"></script>
+  <script src="guide_v0.4.0.js"></script>
 </body>
 
 </html>

@@ -1,50 +1,7 @@
 import { CauHinh } from './quan_ly_cau_hinh.js';
 import { QuanLyThuVien } from './quan_ly_thu_vien.js';
 import { GiaoDienCaiDat } from './giao_dien_cai_dat.js';
-
-export function showConfirm(tieuDe, noiDung, hanhDongXacNhan) {
-    const modal = document.getElementById('confirm-modal');
-    const title = document.getElementById('modal-title');
-    const body = document.getElementById('modal-body');
-    const btnConfirm = document.getElementById('modal-confirm');
-    const btnCancel = document.getElementById('modal-cancel');
-    if (!modal || !title || !body || !btnConfirm || !btnCancel) return;
-
-    title.innerText = tieuDe;
-    body.innerText = noiDung;
-    modal.style.display = 'flex';
-
-    const btnConfirmMoi = btnConfirm.cloneNode(true);
-    btnConfirm.replaceWith(btnConfirmMoi);
-    const btnCancelMoi = btnCancel.cloneNode(true);
-    btnCancel.replaceWith(btnCancelMoi);
-
-    const dong = () => { modal.style.display = 'none'; };
-    btnConfirmMoi.addEventListener('click', () => { dong(); hanhDongXacNhan(); }, { once: true });
-    btnCancelMoi.addEventListener('click', dong, { once: true });
-}
-
-export function showToast(tinNhan, loai = 'info') {
-    let thongBao = document.getElementById('toast');
-    if (!thongBao) {
-        thongBao = document.createElement('div');
-        thongBao.id = 'toast';
-        thongBao.className = 'toast';
-        document.body.appendChild(thongBao);
-    }
-    
-    thongBao.className = `toast show toast-${loai}`;
-    let bieuTuong = '';
-    if (loai === 'success') bieuTuong = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
-    else if (loai === 'warning') bieuTuong = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
-    
-    thongBao.innerHTML = bieuTuong;
-    const spanText = document.createElement('span');
-    spanText.textContent = tinNhan;
-    thongBao.appendChild(spanText);
-    clearTimeout(thongBao.timeoutId);
-    thongBao.timeoutId = setTimeout(() => { thongBao.classList.remove('show'); }, 2500);
-}
+import { showToast, showConfirm } from './tien_ich.js';
 
 export const DieuKhienTrinhPhat = {
     idTabHienTai: null,
@@ -101,6 +58,54 @@ export const DieuKhienTrinhPhat = {
         document.body.style.opacity = '1';
     },
 
+    capNhatDanhSachGiong(engineId) {
+        const theChon = document.getElementById('voice-select');
+        const theThongTin = document.getElementById('info-voice');
+        if (!theChon) return;
+        const giaTriCu = CauHinh.lay('voiceIndex', true) || 0;
+
+        const taoOptions = (cacGiong) => {
+            theChon.innerHTML = cacGiong.map((ten, index) => {
+                const tenAnToan = ten.replace(/[&<>"'`=\/]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'}[s]));
+                return `<option value="${index}" ${index == giaTriCu ? 'selected' : ''}>${tenAnToan}</option>`;
+            }).join('');
+            GiaoDienCaiDat.capNhatGiaoDien('voice-select');
+            if (theThongTin) {
+                const selectedOpt = theChon.options[theChon.selectedIndex];
+                theThongTin.textContent = selectedOpt ? selectedOpt.text : 'Mặc định';
+            }
+        };
+
+        if (engineId === 'web') {
+            if (!this.idTabHienTai) return;
+            chrome.tabs.sendMessage(this.idTabHienTai, { hanhDong: 'layGiongDoc' }, phanHoi => {
+                if (chrome.runtime.lastError) return;
+                if (phanHoi && phanHoi.voices) {
+                    theChon.innerHTML = phanHoi.voices.map(v => {
+                        let ten = v.name.replace(/ - Vietnamese \(Vietnam\)/i, '').replace(/ \(Vietnam\)/i, '').replace(/Microsoft /i, 'MS ').replace(/Google /i, 'GG ');
+                        if (ten.length > 22) ten = ten.substring(0, 20) + '...';
+                        const tenAnToan = ten.replace(/[&<>"'`=\/]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'}[s]));
+                        const anToanIndex = String(v.index).replace(/[^0-9]/g, '');
+                        return `<option value="${anToanIndex}" ${anToanIndex == giaTriCu ? 'selected' : ''}>${tenAnToan}</option>`;
+                    }).join('');
+                    GiaoDienCaiDat.capNhatGiaoDien('voice-select');
+                    if (theThongTin) {
+                        const selectedOpt = theChon.options[theChon.selectedIndex];
+                        theThongTin.textContent = selectedOpt ? selectedOpt.text : 'Mặc định';
+                    }
+                }
+            });
+        } else if (engineId.startsWith('fpt_')) {
+            taoOptions(['Ban Mai (Nữ miền Bắc)', 'Lê Minh (Nam miền Bắc)', 'Thu Minh (Nữ miền Bắc)', 'Mỹ An (Nữ miền Trung)', 'Gia Huy (Nam miền Trung)', 'Lan Nhi (Nữ miền Nam)', 'Linh San (Nữ miền Nam)']);
+        } else if (engineId.startsWith('azure_')) {
+            taoOptions(['Hoài My (Nữ)', 'Nam Minh (Nam)']);
+        } else if (engineId.startsWith('gcp_')) {
+            taoOptions(['Neural2 A (Nữ)', 'Neural2 D (Nam)', 'Wavenet A (Nữ)', 'Wavenet B (Nam)', 'Wavenet C (Nữ)', 'Wavenet D (Nam)', 'Standard A (Nữ)', 'Standard B (Nam)', 'Standard C (Nữ)', 'Standard D (Nam)']);
+        } else {
+            if (theThongTin) theThongTin.textContent = 'Mặc định';
+        }
+    },
+
     yeuCauTrangThaiBanDau() {
         if (!this.idTabHienTai) return;
         chrome.tabs.sendMessage(this.idTabHienTai, { hanhDong: 'layThongTin' }, phanHoi => {
@@ -111,22 +116,8 @@ export const DieuKhienTrinhPhat = {
             if (phanHoi) this.capNhatThongTinTruyen(phanHoi);
         });
         
-        chrome.tabs.sendMessage(this.idTabHienTai, { hanhDong: 'layGiongDoc' }, phanHoi => {
-            if (chrome.runtime.lastError) return;
-            if (phanHoi && phanHoi.voices) {
-                const theChon = document.getElementById('voice-select');
-                if (!theChon) return;
-                const giaTriCu = CauHinh.lay('voiceIndex', true) || 0;
-                theChon.innerHTML = phanHoi.voices.map(v => {
-                    let ten = v.name.replace(/ - Vietnamese \(Vietnam\)/i, '').replace(/ \(Vietnam\)/i, '').replace(/Microsoft /i, 'MS ').replace(/Google /i, 'GG ');
-                    if (ten.length > 22) ten = ten.substring(0, 20) + '...';
-                    const tenAnToan = ten.replace(/[&<>"'`=\/]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'}[s]));
-                    const anToanIndex = String(v.index).replace(/[^0-9]/g, '');
-                    return `<option value="${anToanIndex}" ${anToanIndex == giaTriCu ? 'selected' : ''}>${tenAnToan}</option>`;
-                }).join('');
-                GiaoDienCaiDat.capNhatGiaoDien('voice-select');
-            }
-        });
+        const engineHienTai = CauHinh.lay('maydoc') || 'web';
+        this.capNhatDanhSachGiong(engineHienTai);
     },
 
     guiLenh(hanhDong, thamSoThem = {}) {
@@ -134,6 +125,78 @@ export const DieuKhienTrinhPhat = {
         chrome.tabs.sendMessage(this.idTabHienTai, { hanhDong: hanhDong, ...thamSoThem }, () => {
             if (chrome.runtime.lastError) {  }
         });
+    },
+
+    capNhatGiaoDienEngine(engineId) {
+        if (!engineId) return;
+        const badge = document.getElementById('tts-badge');
+        const footerEngine = document.getElementById('footer-engine');
+        const voiceTrigger = document.getElementById('custom-voice-trigger');
+        
+        let engineName = 'Web Speech API';
+        let isWeb = true;
+        let hasVoiceList = true;
+
+        if (engineId === 'web') {
+            engineName = 'Web TTS';
+            if(footerEngine) footerEngine.textContent = 'Web Speech API';
+        } else {
+            isWeb = false;
+            const customEngines = CauHinh.lay('customEngines') || [];
+            const matched = customEngines.find(e => e.id === engineId);
+            if (matched) {
+                engineName = matched.name;
+            } else if (engineId.startsWith('fpt_')) {
+                engineName = 'FPT.AI TTS';
+            } else if (engineId.startsWith('azure_')) {
+                engineName = 'Azure TTS';
+            } else if (engineId.startsWith('gcp_')) {
+                engineName = 'GCP TTS';
+            } else {
+                engineName = 'Custom TTS';
+            }
+            if(footerEngine) footerEngine.textContent = engineName;
+
+            if (!engineId.startsWith('fpt_') && !engineId.startsWith('azure_') && !engineId.startsWith('gcp_')) {
+                hasVoiceList = false;
+            }
+        }
+
+        if (badge) badge.textContent = engineName;
+
+        if (voiceTrigger && voiceTrigger.parentElement) {
+            voiceTrigger.parentElement.style.display = hasVoiceList ? 'block' : 'none';
+            const optionsRow = voiceTrigger.parentElement.parentElement;
+            if (optionsRow && optionsRow.classList.contains('options-row')) {
+                optionsRow.style.justifyContent = hasVoiceList ? 'flex-start' : 'flex-end';
+            }
+        }
+
+        const engineSelect = document.getElementById('engine-select');
+        if (engineSelect && engineSelect.value !== engineId) {
+            engineSelect.value = engineId;
+            if (window.GiaoDienCaiDat && typeof GiaoDienCaiDat.capNhatGiaoDien === 'function') {
+                GiaoDienCaiDat.capNhatGiaoDien('engine-select');
+            }
+        }
+
+        const volSlider = document.getElementById('vol-slider');
+        if (volSlider) {
+            const maxVol = engineId === 'web' ? 1.0 : 2.0;
+            volSlider.max = maxVol;
+            if (parseFloat(volSlider.value) > maxVol) {
+                volSlider.value = maxVol;
+                const volVal = document.getElementById('vol-val');
+                if (volVal) volVal.textContent = Math.round(maxVol * 100) + '%';
+                if (window.CauHinh) CauHinh.dat('volume', maxVol, true);
+                this.guiLenh('capNhatCaiDat');
+            }
+            if (window.GiaoDienCaiDat && typeof GiaoDienCaiDat.capNhatGiaoDien === 'function') {
+                GiaoDienCaiDat.capNhatGiaoDien('vol-slider');
+            }
+        }
+
+        this.capNhatDanhSachGiong(engineId);
     },
 
     capNhatTrangThaiPhat(trangThai) {
@@ -204,6 +267,10 @@ export const DieuKhienTrinhPhat = {
                 bar.style.transform = `scaleX(${trangThai.progress.current / trangThai.progress.total})`;
                 percent.textContent = phanTram + '%';
             }
+        }
+
+        if (trangThai.engine) {
+            this.capNhatGiaoDienEngine(trangThai.engine);
         }
     },
 
@@ -350,15 +417,18 @@ export const DieuKhienTrinhPhat = {
     },
 
     ganSuKien() {
-        document.getElementById('btn-play').addEventListener('click', () => {
+        document.getElementById('btn-play')?.addEventListener('click', () => {
             this.guiLenh('daoTrangThaiPhat');
-            document.getElementById('btn-play').classList.add('active');
-            setTimeout(() => document.getElementById('btn-play').classList.remove('active'), 200);
+            const btnPlay = document.getElementById('btn-play');
+            if (btnPlay) {
+                btnPlay.classList.add('active');
+                setTimeout(() => btnPlay.classList.remove('active'), 200);
+            }
         });
-        document.getElementById('btn-stop').addEventListener('click', () => this.guiLenh('dungPhat'));
-        document.getElementById('btn-next').addEventListener('click', () => this.guiLenh('chuongTiep'));
-        document.getElementById('btn-prev').addEventListener('click', () => this.guiLenh('chuongTruoc'));
-        document.getElementById('btn-replay').addEventListener('click', () => this.guiLenh('phatLai'));
+        document.getElementById('btn-stop')?.addEventListener('click', () => this.guiLenh('dungPhat'));
+        document.getElementById('btn-next')?.addEventListener('click', () => this.guiLenh('chuongTiep'));
+        document.getElementById('btn-prev')?.addEventListener('click', () => this.guiLenh('chuongTruoc'));
+        document.getElementById('btn-replay')?.addEventListener('click', () => this.guiLenh('phatLai'));
 
         const btnSave = document.getElementById('btn-save');
         if (btnSave) {
@@ -443,19 +513,14 @@ export const DieuKhienTrinhPhat = {
                     if (panel) panel.classList.add('active');
                 }
                 
-                if (typeof window.GiaoDienCaiDat !== 'undefined') {
-                    window.GiaoDienCaiDat.taiLaiDuLieuTuDongDung();
-                    window.GiaoDienCaiDat.taiLaiDuLieuMayDoc();
-                } else if (typeof GiaoDienCaiDat !== 'undefined') {
-                    GiaoDienCaiDat.taiLaiDuLieuTuDongDung();
-                    GiaoDienCaiDat.taiLaiDuLieuMayDoc();
-                }
+                GiaoDienCaiDat.taiLaiDuLieuTuDongDung();
+                GiaoDienCaiDat.taiLaiDuLieuMayDoc();
             });
         });
 
         const modal = document.getElementById('confirm-modal');
         if (modal) {
-            modal.addEventListener('click', e => { if(e.target === modal) modal.style.display = 'none'; });
+            modal.addEventListener('click', e => { if(e.target === modal) modal.classList.remove('show'); });
         }
 
         document.addEventListener('contextmenu', e => { if (e.target.tagName !== 'INPUT') e.preventDefault(); });

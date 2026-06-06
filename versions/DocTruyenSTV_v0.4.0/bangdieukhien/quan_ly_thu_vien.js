@@ -1,4 +1,5 @@
-import { showToast, showConfirm, DieuKhienTrinhPhat } from './dieu_khien_trinh_phat.js';
+import { DieuKhienTrinhPhat } from './dieu_khien_trinh_phat.js';
+import { showToast, showConfirm } from './tien_ich.js';
 
 export const QuanLyThuVien = {
     danhSachDoc: [],
@@ -206,11 +207,11 @@ export const QuanLyThuVien = {
                     showToast('Đã phục hồi dữ liệu thành công!', 'success');
                 });
             } catch (err) {
-                showToast('File không hợp lệ', 'danger');
+                showToast('File không hợp lệ', 'error');
             }
             e.target.value = '';
         }).catch(() => {
-            showToast('Lỗi đọc file', 'danger');
+            showToast('Lỗi đọc file', 'error');
             e.target.value = '';
         });
     },
@@ -267,9 +268,14 @@ export const QuanLyThuVien = {
         if (btnClear) btnClear.addEventListener('click', () => {
             showConfirm(
                 'Xác nhận xóa toàn bộ dữ liệu',
-                'Hành động này sẽ xóa vĩnh viễn:\n• Danh sách truyện đã lưu\n• Từ điển tùy chỉnh\n• Toàn bộ cài đặt\n\nKhông thể hoàn tác!',
+                'Hành động này sẽ xóa vĩnh viễn:\n• Danh sách truyện đã lưu\n• Từ điển tùy chỉnh\n• Toàn bộ cài đặt\n\n(API Key của bạn vẫn sẽ được giữ lại!)\n\nKhông thể hoàn tác!',
                 () => {
-                    chrome.storage.local.clear(() => {
+                    const keysToRemove = [
+                        'readingList', 'customDict', 'stopTime', 'stopRealtimeTarget', 
+                        'stopAfterChapters', 'customStopConfig', 'sleepTargetTimestamp',
+                        'last_active_state', 'miniPlayerMode', 'isMiniPlayerMinimized', 'customShortcuts'
+                    ];
+                    chrome.storage.local.remove(keysToRemove, () => {
                         this.taiDanhSachDoc();
                         showToast('Đã xóa trắng dữ liệu', 'success');
                     });

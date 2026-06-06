@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Đọc Truyện Cho STV",
-  "version": "0.3.3",
-  "description": "Tự động đọc truyện trên Sáng Tác Việt. Hỗ trợ Web Speech, FPT.AI, Azure, Google Cloud TTS.",
+  "version": "0.4.0",
+  "description": "Tự động đọc truyện trên Sáng Tác Việt. Hỗ trợ Web Speech, FPT.AI, Azure, Google Cloud TTS. (Unofficial)",
   "permissions": [
     "activeTab",
     "scripting",
@@ -12,12 +12,13 @@
   "host_permissions": [
     "https://sangtacviet.com/*",
     "https://www.sangtacviet.com/*",
-    "https://api.fpt.ai/*",
+    "https://*.fpt.ai/*",
     "https://*.tts.speech.microsoft.com/*",
-    "https://texttospeech.googleapis.com/*"
+    "https://texttospeech.googleapis.com/*",
+    "https://*/*"
   ],
   "content_security_policy": {
-    "extension_pages": "default-src 'self'; script-src 'self'; object-src 'none'; connect-src https://api.fpt.ai https://*.tts.speech.microsoft.com https://texttospeech.googleapis.com; img-src 'self' https: data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; frame-ancestors 'none';"
+    "extension_pages": "default-src 'self'; script-src 'self'; object-src 'none'; connect-src https: http: data: blob:; img-src 'self' https: data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; frame-ancestors 'none';"
   },
   "icons": {
     "16": "icons/icon16.png",
@@ -26,8 +27,8 @@
     "128": "icons/icon128.png"
   },
   "action": {
-    "default_popup": "popup_v0.3.3.html",
-    "default_title": "Đọc Truyện STV",
+    "default_popup": "popup_v0.4.0.html",
+    "default_title": "Đọc Truyện Cho Sáng Tác Việt",
     "default_icon": {
       "16": "icons/icon16.png",
       "32": "icons/icon32.png",
@@ -36,7 +37,7 @@
     }
   },
   "background": {
-    "service_worker": "chayngam_v0.3.3.js"
+    "service_worker": "chayngam_v0.4.0.js"
   },
   "content_scripts": [
     {
@@ -46,8 +47,8 @@
       ],
       "js": [
         "noidung/cau_hinh.js",
-      "noidung/xu_ly.js",
-      "noidung/giao_dien.js"
+        "noidung/xu_ly.js",
+        "noidung/giao_dien.js"
       ],
       "run_at": "document_idle"
     }

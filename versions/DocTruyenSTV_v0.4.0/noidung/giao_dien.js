@@ -119,7 +119,7 @@ DocTruyenSTV_Ext.GiaoDienSTV = {
         player.innerHTML = `
             <div class="stv-mp-drag" id="stv-mp-drag-handle">
                 <span class="stv-mp-status-dot" id="stv-mp-dot"></span>
-                <span class="stv-mp-lbl">Auto Đọc STV</span>
+                <span class="stv-mp-lbl">Đọc Truyện Cho Sáng Tác Việt</span>
                 <button class="stv-mp-min-btn" id="stv-mp-minimize" title="Thu nhỏ">
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
                 </button>
@@ -153,6 +153,19 @@ DocTruyenSTV_Ext.GiaoDienSTV = {
         bubble.classList.add('stv-mp-hidden');
         bubble.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>';
         document.body.appendChild(bubble);
+
+        chrome.storage.local.get(['mpLeft', 'mpBottom'], data => {
+            if (data.mpLeft !== undefined) {
+                player.style.left = data.mpLeft;
+                bubble.style.left = data.mpLeft;
+                player.style.right = 'auto';
+                bubble.style.right = 'auto';
+            }
+            if (data.mpBottom !== undefined) {
+                player.style.bottom = data.mpBottom;
+                bubble.style.bottom = data.mpBottom;
+            }
+        });
 
         this.ganSuKien();
     },
@@ -222,7 +235,15 @@ DocTruyenSTV_Ext.GiaoDienSTV = {
             bongBong.style.right = 'auto';
         };
 
-        const ketThucKeo = () => { dangKeo = false; };
+        const ketThucKeo = () => {
+            if (dangKeo) {
+                dangKeo = false;
+                chrome.storage.local.set({ 
+                    mpLeft: bangDieuKhien.style.left, 
+                    mpBottom: bangDieuKhien.style.bottom 
+                });
+            }
+        };
 
         tayCam.addEventListener('mousedown', batDauKeo);
         tayCam.addEventListener('touchstart', batDauKeo, { passive: false });
@@ -285,7 +306,24 @@ DocTruyenSTV_Ext.GiaoDienSTV = {
         }
 
         const theCongCu = document.getElementById('stv-mp-engine-badge');
-        if (theCongCu) theCongCu.textContent = DocTruyenSTV_Ext.TrinhPhatAmThanh.layCongCuThucTe().toUpperCase();
+        if (theCongCu) {
+            let congCuStr = DocTruyenSTV_Ext.TrinhPhatAmThanh.layCongCuThucTe();
+            if (congCuStr === 'web') {
+                theCongCu.textContent = 'WEB';
+            } else if (congCuStr.startsWith('fpt_') || congCuStr.startsWith('azure_') || congCuStr.startsWith('gcp_') || congCuStr.startsWith('khac_') || /^\d{13}$/.test(congCuStr)) {
+                chrome.storage.local.get('customEngines', (data) => {
+                    let engines = data.customEngines || [];
+                    let engine = engines.find(e => String(e.id) === String(congCuStr));
+                    if (engine && engine.name) {
+                        theCongCu.textContent = engine.name.toUpperCase();
+                    } else {
+                        theCongCu.textContent = congCuStr.toUpperCase();
+                    }
+                });
+            } else {
+                theCongCu.textContent = congCuStr.toUpperCase();
+            }
+        }
 
         if (this.dangThuNhoMiniPlayer) {
             bangDieuKhien.classList.add('stv-mp-hidden');
@@ -321,16 +359,19 @@ DocTruyenSTV_Ext.ChinhSTV = {
         
         setTimeout(() => DocTruyenSTV_Ext.LuuTruSTV.donDepCacheCu(), 3000);
 
-        chrome.storage.sync.get(['batphimtat'], duLieu => {
-            if (duLieu.batphimtat !== undefined) this.batPhimTat = duLieu.batphimtat;
-        });
-        
         this.phimTatTCH = { 
             playPause: 'K', replay: 'R', prevChap: 'ArrowLeft', nextChap: 'ArrowRight',
-            volUp: 'ArrowUp', volDown: 'ArrowDown', speedUp: ']', speedDown: '[', nextSeg: '.', prevSeg: ',' 
+            volUp: 'ArrowUp', volDown: 'ArrowDown', speedUp: 'Ctrl+ArrowRight', speedDown: 'Ctrl+ArrowLeft', nextSeg: '.', prevSeg: ',' 
         };
-        chrome.storage.local.get('customShortcuts', duLieu => {
+
+        chrome.storage.local.get(['customShortcuts', 'customStopConfig'], duLieu => {
             if (duLieu.customShortcuts) this.phimTatTCH = duLieu.customShortcuts;
+            if (duLieu.customStopConfig) this.cauHinhDungTuyChon = duLieu.customStopConfig;
+            
+            chrome.storage.sync.get(['batphimtat'], syncData => {
+                if (syncData.batphimtat !== undefined) this.batPhimTat = syncData.batphimtat;
+                document.addEventListener('keydown', suKien => this.xuLyPhimTat(suKien));
+            });
         });
 
         chrome.storage.onChanged.addListener((thayDoi, vungChon) => {
@@ -351,8 +392,6 @@ DocTruyenSTV_Ext.ChinhSTV = {
             this.xuLyTinNhan(tinNhan, guiPhanHoi);
             return true;
         });
-
-        document.addEventListener('keydown', suKien => this.xuLyPhimTat(suKien));
         
         window.addEventListener('pagehide', () => {
             try {
@@ -539,37 +578,59 @@ DocTruyenSTV_Ext.ChinhSTV = {
         if (key === ' ') key = 'Space';
         if (key.length === 1) key = key.toUpperCase();
         
-        if (key === 'Escape') {
+        let keyStr = key;
+        if (suKien.ctrlKey) keyStr = 'Ctrl+' + keyStr;
+        if (suKien.altKey) keyStr = 'Alt+' + keyStr;
+        if (suKien.shiftKey && keyStr.length > 1 && !keyStr.includes('+')) keyStr = 'Shift+' + keyStr;
+        
+        if (keyStr === 'Escape') {
             suKien.preventDefault();
             DocTruyenSTV_Ext.TrinhPhatAmThanh.dungPhat();
             return;
         }
         
-        if (key === 'Space' || key === this.phimTatTCH.playPause) {
+        if (keyStr === 'Space' || keyStr === this.phimTatTCH.playPause) {
             suKien.preventDefault();
             DocTruyenSTV_Ext.TrinhPhatAmThanh.daoTrangThaiPhat();
-        } else if (key === this.phimTatTCH.prevChap) {
+        } else if (keyStr === this.phimTatTCH.prevChap) {
             suKien.preventDefault();
             DocTruyenSTV_Ext.TrinhPhatAmThanh.phatChuongTruoc();
             this.hienThongBaoToast('Đang chuyển chương trước...');
-        } else if (key === this.phimTatTCH.nextChap) {
+        } else if (keyStr === this.phimTatTCH.nextChap) {
             suKien.preventDefault();
             DocTruyenSTV_Ext.TrinhPhatAmThanh.phatChuongTiepTheo();
             this.hienThongBaoToast('Đang chuyển chương sau...');
-        } else if (key === this.phimTatTCH.replay) {
+        } else if (keyStr === this.phimTatTCH.speedDown) {
+            suKien.preventDefault();
+            chrome.storage.sync.get(['speed'], data => {
+                let s = Math.round(((data.speed !== undefined ? data.speed : 1) - 0.1) * 10) / 10;
+                if (s < 0.1) s = 0.1;
+                chrome.storage.sync.set({ speed: s });
+                this.hienThongBaoToast(`Tốc độ: ${s}x`);
+            });
+        } else if (keyStr === this.phimTatTCH.speedUp) {
+            suKien.preventDefault();
+            chrome.storage.sync.get(['speed'], data => {
+                let s = Math.round(((data.speed !== undefined ? data.speed : 1) + 0.1) * 10) / 10;
+                if (s > 3.0) s = 3.0;
+                chrome.storage.sync.set({ speed: s });
+                this.hienThongBaoToast(`Tốc độ: ${s}x`);
+            });
+        } else if (keyStr === this.phimTatTCH.replay) {
             suKien.preventDefault();
             DocTruyenSTV_Ext.TrinhPhatAmThanh.dungPhat();
             DocTruyenSTV_Ext.TrinhPhatAmThanh.batDauPhat(0);
-        } else if (key === this.phimTatTCH.volUp) {
+        } else if (keyStr === this.phimTatTCH.volUp) {
             suKien.preventDefault();
             chrome.storage.sync.get(['volume'], data => {
                 let v = Math.round(((data.volume !== undefined ? data.volume : 1) + 0.1) * 10) / 10;
-                const maxVol = DocTruyenSTV_Ext.TrinhPhatAmThanh.congCu === 'web' ? 1.0 : 2.0;
+                let c = DocTruyenSTV_Ext.TrinhPhatAmThanh.layCongCuThucTe();
+                const maxVol = (c === 'web' || c === 'auto') ? 1.0 : 2.0;
                 if (v > maxVol) v = maxVol;
                 chrome.storage.sync.set({ volume: v });
                 this.hienThongBaoToast(`Âm lượng: ${Math.round(v * 100)}%`);
             });
-        } else if (key === this.phimTatTCH.volDown) {
+        } else if (keyStr === this.phimTatTCH.volDown) {
             suKien.preventDefault();
             chrome.storage.sync.get(['volume'], data => {
                 let v = Math.round(((data.volume !== undefined ? data.volume : 1) - 0.1) * 10) / 10;
@@ -577,23 +638,7 @@ DocTruyenSTV_Ext.ChinhSTV = {
                 chrome.storage.sync.set({ volume: v });
                 this.hienThongBaoToast(`Âm lượng: ${Math.round(v * 100)}%`);
             });
-        } else if (key === this.phimTatTCH.speedUp) {
-            suKien.preventDefault();
-            chrome.storage.sync.get(['speed'], data => {
-                let s = Math.round(((data.speed !== undefined ? data.speed : 1) + 0.1) * 10) / 10;
-                if (s > 3.0) s = 3.0;
-                chrome.storage.sync.set({ speed: s });
-                this.hienThongBaoToast(`Tốc độ: ${s.toFixed(1)}x`);
-            });
-        } else if (key === this.phimTatTCH.speedDown) {
-            suKien.preventDefault();
-            chrome.storage.sync.get(['speed'], data => {
-                let s = Math.round(((data.speed !== undefined ? data.speed : 1) - 0.1) * 10) / 10;
-                if (s < 0.5) s = 0.5;
-                chrome.storage.sync.set({ speed: s });
-                this.hienThongBaoToast(`Tốc độ: ${s.toFixed(1)}x`);
-            });
-        } else if (key === this.phimTatTCH.nextSeg) {
+        } else if (keyStr === this.phimTatTCH.nextSeg) {
             suKien.preventDefault();
             DocTruyenSTV_Ext.TrinhPhatAmThanh.nhayDoan('tiep');
             const pt = DocTruyenSTV_Ext.TrinhPhatAmThanh;
@@ -640,7 +685,8 @@ DocTruyenSTV_Ext.ChinhSTV = {
                 const observer = new MutationObserver(() => {
                     if (!daGoi) thuGoi();
                 });
-                observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+                const targetNode = document.querySelector('.contentbox') || document.body;
+                observer.observe(targetNode, { childList: true, subtree: true, characterData: true });
                 
                 setTimeout(() => { if(!daGoi) { daGoi = true; callback(); } observer.disconnect(); }, 15000);
             };

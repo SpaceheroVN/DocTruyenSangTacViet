@@ -2,6 +2,41 @@
 
 const cac_tien_trinh_dang_tai = new Map();
 
+let _db_instance = null;
+let _db_promise = null;
+
+function mo_co_so_du_lieu() {
+    if (_db_instance) return Promise.resolve(_db_instance);
+    if (_db_promise) return _db_promise;
+
+    _db_promise = new Promise((dong_y, tu_choi) => {
+        const yeu_cau = indexedDB.open('STV_TTS_Cache', 1);
+        yeu_cau.onupgradeneeded = (su_kien) => {
+            if (!su_kien.target.result.objectStoreNames.contains('audioBlobs')) {
+                su_kien.target.result.createObjectStore('audioBlobs');
+            }
+        };
+        yeu_cau.onsuccess = (su_kien) => {
+            _db_instance = su_kien.target.result;
+            _db_instance.onclose = () => { _db_instance = null; _db_promise = null; };
+            dong_y(_db_instance);
+        };
+        yeu_cau.onerror = (su_kien) => {
+            _db_promise = null;
+            tu_choi(su_kien.target.error);
+        };
+    });
+    return _db_promise;
+}
+
+function luu_vao_db(db, khoa, blob) {
+    return new Promise((dong_y, tu_choi) => {
+        const giao_dich = db.transaction('audioBlobs', 'readwrite');
+        giao_dich.objectStore('audioBlobs').put({ blob: blob, timestamp: Date.now() }, khoa);
+        giao_dich.oncomplete = () => dong_y();
+        giao_dich.onerror = (su_kien) => tu_choi(su_kien.target.error);
+    });
+}
 self.addEventListener('activate', () => {
     for (const [maYeuCau, duLieu] of cac_tien_trinh_dang_tai.entries()) {
         if (duLieu.bo_dieu_khien) duLieu.bo_dieu_khien.abort();
@@ -36,15 +71,22 @@ async function tai_tu_fpt(van_ban, cau_hinh, tin_hieu_huy) {
         signal: tin_hieu_huy
     });
     
-    if (!phan_hoi.ok) throw new Error('Lỗi FPT');
+    if (!phan_hoi.ok) throw new Error('Lỗi FPT: ' + phan_hoi.status);
     const ket_qua = await phan_hoi.json();
-    if (ket_qua.error) throw new Error(ket_qua.message);
+    if (ket_qua.error && ket_qua.error !== 0 && ket_qua.error !== '0') throw new Error(ket_qua.message || 'Lỗi FPT');
+    if (ket_qua.success === 'false' || ket_qua.success === false) throw new Error(ket_qua.message || 'Lỗi FPT');
     
-    for (let i = 0; i < 20; i++) {
+    let async_link = ket_qua.async;
+    if (!async_link && ket_qua.success && ket_qua.message && ket_qua.message.startsWith('http')) {
+        async_link = ket_qua.message;
+    }
+    if (!async_link) throw new Error('Không nhận được link audio từ FPT');
+    
+    for (let i = 0; i < 10; i++) {
         if (tin_hieu_huy.aborted) throw new DOMException('DaHuy', 'AbortError');
         const delay = Math.min(500 * Math.pow(1.5, i), 5000);
         await sleep(delay, tin_hieu_huy);
-        const kiem_tra = await fetch(ket_qua.async, { signal: tin_hieu_huy }).catch(e => {
+        const kiem_tra = await fetch(async_link, { signal: tin_hieu_huy }).catch(e => {
             if (e.name === 'AbortError') throw e;
             throw new Error('Lỗi mạng FPT: ' + e.message);
         });
@@ -73,8 +115,8 @@ async function tai_tu_fpt(van_ban, cau_hinh, tin_hieu_huy) {
 }
 
 async function tai_tu_gcp(van_ban, cau_hinh, tin_hieu_huy) {
-    const cac_giong = ['vi-VN-Wavenet-A', 'vi-VN-Wavenet-B', 'vi-VN-Wavenet-C', 'vi-VN-Wavenet-D', 'vi-VN-Standard-A', 'vi-VN-Standard-B', 'vi-VN-Standard-C', 'vi-VN-Standard-D'];
-    const giong = cac_giong[cau_hinh.chi_so_giong] || 'vi-VN-Wavenet-A';
+    const cac_giong = ['vi-VN-Neural2-A', 'vi-VN-Neural2-D', 'vi-VN-Wavenet-A', 'vi-VN-Wavenet-B', 'vi-VN-Wavenet-C', 'vi-VN-Wavenet-D', 'vi-VN-Standard-A', 'vi-VN-Standard-B', 'vi-VN-Standard-C', 'vi-VN-Standard-D'];
+    const giong = cac_giong[cau_hinh.chi_so_giong] || 'vi-VN-Neural2-A';
     const toc_do_an_toan = Number(cau_hinh.toc_do) || 1;
     
     const body = {
@@ -130,13 +172,68 @@ async function tai_tu_azure(van_ban, cau_hinh, tin_hieu_huy) {
     return await phan_hoi.blob();
 }
 
+async function tai_tu_khac(van_ban, cau_hinh, tin_hieu_huy, id_cong_cu) {
+    const engine = cau_hinh.customEngines.find(e => String(e.id) === String(id_cong_cu));
+    if (!engine) throw new Error('Không tìm thấy cấu hình engine custom');
+
+    const van_ban_an_toan = van_ban.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r');
+    let bodyStr = engine.bodyTemplate || '';
+    bodyStr = bodyStr.replace(/\{\{van_ban\}\}/g, van_ban_an_toan);
+    bodyStr = bodyStr.replace(/\{\{toc_do\}\}/g, cau_hinh.toc_do);
+
+    let headersObj = {};
+    if (engine.headers) {
+        try { headersObj = JSON.parse(engine.headers); } catch(e) {}
+    }
+
+    const options = {
+        method: engine.method || 'POST',
+        headers: headersObj,
+        signal: tin_hieu_huy
+    };
+    if (engine.method !== 'GET' && engine.method !== 'HEAD' && bodyStr) {
+        options.body = bodyStr;
+    }
+
+    const phan_hoi = await fetch(engine.url, options);
+    if (!phan_hoi.ok) throw new Error(`Lỗi HTTP Custom API: ${phan_hoi.status}`);
+
+    const audioPath = (engine.audioPath || '').trim();
+    if (!audioPath) return await phan_hoi.blob();
+
+    const ket_qua = await phan_hoi.json();
+    let val = ket_qua;
+    const parts = audioPath.split('.');
+    for (const p of parts) {
+        if (val === undefined || val === null) break;
+        val = val[p];
+    }
+
+    if (!val) throw new Error('Không tìm thấy audio tại đường dẫn ' + audioPath);
+
+    if (String(val).startsWith('http://') || String(val).startsWith('https://')) {
+        const res2 = await fetch(val, { signal: tin_hieu_huy });
+        if (!res2.ok) throw new Error('Lỗi tải audio từ URL: ' + res2.status);
+        return await res2.blob();
+    } else {
+        let base64Data = String(val);
+        if (base64Data.startsWith('data:')) base64Data = base64Data.split(',')[1];
+        const binaryStr = atob(base64Data);
+        const len = binaryStr.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) bytes[i] = binaryStr.charCodeAt(i);
+        return new Blob([bytes], { type: 'audio/mpeg' });
+    }
+}
+
 async function lay_cau_hinh_api() {
-    const du_lieu = await chrome.storage.local.get(['fpt_key', 'azure_key', 'azure_region', 'gcp_key']);
+    const du_lieu = await chrome.storage.local.get(['fpt_key', 'azure_key', 'azure_region', 'gcp_key', 'customEngines']);
     return {
         khoa_fpt: (du_lieu.fpt_key || '').replace(/[\x00-\x1F\x7F\s]/g, '').slice(0, 200),
         khoa_azure: (du_lieu.azure_key || '').replace(/[\x00-\x1F\x7F\s]/g, '').slice(0, 200),
         vung_azure: du_lieu.azure_region || 'southeastasia',
-        khoa_gcp: (du_lieu.gcp_key || '').replace(/[\x00-\x1F\x7F\s]/g, '').slice(0, 200)
+        khoa_gcp: (du_lieu.gcp_key || '').replace(/[\x00-\x1F\x7F\s]/g, '').slice(0, 200),
+        customEngines: du_lieu.customEngines || []
     };
 }
 
@@ -145,9 +242,24 @@ async function tai_am_thanh(van_ban, cong_cu, chi_so_giong, toc_do, tin_hieu_huy
     cau_hinh.chi_so_giong = chi_so_giong;
     cau_hinh.toc_do = toc_do;
     
-    if (cong_cu === 'fpt') return await tai_tu_fpt(van_ban, cau_hinh, tin_hieu_huy);
-    if (cong_cu === 'azure') return await tai_tu_azure(van_ban, cau_hinh, tin_hieu_huy);
-    if (cong_cu === 'gcp') return await tai_tu_gcp(van_ban, cau_hinh, tin_hieu_huy);
+    let enginePrefix = cong_cu;
+    if (cong_cu.startsWith('fpt_') || cong_cu.startsWith('azure_') || cong_cu.startsWith('gcp_')) {
+        const engine = cau_hinh.customEngines.find(e => String(e.id) === String(cong_cu));
+        if (engine) {
+            enginePrefix = engine.type;
+            if (enginePrefix === 'fpt') cau_hinh.khoa_fpt = engine.apiKey;
+            if (enginePrefix === 'azure') {
+                cau_hinh.khoa_azure = engine.apiKey;
+                if (engine.region) cau_hinh.vung_azure = engine.region;
+            }
+            if (enginePrefix === 'gcp') cau_hinh.khoa_gcp = engine.apiKey;
+        }
+    }
+
+    if (enginePrefix === 'fpt') return await tai_tu_fpt(van_ban, cau_hinh, tin_hieu_huy);
+    if (enginePrefix === 'azure') return await tai_tu_azure(van_ban, cau_hinh, tin_hieu_huy);
+    if (enginePrefix === 'gcp') return await tai_tu_gcp(van_ban, cau_hinh, tin_hieu_huy);
+    if (enginePrefix.startsWith('khac_')) return await tai_tu_khac(van_ban, cau_hinh, tin_hieu_huy, cong_cu);
     throw new Error('Công cụ không hợp lệ');
 }
 
@@ -162,6 +274,8 @@ chrome.runtime.onMessage.addListener((tin_nhan, nguoi_gui, gui_phan_hoi) => {
         try {
             if (!new URL(nguoi_gui.tab.url).hostname.endsWith('sangtacviet.com')) return false;
         } catch(e) { return false; }
+    } else if (nguoi_gui.id !== chrome.runtime.id) {
+        return false;
     }
 
     if (tin_nhan.hanhDong === 'taiAmThanh') {
@@ -213,6 +327,8 @@ chrome.runtime.onMessage.addListener((tin_nhan, nguoi_gui, gui_phan_hoi) => {
             cac_tien_trinh_dang_tai.get(id_the).bo_dieu_khien.abort();
             cac_tien_trinh_dang_tai.delete(id_the);
         }
+    } else if (tin_nhan.hanhDong === 'thayDoiTrangThai' || tin_nhan.hanhDong === 'capNhatAnhBia') {
+        chrome.runtime.sendMessage(tin_nhan).catch(() => {});
     }
 });
 
@@ -231,39 +347,3 @@ chrome.tabs.onUpdated.addListener((id_the, thong_tin) => {
         }
     }
 });
-
-let _db_instance = null;
-let _db_promise = null;
-
-function mo_co_so_du_lieu() {
-    if (_db_instance) return Promise.resolve(_db_instance);
-    if (_db_promise) return _db_promise;
-
-    _db_promise = new Promise((dong_y, tu_choi) => {
-        const yeu_cau = indexedDB.open('STV_TTS_Cache', 1);
-        yeu_cau.onupgradeneeded = (su_kien) => {
-            if (!su_kien.target.result.objectStoreNames.contains('audioBlobs')) {
-                su_kien.target.result.createObjectStore('audioBlobs');
-            }
-        };
-        yeu_cau.onsuccess = (su_kien) => {
-            _db_instance = su_kien.target.result;
-            _db_instance.onclose = () => { _db_instance = null; _db_promise = null; };
-            dong_y(_db_instance);
-        };
-        yeu_cau.onerror = (su_kien) => {
-            _db_promise = null;
-            tu_choi(su_kien.target.error);
-        };
-    });
-    return _db_promise;
-}
-
-function luu_vao_db(db, khoa, blob) {
-    return new Promise((dong_y, tu_choi) => {
-        const giao_dich = db.transaction('audioBlobs', 'readwrite');
-        giao_dich.objectStore('audioBlobs').put({ blob: blob, timestamp: Date.now() }, khoa);
-        giao_dich.oncomplete = () => dong_y();
-        giao_dich.onerror = (su_kien) => tu_choi(su_kien.target.error);
-    });
-}
