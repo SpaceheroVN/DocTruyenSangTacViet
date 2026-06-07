@@ -43,6 +43,7 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
     doiTuongAmThanh: null,
     phatNgonHienTai: null,
     duongDanBoNhoDem: null,
+    _preloadQueue: [],
 
     dongHoGiamSat: null,
     dongHoDuyTri: null,
@@ -756,6 +757,44 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
         return this.doiTuongAmThanh;
     },
 
+    _damBaoTaiTruoc(idLuot, hienTaiDoan, hienTaiCau, soLuong) {
+        if (this.idLuotPhat !== idLuot || !this.dangPhat) return;
+        if (!this._preloadQueue) this._preloadQueue = [];
+        
+        this._preloadQueue = this._preloadQueue.filter(p => p.idLuot === idLuot);
+        
+        let duyetDoan = hienTaiDoan;
+        let duyetCau = hienTaiCau;
+        let cacCauHienTai = DocTruyenSTV_Ext.PhanTichSTV.chiaCauNho(this.cacDoan[duyetDoan].text, 500);
+        
+        while (this._preloadQueue.length < soLuong) {
+            duyetCau++;
+            if (duyetCau >= cacCauHienTai.length) {
+                duyetDoan++;
+                while (duyetDoan < this.cacDoan.length && !this.cacDoan[duyetDoan].text) {
+                    duyetDoan++;
+                }
+                if (duyetDoan >= this.cacDoan.length) break;
+                cacCauHienTai = DocTruyenSTV_Ext.PhanTichSTV.chiaCauNho(this.cacDoan[duyetDoan].text, 500);
+                duyetCau = 0;
+            }
+            if (duyetCau >= cacCauHienTai.length) continue;
+            
+            const chuoi = cacCauHienTai[duyetCau];
+            const daCo = this._preloadQueue.find(p => p.doanIndex === duyetDoan && p.cauIndex === duyetCau);
+            if (!daCo) {
+                const khoa = DocTruyenSTV_Ext.PhanTichSTV.taoKhoaLuuTru(chuoi, this.congCu, this.chiSoGiong, this.tocDo);
+                this._preloadQueue.push({
+                    doanIndex: duyetDoan,
+                    cauIndex: duyetCau,
+                    idLuot: idLuot,
+                    text: chuoi,
+                    promise: this.taiAmThanhTrucTiep(chuoi, khoa).catch(e => ({ error: e }))
+                });
+            }
+        }
+    },
+
     async phatDoanAPI() {
         while (this.chiSoHienTai < this.cacDoan.length && !this.cacDoan[this.chiSoHienTai].text) {
             this.chiSoHienTai++;
@@ -785,11 +824,16 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
             const chuoi = cacCau[i];
             const khoa = DocTruyenSTV_Ext.PhanTichSTV.taoKhoaLuuTru(chuoi, this.congCu, this.chiSoGiong, this.tocDo);
 
+            this._damBaoTaiTruoc(idLuot, this.chiSoHienTai, i, 2);
+
             let blob;
             try {
                 let promiseTai;
-                if (this._preload && this._preload.doanIndex === this.chiSoHienTai && this._preload.cauIndex === i && this._preload.idLuot === idLuot) {
-                    promiseTai = this._preload.promise;
+                if (!this._preloadQueue) this._preloadQueue = [];
+                const qIdx = this._preloadQueue.findIndex(p => p.doanIndex === this.chiSoHienTai && p.cauIndex === i && p.idLuot === idLuot);
+                if (qIdx !== -1) {
+                    promiseTai = this._preloadQueue[qIdx].promise;
+                    this._preloadQueue.splice(qIdx, 1);
                 } else {
                     promiseTai = this.taiAmThanhTrucTiep(chuoi, khoa);
                 }
@@ -806,8 +850,70 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
                 
                 if (blob && blob.error) throw blob.error;
             } catch (l) {
-                this._xuLyLoiAPI(l, idLuot);
-                return;
+                const msg = (l.message || '').toLowerCase();
+                const laLoiQuota = msg.includes('quota') || msg.includes('429') || msg.includes('401') || msg.includes('403') || msg.includes('unauthorized') || msg.includes('forbidden') || msg.includes('exceeded');
+                const laLoiKenh = msg.includes('message channel') || msg.includes('receiving end does not exist') || msg.includes('could not establish connection') || msg.includes('extension context');
+                
+                if (laLoiQuota || laLoiKenh) {
+                    this._xuLyLoiAPI(l, idLuot);
+                    return;
+                }
+
+                const laLoiTimeout = msg.includes('hết thời gian') || msg.includes('timeout') || msg.includes('render');
+                if (laLoiTimeout || this.thayNhanhWeb !== 'off') {
+                    if (this.thayNhanhWeb === 'off') {
+                        this._xuLyLoiAPI(l, idLuot);
+                        return;
+                    }
+                    
+                    console.warn(`[DocTruyenSTV] Lỗi nạp câu (đoạn ${this.chiSoHienTai}, câu ${i}) — dùng Web Speech thay thế:`, msg);
+                    this.dangTai = false;
+                    this.dangPhatTamWeb = true;
+                    this.PhatTinNhanTrangThai();
+                    
+                    await new Promise((resolve) => {
+                        const u = new SpeechSynthesisUtterance(chuoi);
+                        u.lang = 'vi-VN';
+                        u.rate = this.tocDo;
+                        u.pitch = 1.0;
+                        u.volume = Math.min(this.amLuong, 1.0);
+                        const dsGiong = window.speechSynthesis.getVoices();
+                        const giong = dsGiong.find(v => v.lang === 'vi-VN' && v.name.includes('Google')) || dsGiong.find(v => v.lang === 'vi-VN' && v.name.includes('Microsoft'));
+                        if (giong) u.voice = giong;
+                        
+                        let daResolve = false;
+                        const ketThuc = () => { if (!daResolve) { daResolve = true; resolve(); } };
+                        u.onend = ketThuc;
+                        u.onerror = ketThuc;
+                        window.speechSynthesis.speak(u);
+                        
+                        const checkCancel = setInterval(() => {
+                            if (this.idLuotPhat !== idLuot || !this.dangPhat) {
+                                clearInterval(checkCancel);
+                                window.speechSynthesis.cancel();
+                                ketThuc();
+                            }
+                        }, 200);
+                        
+                        const orgEnd = u.onend;
+                        u.onend = () => { clearInterval(checkCancel); orgEnd(); };
+                        const orgErr = u.onerror;
+                        u.onerror = () => { clearInterval(checkCancel); orgErr(); };
+                    });
+                    
+                    this.dangPhatTamWeb = false;
+                    this.PhatTinNhanTrangThai();
+                    
+                    if (this.idLuotPhat !== idLuot || !this.dangPhat) return;
+                    if (i < cacCau.length - 1 && this.thoiGianNghi > 0) {
+                        await new Promise(r => setTimeout(r, this.thoiGianNghi));
+                        if (this.idLuotPhat !== idLuot || !this.dangPhat) return;
+                    }
+                    continue;
+                } else {
+                    this._xuLyLoiAPI(l, idLuot);
+                    return;
+                }
             }
 
             if (this.idLuotPhat !== idLuot || !this.dangPhat) return;
@@ -827,36 +933,6 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
             audio.src = this.duongDanBoNhoDem;
             audio.volume = Math.min(this.amLuong, 1.0);
             audio.playbackRate = this.tocDo;
-
-            let nextDoanIndex = this.chiSoHienTai;
-            let nextCauIndex = i + 1;
-            let nextCauText = null;
-
-            if (nextCauIndex < cacCau.length) {
-                nextCauText = cacCau[nextCauIndex];
-            } else {
-                nextDoanIndex++;
-                while (nextDoanIndex < this.cacDoan.length && !this.cacDoan[nextDoanIndex].text) {
-                    nextDoanIndex++;
-                }
-                if (nextDoanIndex < this.cacDoan.length) {
-                    const nextCacCau = DocTruyenSTV_Ext.PhanTichSTV.chiaCauNho(this.cacDoan[nextDoanIndex].text, 500);
-                    if (nextCacCau.length > 0) {
-                        nextCauText = nextCacCau[0];
-                        nextCauIndex = 0; 
-                    }
-                }
-            }
-
-            if (nextCauText) {
-                const nextKhoa = DocTruyenSTV_Ext.PhanTichSTV.taoKhoaLuuTru(nextCauText, this.congCu, this.chiSoGiong, this.tocDo);
-                this._preload = {
-                    doanIndex: nextDoanIndex,
-                    cauIndex: nextCauIndex,
-                    idLuot: idLuot,
-                    promise: this.taiAmThanhTrucTiep(nextCauText, nextKhoa).catch(e => ({ error: e }))
-                };
-            }
 
             await new Promise((dongY) => {
                 const guard = idLuot;

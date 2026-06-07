@@ -4,7 +4,7 @@
   <p>Tiện ích trình duyệt tự động đọc truyện trên <a href="https://sangtacviet.com">Sáng Tác Việt</a>, hỗ trợ nhiều engine TTS với giọng đọc tự nhiên.</p>
 </div>
 
-[![Version](https://img.shields.io/badge/version-0.3.4-orange)](#)
+[![Version](https://img.shields.io/badge/version-0.4.0-orange)](#)
 [![License](https://img.shields.io/badge/license-MIT-blue)](#)
 [![Edge Add-on](https://img.shields.io/badge/Microsoft%20Edge-Add--on-0078d4?logo=microsoftedge)](https://microsoftedge.microsoft.com/addons/detail/mabgcghglcjheefkkicmkpmlhaooiiae)
 
@@ -17,15 +17,18 @@
 - **FPT.AI TTS** — Giọng Việt tự nhiên, 100.000 ký tự miễn phí/tháng. *(Khuyên dùng)*
 - **Microsoft Azure TTS** — Giọng chất lượng cao nhất (Hoài My...), 500.000 ký tự miễn phí/tháng (yêu cầu thẻ VISA xác minh).
 - **Google Cloud TTS** — 8 giọng Wavenet/Standard tiếng Việt, 1 triệu ký tự miễn phí/tháng (yêu cầu thẻ VISA xác minh).
+- **Nguồn đọc tự tạo (Custom TTS)** — Tự do kết nối và tích hợp bất kỳ máy chủ giọng đọc API nào (hỗ trợ tùy biến POST/GET, Headers, Body JSON).
 
 **Điều khiển phát**
 - Phát / Tạm dừng / Chuyển chương tự động
-- Điều chỉnh tốc độ, âm lượng, giọng đọc
+- Điều chỉnh tốc độ, âm lượng (khuếch đại lên tới 200% cho các nguồn API), giọng đọc
 - Đọc tên truyện và tên chương trước khi vào nội dung
 - Phím tắt bàn phím: `K` (phát/dừng), `R` (đọc lại), `←` / `→` (chuyển chương), `[` / `]` (tốc độ), `,` / `.` (nhảy đoạn)
 
 **Tính năng nâng cao**
 - **Giao diện hiện đại** — Thiết kế tiện ích đẹp mắt với các hiệu ứng tương tác (glow/hover) mượt mà.
+- **Tối ưu hóa đa tab** — Hoạt động mượt mà không gây giật lag kể cả khi mở hàng chục tab Sáng Tác Việt cùng lúc.
+- **Thay nhanh Web API** — Hỗ trợ 3 mức cấu hình (Tắt / Bật 5s / Cực đoan 1s) tự động chuyển nguồn đọc nếu API lỗi.
 - **Mini Player** — Thanh điều khiển thu gọn nổi trên trang, hỗ trợ chế độ CHƯƠNG / ĐOẠN
 - **Tự động dừng** — Hẹn giờ theo thời lượng, giờ thực, số chương, hoặc kết hợp tùy chỉnh
 - **Từ điển tùy chỉnh** — Thay thế/phát âm lại từ ngữ theo ý muốn, hỗ trợ regex Unicode
@@ -53,9 +56,9 @@ Tải trực tiếp tại [Microsoft Edge Add-ons](https://microsoftedge.microso
 
 ## Cấu hình API
 
-Để dùng FPT.AI, Azure hoặc Google Cloud, mở popup → **Cài đặt** → chọn nguồn giọng đọc → dán API Key → **Lưu**.
+Để sử dụng FPT.AI, Azure, Google Cloud hoặc nguồn tự tạo, hãy mở tiện ích (popup) → Chọn hộp thả xuống của **Nguồn giọng đọc** → Tiến hành **Thêm nguồn đọc API** hoặc nhập API Key cho nguồn có sẵn → Bấm **Lưu**.
 
-Hướng dẫn lấy key chi tiết có trong tab **Hướng dẫn lấy API** ngay trong tiện ích, hoặc xem tại [trang dự án](https://spaceherovn.github.io/DocTruyenSangTacViet/).
+Hướng dẫn lấy key chi tiết có trong tab **Hướng dẫn cài đặt API** ở giao diện bảng điều khiển.
 
 > **Lưu ý:** Server FPT/Azure/Google đôi khi quá tải, dẫn đến lỗi hoặc nhảy đoạn đọc. Tiện ích có cơ chế tự thử lại. Nếu vẫn lỗi, hãy tạm dừng ~1 phút rồi phát lại, hoặc chuyển sang Web Speech API.
 
@@ -65,8 +68,8 @@ Hướng dẫn lấy key chi tiết có trong tab **Hướng dẫn lấy API** n
 
 ```
 ├── manifest.json
-├── popup_v0.3.4.html          # Giao diện popup chính
-├── chayngam_v0.3.4.js         # Service worker xử lý API nền
+├── popup_v0.4.0.html          # Giao diện popup chính
+├── chayngam_v0.4.0.js         # Service worker xử lý API nền
 ├── noidung/
 │   ├── cau_hinh.js            # Cấu hình, cache IDB, từ điển
 │   ├── xu_ly.js               # Logic phát âm thanh (Web Speech & API)
@@ -76,8 +79,9 @@ Hướng dẫn lấy key chi tiết có trong tab **Hướng dẫn lấy API** n
 ├── giao_dien_cai_dat.js       # Giao diện cài đặt popup
 ├── quan_ly_thu_vien.js        # Quản lý danh sách đọc
 ├── quan_ly_cau_hinh.js        # Đọc/ghi storage tập trung
-├── guide_v0.3.4.html          # Trang hướng dẫn & thông tin
-├── guide_v0.3.4.js            # Logic trang hướng dẫn
+├── tien_ich.js                # Các hàm tiện ích dùng chung (Toast, Confirm...)
+├── guide_v0.4.0.html          # Trang hướng dẫn & thông tin
+├── guide_v0.4.0.js            # Logic trang hướng dẫn
 └── icons/
     ├── icon16.png
     ├── icon32.png
