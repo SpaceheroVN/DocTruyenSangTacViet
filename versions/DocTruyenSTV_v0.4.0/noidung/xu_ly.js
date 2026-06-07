@@ -39,11 +39,11 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
 
     cacDoan: [],
     chiSoHienTai: 0,
-    
+
     doiTuongAmThanh: null,
     phatNgonHienTai: null,
     duongDanBoNhoDem: null,
-    
+
     dongHoGiamSat: null,
     dongHoDuyTri: null,
     dongHoLuuTrangThai: null,
@@ -52,19 +52,39 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
     dongHoThoiGian: null,
 
     khoiTao() {
-        chrome.storage.sync.get(['speed', 'volume', 'voiceIndex', 'maydoc', 'tudongchuyenchuong', 'smartPauses', 'doctentruyen', 'doctenchuong'], duLieu => {
-            this.tocDo = duLieu.speed !== undefined ? duLieu.speed : 1;
-            this.amLuong = duLieu.volume !== undefined ? duLieu.volume : 1;
-            this.chiSoGiong = duLieu.voiceIndex !== undefined ? parseInt(duLieu.voiceIndex, 10) : 0;
+        chrome.storage.sync.get(['maydoc', 'speed', 'volume', 'voiceIndex', 'tudongchuyenchuong', 'smartPauses', 'doctentruyen', 'doctenchuong', 'thayNhanhWeb'], duLieu => {
             this.congCu = duLieu.maydoc || 'auto';
+            this.tocDo = duLieu.speed || 1.0;
+            this.amLuong = duLieu.volume !== undefined ? duLieu.volume : 1.0;
+            this.chiSoGiong = duLieu.voiceIndex !== undefined ? parseInt(duLieu.voiceIndex, 10) : 0;
             this.tuDongChuyenChuong = duLieu.tudongchuyenchuong !== undefined ? duLieu.tudongchuyenchuong : true;
             this.thoiGianNghi = duLieu.smartPauses !== undefined ? duLieu.smartPauses : 1000;
             this.docTenTruyen = duLieu.doctentruyen !== undefined ? duLieu.doctentruyen : true;
             this.docTenChuong = duLieu.doctenchuong !== undefined ? duLieu.doctenchuong : true;
+            let val = duLieu.thayNhanhWeb;
+            if (val === true) val = 'on';
+            if (val === false) val = 'off';
+            this.thayNhanhWeb = val || 'off';
         });
-        
+
         chrome.storage.onChanged.addListener((thayDoi, vungChon) => {
             if (vungChon === 'sync') {
+                if (thayDoi.maydoc) {
+                    this.congCu = thayDoi.maydoc.newValue;
+                    if (this.dangPhat && !this.dangTamDung) {
+                        this.dungPhat();
+                        setTimeout(() => this.batDauPhat(this.chiSoHienTai), 200);
+                    } else if (this.dangPhat && this.dangTamDung) {
+                        this.huyTaiAPI();
+                        this.huyAmThanhWeb();
+                        if (this.doiTuongAmThanh) {
+                            this.doiTuongAmThanh.onended = null;
+                            this.doiTuongAmThanh.pause();
+                            this.doiTuongAmThanh.src = '';
+                            this.doiTuongAmThanh = null;
+                        }
+                    }
+                }
                 if (thayDoi.speed) {
                     this.tocDo = thayDoi.speed.newValue;
                     if (this.doiTuongAmThanh) this.doiTuongAmThanh.playbackRate = this.tocDo;
@@ -76,14 +96,19 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
                         DocTruyenSTV_Ext.QuanLyDongCoAmThanh.bo_chinh_am.gain.value = this.amLuong;
                     }
                 }
-                if (thayDoi.maydoc) this.congCu = thayDoi.maydoc.newValue;
                 if (thayDoi.voiceIndex) this.chiSoGiong = parseInt(thayDoi.voiceIndex.newValue, 10);
-                if (thayDoi.tudongchuyenchuong) this.tuDongChuyenChuong = thayDoi.tudongchuyenchuong.newValue;
+                if (thayDoi.tudongchuyenchuong) this.tuDongChuyenchuong = thayDoi.tudongchuyenchuong.newValue;
                 if (thayDoi.smartPauses) this.thoiGianNghi = thayDoi.smartPauses.newValue;
+                if (thayDoi.thayNhanhWeb !== undefined) {
+                    let val = thayDoi.thayNhanhWeb.newValue;
+                    if (val === true) val = 'on';
+                    if (val === false) val = 'off';
+                    this.thayNhanhWeb = val || 'off';
+                }
                 if (thayDoi.doctentruyen !== undefined || thayDoi.doctenchuong !== undefined) {
                     if (thayDoi.doctentruyen !== undefined) this.docTenTruyen = thayDoi.doctentruyen.newValue;
                     if (thayDoi.doctenchuong !== undefined) this.docTenChuong = thayDoi.doctenchuong.newValue;
-                    
+
                     let doanHienTai = '';
                     if (this.cacDoan.length > 0 && this.chiSoHienTai < this.cacDoan.length) {
                         doanHienTai = this.cacDoan[this.chiSoHienTai].text;
@@ -98,7 +123,7 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
                 }
             }
         });
-        
+
         document.body.addEventListener('click', (e) => {
             const btn = e.target.closest('a');
             if (btn && btn.href && btn.href.includes('/truyen/')) {
@@ -109,6 +134,7 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
     },
 
     layCongCuThucTe() {
+        if (this.dangPhatTamWeb) return 'web';
         if (this.congCu && this.congCu.startsWith('khac_')) return this.congCu;
         return (this.congCu === 'auto' || this.congCu === 'google') ? 'web' : this.congCu;
     },
@@ -153,8 +179,8 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
 
     _debouncedTrangThai: null,
     PhatTinNhanTrangThai() {
-        DocTruyenSTV_Ext.GiaoDienSTV.capNhatBangDieuKhien(this.chiSoHienTai, this.cacDoan.length, this.dangPhat, this.dangTamDung);
-        
+        DocTruyenSTV_Ext.GiaoDienSTV.capNhatBangDieuKhien(this.chiSoHienTai, this.cacDoan.length, this.dangPhat, this.dangTamDung, this.dangTai);
+
         if (this._debouncedTrangThai) return;
         this._debouncedTrangThai = setTimeout(() => {
             this._debouncedTrangThai = null;
@@ -171,7 +197,7 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
                     absoluteProgress: this._cacTheDaLuu ? { current: this.layChiSoToanCuc() + 1 } : null
                 }
             }, () => {
-                if (chrome.runtime.lastError) {  }
+                if (chrome.runtime.lastError) { }
             });
         }, 200);
     },
@@ -181,24 +207,27 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
     chuanBiCacDoan() {
         const congCuThuc = this.layCongCuThucTe();
         const doDaiToiDa = congCuThuc === 'web' ? 250 : 5000;
-        
+
         if (!this._cacTheDaLuu) {
             this._cacTheDaLuu = DocTruyenSTV_Ext.PhanTichSTV.chuanBiNoiDungThe();
         }
-        
+
         let cacThe = this._cacTheDaLuu.filter(t => {
             if (!this.docTenTruyen && t.isTenTruyen) return false;
             if (!this.docTenChuong && t.isTenChuong) return false;
             return true;
         });
-        
+
         this.cacDoan = DocTruyenSTV_Ext.PhanTichSTV.taoDanhSachPhat(cacThe, doDaiToiDa);
     },
 
     batDauPhat(tuViTri = null) {
+        const btn = document.getElementById('stv-btn-retry-web');
+        if (btn) btn.remove();
+
         if (this.cacDoan.length === 0) this.chuanBiCacDoan();
         if (this.cacDoan.length === 0) return;
-        
+
         if (this.dongHoThoiGian) { clearInterval(this.dongHoThoiGian); this.dongHoThoiGian = null; }
         this.giayDaTroi = 0;
         this.dongHoThoiGian = setInterval(() => {
@@ -207,9 +236,9 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
                 this.PhatTinNhanTrangThai();
             }
         }, 1000);
-        
+
         if (tuViTri !== null) this.chiSoHienTai = tuViTri;
-        
+
         this.dangPhat = true;
         this.dangTamDung = false;
         this.idLuotPhat++;
@@ -221,15 +250,23 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
     },
 
     dungPhat() {
+        const btn = document.getElementById('stv-btn-retry-web');
+        if (btn) btn.remove();
+
         this.dangPhat = false;
         this.dangTamDung = false;
         this.dangTai = false;
+
+        if (this._dongHoChuyenChuong) {
+            clearTimeout(this._dongHoChuyenChuong);
+            this._dongHoChuyenChuong = null;
+        }
         this.idLuotPhat++;
         if (this.dongHoThoiGian) { clearInterval(this.dongHoThoiGian); this.dongHoThoiGian = null; }
         this.giayDaTroi = 0;
         this.huyTaiAPI();
         this.huyAmThanhWeb();
-        
+
         if (this.doiTuongAmThanh) {
             this.doiTuongAmThanh.onended = null;
             this.doiTuongAmThanh.pause();
@@ -245,7 +282,7 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
             URL.revokeObjectURL(this.duongDanBoNhoDem);
             this.duongDanBoNhoDem = null;
         }
-        
+
         DocTruyenSTV_Ext.GiaoDienSTV.xoaBoiDen();
         this.PhatTinNhanTrangThai();
     },
@@ -265,10 +302,21 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
 
     tiepTucPhat() {
         if (!this.dangPhat || !this.dangTamDung) return;
+
+        const congCuThuc = this.layCongCuThucTe();
+
+        if (congCuThuc !== 'web' && (!this.doiTuongAmThanh || !this.doiTuongAmThanh.src)) {
+            this.batDauPhat(this.chiSoHienTai);
+            return;
+        } else if (congCuThuc === 'web' && !window.speechSynthesis.speaking && !window.speechSynthesis.pending) {
+            this.batDauPhat(this.chiSoHienTai);
+            return;
+        }
+
         this.dangTamDung = false;
         this.PhatTinNhanTrangThai();
 
-        if (this.layCongCuThucTe() === 'web') {
+        if (congCuThuc === 'web') {
             window.speechSynthesis.resume();
         } else {
             if (this.doiTuongAmThanh) this.doiTuongAmThanh.play();
@@ -279,7 +327,7 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
     capNhatTuDienDong() {
         const chiSoCu = this.chiSoHienTai;
         const dangPhatTruocDo = this.dangPhat && !this.dangTamDung;
-        
+
         this.huyTaiAPI();
 
         if (this.dangPhat || this.dangTamDung) {
@@ -289,19 +337,19 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
                 this.doiTuongAmThanh.src = '';
             }
         }
-        
+
         this._cacTheDaLuu = null;
         this.cacDoan = [];
         document.querySelectorAll('.contentbox').forEach(k => {
             delete k.dataset.extTtsDone;
         });
-        
+
         this.chuanBiCacDoan();
         DocTruyenSTV_Ext.GiaoDienSTV.boiDenDoan(
             Math.min(chiSoCu, Math.max(0, this.cacDoan.length - 1)),
             this.cacDoan, false, false
         );
-        
+
         if (dangPhatTruocDo) {
             const viTriMoi = Math.min(chiSoCu, Math.max(0, this.cacDoan.length - 1));
             this.batDauPhat(viTriMoi);
@@ -343,9 +391,10 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
                 return text === 'chương sau' || text === 'chương tiếp' || text.includes('tiếp theo');
             });
         }
-        
+
         if (nutTiep) {
             this.dungPhat();
+            DocTruyenSTV_Ext.GiaoDienSTV.hienThiThongBao('Đang chuyển sang chương tiếp theo...');
             sessionStorage.setItem('autoStartOnLoad', 'true');
             nutTiep.click();
         } else {
@@ -371,7 +420,7 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
                 return text === 'chương trước' || text.includes('trước đó');
             });
         }
-        
+
         if (nutTruoc) {
             this.dungPhat();
             sessionStorage.setItem('autoStartOnLoad', 'true');
@@ -381,7 +430,7 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
         }
     },
 
-    
+
     huyAmThanhWeb() {
         if (this.dongHoGiamSat) { clearTimeout(this.dongHoGiamSat); this.dongHoGiamSat = null; }
         if (this.dongHoDuyTri) { clearInterval(this.dongHoDuyTri); this.dongHoDuyTri = null; }
@@ -393,7 +442,10 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
         window.speechSynthesis.cancel();
     },
 
-    phatDoanWeb(batBuocThuLai = false) {
+    phatDoanWeb(boQuaGhiChu = false) {
+        const btnCu = document.getElementById('stv-btn-retry-web');
+        if (btnCu) btnCu.remove();
+
         while (this.chiSoHienTai < this.cacDoan.length && !this.cacDoan[this.chiSoHienTai].text) {
             this.chiSoHienTai++;
         }
@@ -416,12 +468,12 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
         u.volume = Math.min(this.amLuong, 1.0);
 
         const dsGiong = window.speechSynthesis.getVoices();
-        const giong = dsGiong.find(v => v.lang === 'vi-VN' && v.name.includes('Google')) || 
-                      dsGiong.find(v => v.lang === 'vi-VN' && v.name.includes('Microsoft'));
+        const giong = dsGiong.find(v => v.lang === 'vi-VN' && v.name.includes('Google')) ||
+            dsGiong.find(v => v.lang === 'vi-VN' && v.name.includes('Microsoft'));
         if (giong) u.voice = giong;
 
         const idLuot = this.idLuotPhat;
-        
+
         u.onstart = () => {
             if (this.idLuotPhat !== idLuot) return;
             if (this.dongHoGiamSat) clearTimeout(this.dongHoGiamSat);
@@ -461,13 +513,60 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
         window.speechSynthesis.speak(u);
     },
 
+    _hienThiNutChuyenWebTamThoi(idLuot) {
+        const doan = this.cacDoan[this.chiSoHienTai];
+        if (!doan || !doan.el) return;
+
+        let btn = document.getElementById('stv-btn-retry-web');
+        if (!btn) {
+            btn = document.createElement('button');
+            btn.id = 'stv-btn-retry-web';
+            btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 5px;"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>Web API tạm';
+            btn.title = 'Bấm để đọc đoạn này bằng Web Speech, sau đó sẽ tự động quay lại API cao cấp';
+            btn.style.cssText = 'display: inline-flex; align-items: center; margin-left: 12px; background: linear-gradient(135deg, #ff4d4f, #ff7875); color: #fff; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; vertical-align: middle; box-shadow: 0 4px 10px rgba(255, 77, 79, 0.3); transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); letter-spacing: 0.2px; user-select: none;';
+            btn.onmouseover = () => {
+                btn.style.transform = 'scale(1.06) translateY(-1px)';
+                btn.style.boxShadow = '0 6px 14px rgba(255, 77, 79, 0.4)';
+                btn.style.filter = 'brightness(1.08)';
+            };
+            btn.onmouseout = () => {
+                btn.style.transform = 'scale(1) translateY(0)';
+                btn.style.boxShadow = '0 4px 10px rgba(255, 77, 79, 0.3)';
+                btn.style.filter = 'brightness(1)';
+            };
+
+            btn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                btn.remove();
+                if (this.idLuotPhat !== idLuot || !this.dangPhat) return;
+
+                this.idLuotPhat++;
+                const luotMoi = this.idLuotPhat;
+
+                if (this.doiTuongAmThanh) {
+                    this.doiTuongAmThanh.onended = null;
+                    this.doiTuongAmThanh.pause();
+                }
+                this._xoaBlobCu();
+                this.huyTaiAPI();
+
+                this._soLanRetryTimeout = 0;
+                this.dangTai = false;
+                this.PhatTinNhanTrangThai();
+                this._phatMotDoanWebRoiQuayLaiFPT(luotMoi);
+            };
+            doan.el.appendChild(btn);
+        }
+    },
+
 
     huyTaiAPI() {
         try {
             if (chrome.runtime && chrome.runtime.id) {
                 chrome.runtime.sendMessage({ hanhDong: 'huyTatCa' });
             }
-        } catch(e) {
+        } catch (e) {
         }
     },
 
@@ -475,39 +574,186 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
         const cacheBlob = await DocTruyenSTV_Ext.LuuTruSTV.layAmThanh(khoaCache);
         if (cacheBlob) return cacheBlob;
 
+        let phanHoi;
         try {
-            const phanHoi = await chrome.runtime.sendMessage({
+            phanHoi = await chrome.runtime.sendMessage({
                 hanhDong: 'taiAmThanh',
                 vanBan: vanBan,
                 congCu: this.congCu,
                 chiSoGiong: this.chiSoGiong,
                 tocDo: this.tocDo,
                 maYeuCau: Date.now().toString() + Math.random(),
-                khoaCache: khoaCache
+                khoaCache: khoaCache,
+                thayNhanhWeb: this.thayNhanhWeb
             });
-            if (phanHoi && phanHoi.error) {
-                if (phanHoi.biHuy) throw new DOMException(phanHoi.error, 'AbortError');
-                throw new Error(phanHoi.error);
-            }
         } catch (e) {
-            if (e.name === 'AbortError') throw e;
-            throw e; 
+            throw e;
         }
 
-        const idLuotKhoiTao = this.idLuotPhat;
-        for (let i = 0; i < 10; i++) {
-            if (this.idLuotPhat !== idLuotKhoiTao || !this.dangPhat) throw new DOMException('DaHuy', 'AbortError');
-            const kq = await DocTruyenSTV_Ext.LuuTruSTV.layAmThanh(khoaCache);
-            if (kq) return kq;
-            
-            const waitTime = i < 3 ? 200 : 1000;
-            const steps = waitTime / 100;
-            for (let j = 0; j < steps; j++) {
-                if (this.idLuotPhat !== idLuotKhoiTao || !this.dangPhat) throw new DOMException('DaHuy', 'AbortError');
-                await new Promise(r => setTimeout(r, 100));
+        if (!phanHoi) throw new Error('Không nhận được phản hồi từ background');
+        if (phanHoi.biHuy) throw new DOMException(phanHoi.error || 'DaHuy', 'AbortError');
+        if (phanHoi.error) throw new Error(phanHoi.error);
+
+        if (phanHoi.audioBase64) {
+            const binaryStr = atob(phanHoi.audioBase64);
+            const len = binaryStr.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) bytes[i] = binaryStr.charCodeAt(i);
+            const blob = new Blob([bytes], { type: phanHoi.audioType || 'audio/mpeg' });
+            DocTruyenSTV_Ext.LuuTruSTV.luuAmThanh(khoaCache, blob).catch(() => { });
+            return blob;
+        }
+
+        throw new Error('Background không trả về dữ liệu audio');
+    },
+
+    _xuLyLoiAPI(l, idLuot) {
+        this.dangTai = false;
+        this.PhatTinNhanTrangThai();
+
+        if (this.idLuotPhat !== idLuot || !this.dangPhat) return true;
+        if (l.name === 'AbortError') return true;
+
+        const msg = (l.message || '').toLowerCase();
+        console.error('[DocTruyenSTV] Lỗi API:', l);
+
+        const laLoiKenh = msg.includes('message channel')
+            || msg.includes('receiving end does not exist')
+            || msg.includes('could not establish connection')
+            || msg.includes('extension context');
+        if (laLoiKenh) {
+            console.warn('[DocTruyenSTV] Lỗi kênh, retry sau 1s...');
+            setTimeout(() => {
+                if (this.idLuotPhat === idLuot && this.dangPhat) this.phatDoanAPI();
+            }, 1000);
+            return true;
+        }
+
+        const laLoiQuota = msg.includes('quota') || msg.includes('429')
+            || msg.includes('401') || msg.includes('403')
+            || msg.includes('unauthorized') || msg.includes('forbidden')
+            || msg.includes('exceeded');
+
+        if (laLoiQuota && this.congCu && this.congCu !== 'web') {
+            chrome.storage.local.get('customEngines', (data) => {
+                const engines = data.customEngines || [];
+                const engine = engines.find(e => e.id === this.congCu);
+                if (engine && !engine.isQuotaExceeded) {
+                    engine.isQuotaExceeded = true;
+                    chrome.storage.local.set({ customEngines: engines });
+                }
+            });
+        } else {
+            const laLoiTimeout = msg.includes('hết thời gian') || msg.includes('timeout') || msg.includes('render');
+            if (laLoiTimeout || this.thayNhanhWeb !== 'off') {
+                if (this.thayNhanhWeb === 'off') {
+                    this._soLanRetryTimeout = (this._soLanRetryTimeout || 0) + 1;
+                    if (this._soLanRetryTimeout <= 2) {
+                        console.warn('[DocTruyenSTV] Lỗi API — sangtacviet.com, retry lần', this._soLanRetryTimeout);
+                        setTimeout(() => {
+                            if (this.idLuotPhat === idLuot && this.dangPhat) {
+                                this.phatDoanAPI();
+                            }
+                        }, 1000);
+                        return true;
+                    }
+                }
+                
+                this._soLanRetryTimeout = 0;
+                console.warn('[DocTruyenSTV] Lỗi API — dùng Web Speech cho đoạn này rồi quay lại FPT');
+                
+                const btn = document.getElementById('stv-btn-retry-web');
+                if (btn) btn.remove();
+
+                if (this.doiTuongAmThanh) {
+                    this.doiTuongAmThanh.onended = null;
+                    this.doiTuongAmThanh.pause();
+                    this.doiTuongAmThanh.src = '';
+                }
+                this._xoaBlobCu();
+                this._phatMotDoanWebRoiQuayLaiFPT(idLuot);
+                return true;
             }
         }
-        throw new Error("Tải âm thanh thất bại do quá thời gian chờ (Timeout)");
+        this._soLanRetryTimeout = 0;
+
+        if (this.doiTuongAmThanh) {
+            this.doiTuongAmThanh.onended = null;
+            this.doiTuongAmThanh.pause();
+            this.doiTuongAmThanh.src = '';
+            this.doiTuongAmThanh = null;
+        }
+        this._xoaBlobCu();
+
+        this.congCu = 'web';
+        chrome.storage.sync.set({ maydoc: 'web' });
+        DocTruyenSTV_Ext.GiaoDienSTV.hienThiThongBao(
+            laLoiQuota ? 'Hết lượt API — đã chuyển sang Web Speech'
+                : 'Lỗi tải API — đã chuyển sang Web Speech'
+        );
+        this.phatDoanWeb();
+        return true;
+    },
+
+    _phatMotDoanWebRoiQuayLaiFPT(idLuot) {
+        if (this.idLuotPhat !== idLuot || !this.dangPhat) return;
+        const doan = this.cacDoan[this.chiSoHienTai];
+        if (!doan) return;
+
+        this.huyAmThanhWeb();
+        this.dangTai = false;
+        this.dangPhatTamWeb = true;
+        this.PhatTinNhanTrangThai();
+        const u = new SpeechSynthesisUtterance(doan.text);
+        u.lang = 'vi-VN';
+        u.rate = this.tocDo;
+        u.pitch = 1.0;
+        u.volume = Math.min(this.amLuong, 1.0);
+        const dsGiong = window.speechSynthesis.getVoices();
+        const giong = dsGiong.find(v => v.lang === 'vi-VN' && v.name.includes('Google')) ||
+            dsGiong.find(v => v.lang === 'vi-VN' && v.name.includes('Microsoft'));
+        if (giong) u.voice = giong;
+
+        const thoat = () => {
+            this.huyAmThanhWeb();
+            this.dangPhatTamWeb = false;
+            this.PhatTinNhanTrangThai();
+            if (this.idLuotPhat !== idLuot || !this.dangPhat) return;
+            this.chiSoHienTai++;
+            setTimeout(() => {
+                if (this.idLuotPhat === idLuot && this.dangPhat) this.phatDoanAPI();
+            }, this.thoiGianNghi);
+        };
+
+        u.onend = thoat;
+        u.onerror = (e) => {
+            if (e.error === 'canceled' || e.error === 'interrupted') return;
+            thoat();
+        };
+
+        this.dongHoGiamSat = setTimeout(() => {
+            if (this.idLuotPhat === idLuot) thoat();
+        }, Math.max(15000, doan.text.length * 200));
+
+        window.speechSynthesis.speak(u);
+        this.phatNgonHienTai = u;
+    },
+
+    _xoaBlobCu() {
+        if (this.duongDanBoNhoDem) {
+            URL.revokeObjectURL(this.duongDanBoNhoDem);
+            this.duongDanBoNhoDem = null;
+        }
+    },
+
+    _damBaoAudioEl() {
+        if (!this.doiTuongAmThanh) {
+            const { bo_nguon, bo_chinh_am } = DocTruyenSTV_Ext.QuanLyDongCoAmThanh.lay_nguon();
+            this.doiTuongAmThanh = new Audio();
+            this._mediaSource = bo_nguon.createMediaElementSource(this.doiTuongAmThanh);
+            this._mediaSource.connect(bo_chinh_am);
+        }
+        return this.doiTuongAmThanh;
     },
 
     async phatDoanAPI() {
@@ -516,8 +762,10 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
         }
 
         if (!this.dangPhat || this.chiSoHienTai >= this.cacDoan.length) {
-            if (this.chiSoHienTai >= this.cacDoan.length && this.tuDongChuyenChuong && this.dangPhat) this.phatChuongTiepTheo();
-            else this.dungPhat();
+            if (this.chiSoHienTai >= this.cacDoan.length && this.tuDongChuyenChuong && this.dangPhat)
+                this.phatChuongTiepTheo();
+            else
+                this.dungPhat();
             return;
         }
 
@@ -525,106 +773,142 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
         DocTruyenSTV_Ext.GiaoDienSTV.boiDenDoan(this.chiSoHienTai, this.cacDoan, this.dangPhat, this.dangTamDung);
         const idLuot = this.idLuotPhat;
 
-        try {
-            this.dangTai = true;
-            this.PhatTinNhanTrangThai();
-            
-            const khoaCache = DocTruyenSTV_Ext.PhanTichSTV.taoKhoaLuuTru(doan.text, this.congCu, this.chiSoGiong, this.tocDo);
-            const blob = await this.taiAmThanhTrucTiep(doan.text, khoaCache);
-            
-            this.dangTai = false;
-            this.PhatTinNhanTrangThai();
-            
+        const btnCu = document.getElementById('stv-btn-retry-web');
+        if (btnCu) btnCu.remove();
+        this._hienThiNutChuyenWebTamThoi(idLuot);
+
+        const cacCau = DocTruyenSTV_Ext.PhanTichSTV.chiaCauNho(doan.text, 500);
+
+        for (let i = 0; i < cacCau.length; i++) {
             if (this.idLuotPhat !== idLuot || !this.dangPhat) return;
 
-            if (this.duongDanBoNhoDem) URL.revokeObjectURL(this.duongDanBoNhoDem);
+            const chuoi = cacCau[i];
+            const khoa = DocTruyenSTV_Ext.PhanTichSTV.taoKhoaLuuTru(chuoi, this.congCu, this.chiSoGiong, this.tocDo);
+
+            let blob;
+            try {
+                let promiseTai;
+                if (this._preload && this._preload.doanIndex === this.chiSoHienTai && this._preload.cauIndex === i && this._preload.idLuot === idLuot) {
+                    promiseTai = this._preload.promise;
+                } else {
+                    promiseTai = this.taiAmThanhTrucTiep(chuoi, khoa);
+                }
+
+                let _loadingTimer = setTimeout(() => {
+                    if (this.idLuotPhat === idLuot && this.dangPhat) {
+                        this.dangTai = true;
+                        this.PhatTinNhanTrangThai();
+                    }
+                }, 100);
+
+                blob = await promiseTai;
+                clearTimeout(_loadingTimer);
+                
+                if (blob && blob.error) throw blob.error;
+            } catch (l) {
+                this._xuLyLoiAPI(l, idLuot);
+                return;
+            }
+
+            if (this.idLuotPhat !== idLuot || !this.dangPhat) return;
+
+            this.dangTai = false;
+            this.PhatTinNhanTrangThai();
+
+            this._xoaBlobCu();
             this.duongDanBoNhoDem = URL.createObjectURL(blob);
 
-            const { bo_nguon, bo_chinh_am } = DocTruyenSTV_Ext.QuanLyDongCoAmThanh.lay_nguon();
-            
+            const { bo_chinh_am } = DocTruyenSTV_Ext.QuanLyDongCoAmThanh.lay_nguon();
             bo_chinh_am.gain.value = this.amLuong;
 
-            if (!this.doiTuongAmThanh) {
-                this.doiTuongAmThanh = new Audio();
-                this._mediaSource = bo_nguon.createMediaElementSource(this.doiTuongAmThanh);
-                this._mediaSource.connect(bo_chinh_am);
+            const audio = this._damBaoAudioEl();
+            audio.onended = null;
+            audio.pause();
+            audio.src = this.duongDanBoNhoDem;
+            audio.volume = Math.min(this.amLuong, 1.0);
+            audio.playbackRate = this.tocDo;
+
+            let nextDoanIndex = this.chiSoHienTai;
+            let nextCauIndex = i + 1;
+            let nextCauText = null;
+
+            if (nextCauIndex < cacCau.length) {
+                nextCauText = cacCau[nextCauIndex];
             } else {
-                this.doiTuongAmThanh.onended = null;
-                this.doiTuongAmThanh.pause();
-            }
-            this.doiTuongAmThanh.src = this.duongDanBoNhoDem;
-            this.doiTuongAmThanh.volume = Math.min(this.amLuong, 1.0);
-            this.doiTuongAmThanh.playbackRate = this.tocDo;
-            
-            this.doiTuongAmThanh.onended = () => {
-                if (this.idLuotPhat !== idLuot) return;
-                this.chiSoHienTai++;
-                setTimeout(() => this.phatDoanAPI(), this.thoiGianNghi);
-            };
-
-            try {
-                await this.doiTuongAmThanh.play();
-                if (this.dangTamDung) this.doiTuongAmThanh.pause();
-            } catch (e) {
-            }
-
-            if (this.chiSoHienTai + 1 < this.cacDoan.length) {
-                const idLuotHienTai = this.idLuotPhat;
-                const vanBanTiep = this.cacDoan[this.chiSoHienTai + 1].text;
-                if (vanBanTiep) {
-                    const khoaTiep = DocTruyenSTV_Ext.PhanTichSTV.taoKhoaLuuTru(vanBanTiep, this.congCu, this.chiSoGiong, this.tocDo);
-                    DocTruyenSTV_Ext.LuuTruSTV.layAmThanh(khoaTiep).then(cached => {
-                        if (!cached && this.idLuotPhat === idLuotHienTai) {
-                            this.taiAmThanhTrucTiep(vanBanTiep, khoaTiep).catch(()=>{});
-                        }
-                    }).catch(() => {});
+                nextDoanIndex++;
+                while (nextDoanIndex < this.cacDoan.length && !this.cacDoan[nextDoanIndex].text) {
+                    nextDoanIndex++;
+                }
+                if (nextDoanIndex < this.cacDoan.length) {
+                    const nextCacCau = DocTruyenSTV_Ext.PhanTichSTV.chiaCauNho(this.cacDoan[nextDoanIndex].text, 500);
+                    if (nextCacCau.length > 0) {
+                        nextCauText = nextCacCau[0];
+                        nextCauIndex = 0; 
+                    }
                 }
             }
-        } catch(l) {
-            this.dangTai = false;
-            this.PhatTinNhanTrangThai();
-            if (this.duongDanBoNhoDem) {
-                URL.revokeObjectURL(this.duongDanBoNhoDem);
-                this.duongDanBoNhoDem = null;
+
+            if (nextCauText) {
+                const nextKhoa = DocTruyenSTV_Ext.PhanTichSTV.taoKhoaLuuTru(nextCauText, this.congCu, this.chiSoGiong, this.tocDo);
+                this._preload = {
+                    doanIndex: nextDoanIndex,
+                    cauIndex: nextCauIndex,
+                    idLuot: idLuot,
+                    promise: this.taiAmThanhTrucTiep(nextCauText, nextKhoa).catch(e => ({ error: e }))
+                };
             }
 
-            if (this.idLuotPhat !== idLuot || !this.dangPhat) return;
-            if (l.name === 'AbortError') return;
+            await new Promise((dongY) => {
+                const guard = idLuot;
+                audio.onended = () => {
+                    audio.onended = null;
+                    dongY();
+                };
+                audio.onerror = () => {
+                    audio.onended = null;
+                    dongY();
+                };
+                audio.play().then(() => {
+                    if (this.dangTamDung) audio.pause();
+                }).catch(() => dongY());
 
-            const thongBaoLoi = (l.message || '').toLowerCase();
-            console.error('[DocTruyenSTV] Lỗi API bắt được:', l);
-            const laLoiQuota = thongBaoLoi.includes('quota') || thongBaoLoi.includes('429')
-                || thongBaoLoi.includes('401') || thongBaoLoi.includes('403')
-                || thongBaoLoi.includes('unauthorized') || thongBaoLoi.includes('forbidden')
-                || thongBaoLoi.includes('exceeded') || thongBaoLoi.includes('hết');
-            
-            if (laLoiQuota && this.congCu && this.congCu !== 'web') {
-                chrome.storage.local.get('customEngines', (data) => {
-                    let engines = data.customEngines || [];
-                    let engine = engines.find(e => e.id === this.congCu);
-                    if (engine && !engine.isQuotaExceeded) {
-                        engine.isQuotaExceeded = true;
-                        chrome.storage.local.set({ customEngines: engines });
+                const _check = setInterval(() => {
+                    if (this.idLuotPhat !== guard) {
+                        clearInterval(_check);
+                        audio.onended = null;
+                        dongY();
                     }
-                });
-            }
+                }, 100);
+                audio._guardInterval = _check;
+            });
 
-            this.congCu = 'web';
-            chrome.storage.sync.set({ maydoc: 'web' });
-            if (laLoiQuota) {
-                DocTruyenSTV_Ext.GiaoDienSTV.hienThiThongBao('Hết lượt API — đã chuyển sang Web Speech');
-            } else {
-                DocTruyenSTV_Ext.GiaoDienSTV.hienThiThongBao('Lỗi tải API — đã chuyển sang Web Speech');
+            if (audio._guardInterval) { clearInterval(audio._guardInterval); audio._guardInterval = null; }
+            if (this.idLuotPhat !== idLuot || !this.dangPhat) return;
+
+            if (i < cacCau.length - 1 && this.thoiGianNghi > 0) {
+                await new Promise(r => setTimeout(r, this.thoiGianNghi));
+                if (this.idLuotPhat !== idLuot || !this.dangPhat) return;
             }
-            this.phatDoanWeb();
         }
+
+        this.chiSoHienTai++;
+        setTimeout(() => this.phatDoanAPI(), this.thoiGianNghi);
     },
 
     luuTrangThaiChongDoi() {
         if (this.dongHoLuuTrangThai) clearTimeout(this.dongHoLuuTrangThai);
         this.dongHoLuuTrangThai = setTimeout(async () => {
-            const ten = (document.getElementById('booknameholder')?.innerText || '').trim();
-            const chuong = (document.getElementById('bookchapnameholder')?.innerText || '').trim();
+            let theTenTruyen = null;
+            document.querySelectorAll('#booknameholder, #book_name2').forEach(el => {
+                if ((el.innerText || el.textContent).trim().length > 0) theTenTruyen = el;
+            });
+            const ten = theTenTruyen ? (theTenTruyen.innerText || theTenTruyen.textContent).trim() : '';
+
+            let theTenChuong = null;
+            document.querySelectorAll('#bookchapnameholder').forEach(el => {
+                if ((el.innerText || el.textContent).trim().length > 0) theTenChuong = el;
+            });
+            const chuong = theTenChuong ? (theTenChuong.innerText || theTenChuong.textContent).trim() : '';
             if (!ten) return;
 
             const trangThai = {
@@ -638,7 +922,7 @@ DocTruyenSTV_Ext.TrinhPhatAmThanh = {
                 tenChuong: chuong,
                 duongDanTrang: window.location.href
             };
-            
+
             DocTruyenSTV_Ext.LuuTruSTV.luuTienTrinhDoc(trangThai).catch(e => console.log('Không thể lưu tiến trình:', e.message));
         }, 5000);
     }
@@ -651,8 +935,13 @@ DocTruyenSTV_Ext.PhanTichSTV = {
             .replace(/Đang tải nội dung chương\.\.\./gi, '')
             .replace(/@Bạn đang đọc bản lưu.*/gi, '')
             .replace(/@Thực hiện bởi Sáng Tác Việt.*/gi, '')
+            .replace(/Đọc trên web để có chất lượng dịch cao và ủng hộ website\./gi,
+                'Đọc trên Sáng Tác Việt Chấm Cơm để có chất lượng dịch cao và ủng hộ website.')
+            .replace(/[\u200B-\u200D\uFEFF]/g, '')
+            .replace(/[\x00-\x09\x0B-\x1F\x7F-\x9F]/g, '')
+            .replace(/\s+/g, ' ')
             .trim();
-        
+
         const tuDien = DocTruyenSTV_Ext.LuuTruSTV?.tuDienDaBienDich || [];
         for (const quyTac of tuDien) {
             txt = txt.replace(quyTac.regex, quyTac.thayThe);
@@ -666,7 +955,7 @@ DocTruyenSTV_Ext.PhanTichSTV = {
         for (let khung of cacKhung) {
             if (/[\uE000-\uF8FF]/.test(khung.textContent)) { biMaHoa = true; break; }
         }
-        
+
         if (biMaHoa && !document.getElementById('stv-canhbao-mahoa')) {
             let canhBao = document.createElement('div');
             canhBao.id = 'stv-canhbao-mahoa';
@@ -694,11 +983,17 @@ DocTruyenSTV_Ext.PhanTichSTV = {
             }
         };
 
-        const theTenTruyen = document.getElementById('booknameholder') || document.getElementById('book_name2');
-        if (theTenTruyen) themThe(theTenTruyen, theTenTruyen.innerText, { isTenTruyen: true });
+        let theTenTruyen = null;
+        document.querySelectorAll('#booknameholder, #book_name2').forEach(el => {
+            if ((el.innerText || el.textContent).trim().length > 0) theTenTruyen = el;
+        });
+        if (theTenTruyen) themThe(theTenTruyen, theTenTruyen.innerText || theTenTruyen.textContent, { isTenTruyen: true });
 
-        const theTenChuong = document.getElementById('bookchapnameholder');
-        if (theTenChuong) themThe(theTenChuong, theTenChuong.innerText, { isTenChuong: true });
+        let theTenChuong = null;
+        document.querySelectorAll('#bookchapnameholder').forEach(el => {
+            if ((el.innerText || el.textContent).trim().length > 0) theTenChuong = el;
+        });
+        if (theTenChuong) themThe(theTenChuong, theTenChuong.innerText || theTenChuong.textContent, { isTenChuong: true });
 
         const bocCacThe = (khungChua) => {
             let theSpanHienTai = null;
@@ -711,6 +1006,7 @@ DocTruyenSTV_Ext.PhanTichSTV = {
                     }
                 } else {
                     if (['SCRIPT', 'STYLE'].includes(node.nodeName)) return;
+                    if (node.nodeType === 1 && (node.id === 'bookchapnameholder' || node.id === 'booknameholder' || node.id === 'book_name2')) return;
                     if (node.nodeType === 3 && !node.textContent.replace(/\u200B/g, '').trim()) {
                         if (theSpanHienTai) theSpanHienTai.appendChild(node);
                         return;
@@ -731,12 +1027,13 @@ DocTruyenSTV_Ext.PhanTichSTV = {
         cacKhungNoidung.forEach(khung => {
             const chuoiTho = this.lamTranhVanBan(khung.innerText);
             if (chuoiTho.length < 50) return;
-            
+
             const soLuongTtsChunk = khung.querySelectorAll('.tts-chunk').length;
             if (!khung.dataset.extTtsDone || soLuongTtsChunk === 0) {
                 khung.dataset.extTtsDone = 'true';
                 if (khung.dataset.ttsPrepared && soLuongTtsChunk > 0) {
                     khung.querySelectorAll('.tts-chunk').forEach(theSpan => {
+                        if (theSpan.id === 'bookchapnameholder' || theSpan.id === 'booknameholder' || theSpan.id === 'book_name2') return;
                         const khoangTrang = document.createTextNode(' ');
                         theSpan.parentNode.insertBefore(khoangTrang, theSpan.nextSibling);
                         while (theSpan.firstChild) theSpan.parentNode.insertBefore(theSpan.firstChild, theSpan);
@@ -746,21 +1043,49 @@ DocTruyenSTV_Ext.PhanTichSTV = {
                 bocCacThe(khung);
                 khung.dataset.ttsPrepared = 'true';
             }
-            
+
             khung.querySelectorAll('.tts-chunk').forEach(theSpan => {
+                if (theSpan.id === 'bookchapnameholder' || theSpan.id === 'booknameholder' || theSpan.id === 'book_name2') return;
                 let txt = this.lamTranhVanBan(theSpan.innerText || theSpan.textContent || '');
                 if (txt.length > 2) danhSachThe.push({ id: theSpan.id, text: txt, el: theSpan });
             });
         });
-        
+
         return danhSachThe;
+    },
+
+    chiaCauNho(vanBan, maxLen = 500) {
+        const txt = vanBan.replace(/\s+/g, ' ').trim();
+        if (txt.length <= maxLen) return [txt];
+
+        const ketQua = [];
+        const cacManhChinh = txt.split(/(?<=[.!?。…]+["']?)\s+/);
+        for (const manh of cacManhChinh) {
+            if (!manh.trim()) continue;
+            if (manh.length <= maxLen) {
+                ketQua.push(manh.trim());
+            } else {
+                let con = manh.trim();
+                while (con.length > maxLen) {
+                    let cut = con.lastIndexOf(',', maxLen);
+                    if (cut <= 0) cut = con.lastIndexOf(' ', maxLen);
+                    if (cut <= 0) cut = maxLen;
+                    
+                    let piece = con.slice(0, cut + (con[cut] === ',' ? 1 : 0)).trim();
+                    if (piece) ketQua.push(piece);
+                    con = con.slice(cut + (con[cut] === ',' ? 1 : 0)).trim();
+                }
+                if (con) ketQua.push(con);
+            }
+        }
+        return ketQua.filter(c => c.length > 0);
     },
 
     chiaDoanVanBan(vanBan, doDaiToiDa) {
         const cacDoan = [];
         const cacCau = vanBan.split(/(?<=[.!?。…]+["']?)\s+/);
         let hienTai = '';
-        
+
         for (const cau of cacCau) {
             if (!cau.trim()) continue;
             if ((hienTai + ' ' + cau).trim().length <= doDaiToiDa) {
@@ -787,8 +1112,8 @@ DocTruyenSTV_Ext.PhanTichSTV = {
                         }
                     }
                     if (phaHienTai) cacDoan.push(phaHienTai);
-                } else { 
-                    hienTai = cau.trim(); 
+                } else {
+                    hienTai = cau.trim();
                 }
             }
         }
@@ -807,7 +1132,7 @@ DocTruyenSTV_Ext.PhanTichSTV = {
         }
         return danhSachCuoi;
     },
-    
+
     taoKhoaLuuTru(vanBan, congCu, chiSoGiong, tocDo) {
         const tho = vanBan.replace(/\s+/g, '') + `_${congCu}_${chiSoGiong}_${tocDo}`;
         let bam1 = 5381, bam2 = 0;

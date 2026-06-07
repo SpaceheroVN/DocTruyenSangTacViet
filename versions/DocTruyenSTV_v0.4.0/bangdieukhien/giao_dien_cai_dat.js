@@ -30,6 +30,7 @@ export const GiaoDienCaiDat = {
         dienGiaTri('chk-shortcuts', 'batphimtat', true, 'checked');
         dienGiaTri('chk-read-book', 'doctentruyen', true, 'checked');
         dienGiaTri('chk-read-chap', 'doctenchuong', true, 'checked');
+        dienGiaTri('select-auto-fallback', 'thayNhanhWeb', true);
         dienGiaTri('pause-comma', 'smartPauses', true);
 
         dienGiaTri('fpt-key', 'fpt_key', false);
@@ -95,6 +96,7 @@ export const GiaoDienCaiDat = {
         ganDauVao('chk-shortcuts', 'batphimtat', true, 'checked');
         ganDauVao('chk-read-book', 'doctentruyen', true, 'checked');
         ganDauVao('chk-read-chap', 'doctenchuong', true, 'checked');
+        ganDauVao('select-auto-fallback', 'thayNhanhWeb', true);
         ganDauVao('pause-comma', 'smartPauses', true, 'number');
 
         const engineSelect = document.getElementById('engine-select');
@@ -293,6 +295,28 @@ export const GiaoDienCaiDat = {
         this.renderDanhSachEngine();
         this.caiDatOChonTinh('select-auto-stop', 'custom-autostop-text', 'custom-autostop-dropdown', true);
         this.caiDatOChonTinh('voice-select', 'custom-voice-text', 'custom-voice-dropdown', true);
+        const fallbackSeg = document.getElementById('fallback-seg');
+        const selectFallback = document.getElementById('select-auto-fallback');
+        if (fallbackSeg && selectFallback) {
+            const capNhatSeg = () => {
+                const val = selectFallback.value;
+                fallbackSeg.setAttribute('data-val', val);
+                fallbackSeg.querySelectorAll('.seg-item').forEach(item => {
+                    if (item.dataset.val === val) item.classList.add('active');
+                    else item.classList.remove('active');
+                });
+            };
+            selectFallback.addEventListener('change', capNhatSeg);
+            selectFallback._capNhatGiaoDien = capNhatSeg;
+            
+            fallbackSeg.querySelectorAll('.seg-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    selectFallback.value = item.dataset.val;
+                    selectFallback.dispatchEvent(new Event('change'));
+                });
+            });
+            setTimeout(capNhatSeg, 50);
+        }
         
         const btnDeleteEngine = document.getElementById('btn-delete-engine');
         if (btnDeleteEngine) {
@@ -1241,8 +1265,8 @@ export const GiaoDienCaiDat = {
                 nextChap: 'ArrowRight',
                 volUp: 'ArrowUp',
                 volDown: 'ArrowDown',
-                speedUp: 'Ctrl+ArrowRight',
-                speedDown: 'Ctrl+ArrowLeft',
+                speedUp: ']',
+                speedDown: '[',
                 nextSeg: '.',
                 prevSeg: ','
             };

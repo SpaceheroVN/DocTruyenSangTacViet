@@ -97,8 +97,8 @@ DocTruyenSTV_Ext.GiaoDienSTV = {
             #stv-mini-player .stv-mp-btn-play { width: 36px; height: 36px; background: #e8a045; border-color: #e8a045; color: #0f0e17; border-radius: 50%; box-shadow: 0 0 14px rgba(232,160,69,0.35); }
             #stv-mini-player .stv-mp-btn-play:hover { background: #f0b855; border-color: #f0b855; transform: scale(1.07); color: #ffffff !important; }
             #stv-mini-player .stv-mp-right { flex: 1; display: flex; align-items: center; justify-content: flex-end; gap: 5px; overflow: hidden; }
-            #stv-mini-player .stv-mp-progress-txt { font-size: 10px; color: #7a7896; font-variant-numeric: tabular-nums; white-space: nowrap; }
-            #stv-mini-player .stv-mp-engine-badge { font-size: 8px; font-weight: 700; background: rgba(255,255,255,0.06); border: 1px solid #2e2c45; border-radius: 4px; padding: 1px 5px; color: #7a7896; letter-spacing: 0.4px; white-space: nowrap; }
+            #stv-mini-player .stv-mp-progress-txt { font-size: 10px; color: #7a7896; font-variant-numeric: tabular-nums; white-space: nowrap; flex-shrink: 0; }
+            #stv-mini-player .stv-mp-engine-badge { max-width: 65px; overflow: hidden; text-overflow: ellipsis; font-size: 8px; font-weight: 700; background: rgba(255,255,255,0.06); border: 1px solid #2e2c45; border-radius: 4px; padding: 1px 5px; color: #7a7896; letter-spacing: 0.4px; white-space: nowrap; flex-shrink: 1; }
             #stv-mini-bubble {
                 position: fixed; bottom: 20px; left: 14px; width: 44px; height: 44px;
                 background: linear-gradient(135deg, #e8a045, #c45c8a); color: #ffffff;
@@ -110,6 +110,8 @@ DocTruyenSTV_Ext.GiaoDienSTV = {
             #stv-mini-bubble:hover { transform: scale(1.1); box-shadow: 0 6px 22px rgba(232,160,69,0.6); }
             @keyframes stv-pulse-bubble { 0%, 100% { box-shadow: 0 4px 18px rgba(232,160,69,0.45); } 50% { box-shadow: 0 4px 26px rgba(232,160,69,0.75); } }
             #stv-mini-bubble.stv-playing { animation: stv-pulse-bubble 2s ease-in-out infinite; }
+            @keyframes stv-spin { 100% { transform: rotate(360deg); } }
+            .stv-mp-spinner { animation: stv-spin 1s linear infinite; }
         `;
         document.head.appendChild(style);
 
@@ -135,7 +137,8 @@ DocTruyenSTV_Ext.GiaoDienSTV = {
                 </button>
                 <button class="stv-mp-btn stv-mp-btn-play" id="stv-mp-playpause" title="Phát / Dừng">
                     <svg id="stv-mp-icon-play" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none;margin-left:2px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                    <svg id="stv-mp-icon-pause" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                    <svg id="stv-mp-icon-pause" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                    <svg id="stv-mp-icon-loading" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="stv-mp-spinner" style="display:none"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
                 </button>
                 <button class="stv-mp-btn stv-mp-btn-sm" id="stv-mp-next" title="Tiếp theo">
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
@@ -253,7 +256,7 @@ DocTruyenSTV_Ext.GiaoDienSTV = {
         document.addEventListener('touchend', ketThucKeo);
     },
 
-    capNhatBangDieuKhien(chiSoHienTai, tongSoDoan, dangPhat, dangTamDung) {
+    capNhatBangDieuKhien(chiSoHienTai, tongSoDoan, dangPhat, dangTamDung, dangTai = false) {
         const bangDieuKhien = document.getElementById('stv-mini-player');
         const bongBong = document.getElementById('stv-mini-bubble');
         if (!bangDieuKhien || !bongBong) return;
@@ -282,6 +285,8 @@ DocTruyenSTV_Ext.GiaoDienSTV = {
             }
             if (noiDungHienThi === '-' || !noiDungHienThi) noiDungHienThi = 'Đang tải nội dung...';
             
+            noiDungHienThi = noiDungHienThi.replace(/Sáng Tác Việt Chấm Cơm/gi, 'sangtacviet.com');
+            
             theChuong.textContent = noiDungHienThi;
         }
 
@@ -292,9 +297,17 @@ DocTruyenSTV_Ext.GiaoDienSTV = {
 
         const iPlay = document.getElementById('stv-mp-icon-play');
         const iPause = document.getElementById('stv-mp-icon-pause');
-        if (iPlay && iPause) {
-            iPlay.style.display = dangPhatThucSu ? 'none' : 'block';
-            iPause.style.display = dangPhatThucSu ? 'block' : 'none';
+        const iLoading = document.getElementById('stv-mp-icon-loading');
+        if (iPlay && iPause && iLoading) {
+            if (dangTai) {
+                iLoading.style.display = 'block';
+                iPlay.style.display = 'none';
+                iPause.style.display = 'none';
+            } else {
+                iLoading.style.display = 'none';
+                iPlay.style.display = dangPhatThucSu ? 'none' : 'block';
+                iPause.style.display = dangPhatThucSu ? 'block' : 'none';
+            }
         }
 
         const nutCheDo = document.getElementById('stv-mp-mode');
@@ -361,7 +374,7 @@ DocTruyenSTV_Ext.ChinhSTV = {
 
         this.phimTatTCH = { 
             playPause: 'K', replay: 'R', prevChap: 'ArrowLeft', nextChap: 'ArrowRight',
-            volUp: 'ArrowUp', volDown: 'ArrowDown', speedUp: 'Ctrl+ArrowRight', speedDown: 'Ctrl+ArrowLeft', nextSeg: '.', prevSeg: ',' 
+            volUp: 'ArrowUp', volDown: 'ArrowDown', speedUp: ']', speedDown: '[', nextSeg: '.', prevSeg: ',' 
         };
 
         chrome.storage.local.get(['customShortcuts', 'customStopConfig'], duLieu => {
@@ -680,15 +693,15 @@ DocTruyenSTV_Ext.ChinhSTV = {
                     }
                 };
 
-                setTimeout(thuGoi, 500);
-                
-                const observer = new MutationObserver(() => {
+                const timerId = setInterval(() => {
                     if (!daGoi) thuGoi();
-                });
-                const targetNode = document.querySelector('.contentbox') || document.body;
-                observer.observe(targetNode, { childList: true, subtree: true, characterData: true });
+                    else clearInterval(timerId);
+                }, 500);
                 
-                setTimeout(() => { if(!daGoi) { daGoi = true; callback(); } observer.disconnect(); }, 15000);
+                setTimeout(() => { 
+                    if(!daGoi) { daGoi = true; callback(); } 
+                    clearInterval(timerId); 
+                }, 15000);
             };
 
             if (sessionStorage.getItem('autoStartOnLoad') === 'true') {

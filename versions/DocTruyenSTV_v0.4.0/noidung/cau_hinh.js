@@ -101,6 +101,10 @@ DocTruyenSTV_Ext.LuuTruSTV = {
     },
 
     async donDepCacheCu() {
+        const lanCuoi = localStorage.getItem('STV_last_cleanup');
+        const bayGio = Date.now();
+        if (lanCuoi && bayGio - parseInt(lanCuoi) < 12 * 60 * 60 * 1000) return;
+        localStorage.setItem('STV_last_cleanup', bayGio.toString());
         try {
             const db = await this.layKetNoiDB();
             return await new Promise((dongY) => {

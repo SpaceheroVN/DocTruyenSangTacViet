@@ -129,6 +129,11 @@ export const DieuKhienTrinhPhat = {
 
     capNhatGiaoDienEngine(engineId) {
         if (!engineId) return;
+
+        if (CauHinh && CauHinh.lay('maydoc', true) !== engineId) {
+            CauHinh.dat('maydoc', engineId, true);
+        }
+
         const badge = document.getElementById('tts-badge');
         const footerEngine = document.getElementById('footer-engine');
         const voiceTrigger = document.getElementById('custom-voice-trigger');
@@ -175,23 +180,23 @@ export const DieuKhienTrinhPhat = {
         const engineSelect = document.getElementById('engine-select');
         if (engineSelect && engineSelect.value !== engineId) {
             engineSelect.value = engineId;
-            if (window.GiaoDienCaiDat && typeof GiaoDienCaiDat.capNhatGiaoDien === 'function') {
+            if (GiaoDienCaiDat && typeof GiaoDienCaiDat.capNhatGiaoDien === 'function') {
                 GiaoDienCaiDat.capNhatGiaoDien('engine-select');
             }
         }
 
         const volSlider = document.getElementById('vol-slider');
         if (volSlider) {
-            const maxVol = engineId === 'web' ? 1.0 : 2.0;
+            const maxVol = (engineId === 'web' || engineId === 'auto') ? 1.0 : 2.0;
             volSlider.max = maxVol;
             if (parseFloat(volSlider.value) > maxVol) {
                 volSlider.value = maxVol;
                 const volVal = document.getElementById('vol-val');
                 if (volVal) volVal.textContent = Math.round(maxVol * 100) + '%';
-                if (window.CauHinh) CauHinh.dat('volume', maxVol, true);
+                if (CauHinh) CauHinh.dat('volume', maxVol, true);
                 this.guiLenh('capNhatCaiDat');
             }
-            if (window.GiaoDienCaiDat && typeof GiaoDienCaiDat.capNhatGiaoDien === 'function') {
+            if (GiaoDienCaiDat && typeof GiaoDienCaiDat.capNhatGiaoDien === 'function') {
                 GiaoDienCaiDat.capNhatGiaoDien('vol-slider');
             }
         }

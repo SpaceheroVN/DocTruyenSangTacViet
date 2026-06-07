@@ -44,6 +44,35 @@ self.addEventListener('activate', () => {
     cac_tien_trinh_dang_tai.clear();
 });
 
+let _keepalive_interval = null;
+
+function bat_dau_keepalive() {
+    if (_keepalive_interval) return;
+    _keepalive_interval = setInterval(() => {
+        if (cac_tien_trinh_dang_tai.size === 0) {
+            dung_keepalive();
+        }
+    }, 20000);
+}
+
+function dung_keepalive() {
+    if (_keepalive_interval) {
+        clearInterval(_keepalive_interval);
+        _keepalive_interval = null;
+    }
+}
+
+async function blob_sang_base64(blob) {
+    const arrayBuffer = await blob.arrayBuffer();
+    const uint8 = new Uint8Array(arrayBuffer);
+    const CHUNK = 8192;
+    let binary = '';
+    for (let i = 0; i < uint8.length; i += CHUNK) {
+        binary += String.fromCharCode.apply(null, uint8.subarray(i, i + CHUNK));
+    }
+    return btoa(binary);
+}
+
 const sleep = (ms, signal) => new Promise((resolve, reject) => {
     const onAbort = () => {
         clearTimeout(timeout);
@@ -59,32 +88,37 @@ const sleep = (ms, signal) => new Promise((resolve, reject) => {
     }
 });
 
-async function tai_tu_fpt(van_ban, cau_hinh, tin_hieu_huy) {
+async function tai_tu_fpt(van_ban, cau_hinh, tin_hieu_huy, thayNhanhWeb) {
     const cac_giong = ['banmai', 'leminh', 'thuminh', 'myan', 'giahuy', 'lannhi', 'linhsan'];
     const giong = cac_giong[cau_hinh.chi_so_giong] || 'banmai';
     const muc_toc_do = cau_hinh.toc_do > 1 ? 1 : (cau_hinh.toc_do < 1 ? -1 : 0);
-    
+
     const phan_hoi = await fetch('https://api.fpt.ai/hmi/tts/v5', {
         method: 'POST',
         headers: { 'api-key': cau_hinh.khoa_fpt, 'voice': giong, 'speed': muc_toc_do.toString() },
         body: van_ban,
         signal: tin_hieu_huy
     });
-    
+
     if (!phan_hoi.ok) throw new Error('Lỗi FPT: ' + phan_hoi.status);
     const ket_qua = await phan_hoi.json();
     if (ket_qua.error && ket_qua.error !== 0 && ket_qua.error !== '0') throw new Error(ket_qua.message || 'Lỗi FPT');
     if (ket_qua.success === 'false' || ket_qua.success === false) throw new Error(ket_qua.message || 'Lỗi FPT');
-    
+
     let async_link = ket_qua.async;
     if (!async_link && ket_qua.success && ket_qua.message && ket_qua.message.startsWith('http')) {
         async_link = ket_qua.message;
     }
     if (!async_link) throw new Error('Không nhận được link audio từ FPT');
-    
-    for (let i = 0; i < 10; i++) {
+
+    let maxWaitTime = Math.max(18000, van_ban.length * 70);
+    if (thayNhanhWeb === 'extreme') maxWaitTime = 1000;
+    else if (thayNhanhWeb === 'on' || thayNhanhWeb === true) maxWaitTime = Math.max(8000, van_ban.length * 40);
+    const startTime = Date.now();
+    let delay = 400;
+
+    while (Date.now() - startTime < maxWaitTime) {
         if (tin_hieu_huy.aborted) throw new DOMException('DaHuy', 'AbortError');
-        const delay = Math.min(500 * Math.pow(1.5, i), 5000);
         await sleep(delay, tin_hieu_huy);
         const kiem_tra = await fetch(async_link, { signal: tin_hieu_huy }).catch(e => {
             if (e.name === 'AbortError') throw e;
@@ -99,6 +133,7 @@ async function tai_tu_fpt(van_ban, cau_hinh, tin_hieu_huy) {
             if (loai_noi_dung.includes('json')) {
                 const json_body = await kiem_tra.json();
                 if (json_body.message && json_body.message.toLowerCase().includes('processing')) {
+                    delay = Math.min(delay * 1.4, 2000);
                     continue;
                 }
                 throw new Error('Lỗi FPT: ' + (json_body.message || 'Lỗi không xác định'));
@@ -106,6 +141,10 @@ async function tai_tu_fpt(van_ban, cau_hinh, tin_hieu_huy) {
                 await kiem_tra.text();
                 throw new Error('FPT trả về định dạng không hợp lệ: ' + loai_noi_dung);
             }
+        } else if (kiem_tra.status === 404 || kiem_tra.status === 202 || kiem_tra.status === 503) {
+            await kiem_tra.text();
+            delay = Math.min(delay * 1.4, 2000);
+            continue;
         } else {
             await kiem_tra.text();
             throw new Error('HTTP Error FPT: ' + kiem_tra.status);
@@ -118,27 +157,27 @@ async function tai_tu_gcp(van_ban, cau_hinh, tin_hieu_huy) {
     const cac_giong = ['vi-VN-Neural2-A', 'vi-VN-Neural2-D', 'vi-VN-Wavenet-A', 'vi-VN-Wavenet-B', 'vi-VN-Wavenet-C', 'vi-VN-Wavenet-D', 'vi-VN-Standard-A', 'vi-VN-Standard-B', 'vi-VN-Standard-C', 'vi-VN-Standard-D'];
     const giong = cac_giong[cau_hinh.chi_so_giong] || 'vi-VN-Neural2-A';
     const toc_do_an_toan = Number(cau_hinh.toc_do) || 1;
-    
+
     const body = {
         input: { text: van_ban },
         voice: { languageCode: 'vi-VN', name: giong },
         audioConfig: { audioEncoding: 'MP3', speakingRate: toc_do_an_toan }
     };
-    
+
     const phan_hoi = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize`, {
         method: 'POST',
-        headers: { 
+        headers: {
             'Content-Type': 'application/json',
             'X-Goog-Api-Key': cau_hinh.khoa_gcp
         },
         body: JSON.stringify(body),
         signal: tin_hieu_huy
     });
-    
+
     if (!phan_hoi.ok) throw new Error('Lỗi Google Cloud TTS');
     const ket_qua = await phan_hoi.json();
     if (!ket_qua.audioContent) throw new Error('Không nhận được audio từ Google Cloud');
-    
+
     const binaryStr = atob(ket_qua.audioContent);
     const len = binaryStr.length;
     const bytes = new Uint8Array(len);
@@ -156,7 +195,7 @@ async function tai_tu_azure(van_ban, cau_hinh, tin_hieu_huy) {
     const ssml = `<speak version='1.0' xml:lang='vi-VN'><voice name='${giong}'><prosody rate='${toc_do_an_toan}'>${van_ban_an_toan}</prosody></voice></speak>`;
     const reg_vung = /^[a-z0-9-]{2,30}$/;
     const vung_an_toan = reg_vung.test(cau_hinh.vung_azure) ? cau_hinh.vung_azure : 'southeastasia';
-    
+
     const phan_hoi = await fetch(`https://${vung_an_toan}.tts.speech.microsoft.com/cognitiveservices/v1`, {
         method: 'POST',
         headers: {
@@ -167,7 +206,7 @@ async function tai_tu_azure(van_ban, cau_hinh, tin_hieu_huy) {
         body: ssml,
         signal: tin_hieu_huy
     });
-    
+
     if (!phan_hoi.ok) throw new Error('Lỗi Azure');
     return await phan_hoi.blob();
 }
@@ -183,7 +222,7 @@ async function tai_tu_khac(van_ban, cau_hinh, tin_hieu_huy, id_cong_cu) {
 
     let headersObj = {};
     if (engine.headers) {
-        try { headersObj = JSON.parse(engine.headers); } catch(e) {}
+        try { headersObj = JSON.parse(engine.headers); } catch (e) { }
     }
 
     const options = {
@@ -237,11 +276,11 @@ async function lay_cau_hinh_api() {
     };
 }
 
-async function tai_am_thanh(van_ban, cong_cu, chi_so_giong, toc_do, tin_hieu_huy) {
+async function tai_am_thanh(van_ban, cong_cu, chi_so_giong, toc_do, tin_hieu_huy, thayNhanhWeb) {
     const cau_hinh = await lay_cau_hinh_api();
     cau_hinh.chi_so_giong = chi_so_giong;
     cau_hinh.toc_do = toc_do;
-    
+
     let enginePrefix = cong_cu;
     if (cong_cu.startsWith('fpt_') || cong_cu.startsWith('azure_') || cong_cu.startsWith('gcp_')) {
         const engine = cau_hinh.customEngines.find(e => String(e.id) === String(cong_cu));
@@ -256,7 +295,7 @@ async function tai_am_thanh(van_ban, cong_cu, chi_so_giong, toc_do, tin_hieu_huy
         }
     }
 
-    if (enginePrefix === 'fpt') return await tai_tu_fpt(van_ban, cau_hinh, tin_hieu_huy);
+    if (enginePrefix === 'fpt') return await tai_tu_fpt(van_ban, cau_hinh, tin_hieu_huy, thayNhanhWeb);
     if (enginePrefix === 'azure') return await tai_tu_azure(van_ban, cau_hinh, tin_hieu_huy);
     if (enginePrefix === 'gcp') return await tai_tu_gcp(van_ban, cau_hinh, tin_hieu_huy);
     if (enginePrefix.startsWith('khac_')) return await tai_tu_khac(van_ban, cau_hinh, tin_hieu_huy, cong_cu);
@@ -266,55 +305,81 @@ async function tai_am_thanh(van_ban, cong_cu, chi_so_giong, toc_do, tin_hieu_huy
 function gui_phan_hoi_an_toan(ham_gui, du_lieu) {
     try {
         ham_gui(du_lieu);
-    } catch(e) {}
+    } catch (e) { }
 }
 
 chrome.runtime.onMessage.addListener((tin_nhan, nguoi_gui, gui_phan_hoi) => {
     if (nguoi_gui.tab) {
         try {
             if (!new URL(nguoi_gui.tab.url).hostname.endsWith('sangtacviet.com')) return false;
-        } catch(e) { return false; }
+        } catch (e) { return false; }
     } else if (nguoi_gui.id !== chrome.runtime.id) {
         return false;
     }
 
     if (tin_nhan.hanhDong === 'taiAmThanh') {
-        const { vanBan, congCu, chiSoGiong, tocDo, maYeuCau, khoaCache } = tin_nhan;
+        const { vanBan, congCu, chiSoGiong, tocDo, maYeuCau, khoaCache, thayNhanhWeb } = tin_nhan;
         if (typeof vanBan !== 'string' || vanBan.length > 5000) {
             gui_phan_hoi_an_toan(gui_phan_hoi, { error: 'Đoạn văn quá dài', maYeuCau });
             return true;
         }
-        
-        const id_the = nguoi_gui.tab?.id || nguoi_gui.id || 'system';
-        if (cac_tien_trinh_dang_tai.has(id_the)) {
-            cac_tien_trinh_dang_tai.get(id_the).bo_dieu_khien.abort();
-        }
+
+        const id_the = nguoi_gui.tab?.id || nguoi_gui.id;
         const bo_dieu_khien = new AbortController();
         cac_tien_trinh_dang_tai.set(id_the, { bo_dieu_khien, maYeuCau: maYeuCau });
 
+        bat_dau_keepalive();
+
         (async () => {
+            let timeoutTimer = null;
             try {
-                const audio_blob = await tai_am_thanh(vanBan, congCu, chiSoGiong, tocDo, bo_dieu_khien.signal);
-                if (bo_dieu_khien.signal.aborted) throw new DOMException('DaHuy', 'AbortError');
-                
+                const waitPromise = new Promise((resolve, reject) => {
+                    let maxTimeout = Math.max(18000, vanBan.length * 70);
+                    if (thayNhanhWeb === 'extreme') maxTimeout = 1000;
+                    else if (thayNhanhWeb === 'on' || thayNhanhWeb === true) maxTimeout = Math.max(8000, vanBan.length * 40);
+
+                    timeoutTimer = setTimeout(() => {
+                        bo_dieu_khien.abort();
+                        reject(new Error('Hết thời gian API'));
+                    }, maxTimeout);
+
+                    tai_am_thanh(vanBan, congCu, chiSoGiong, tocDo, bo_dieu_khien.signal, thayNhanhWeb)
+                        .then(resolve)
+                        .catch(reject);
+                });
+
+                const audio_blob = await waitPromise;
+                if (timeoutTimer) clearTimeout(timeoutTimer);
+
+                if (bo_dieu_khien.signal.aborted && audio_blob === undefined) throw new DOMException('DaHuy', 'AbortError');
+
                 if (!khoaCache) {
                     gui_phan_hoi_an_toan(gui_phan_hoi, { error: 'Thiếu khóa cache', maYeuCau });
                     return;
                 }
-                
-                const db = await mo_co_so_du_lieu();
-                await luu_vao_db(db, khoaCache, audio_blob);
-                gui_phan_hoi_an_toan(gui_phan_hoi, { success: true, maYeuCau });
-            } catch(l) {
+                try {
+                    const db = await mo_co_so_du_lieu();
+                    await luu_vao_db(db, khoaCache, audio_blob);
+                } catch (e) { }
+
+                const base64Audio = await blob_sang_base64(audio_blob);
+                gui_phan_hoi_an_toan(gui_phan_hoi, {
+                    success: true,
+                    maYeuCau,
+                    audioBase64: base64Audio,
+                    audioType: audio_blob.type || 'audio/mpeg'
+                });
+            } catch (l) {
                 gui_phan_hoi_an_toan(gui_phan_hoi, { error: l.message, biHuy: l.name === 'AbortError', maYeuCau });
             } finally {
                 if (cac_tien_trinh_dang_tai.get(id_the)?.bo_dieu_khien === bo_dieu_khien) {
                     cac_tien_trinh_dang_tai.delete(id_the);
                 }
+                if (cac_tien_trinh_dang_tai.size === 0) dung_keepalive();
             }
         })();
-        
-        return true; 
+
+        return true;
     } else if (tin_nhan.hanhDong === 'huyTaiAmThanh') {
         const id_the = nguoi_gui.tab?.id || nguoi_gui.id || 'system';
         if (cac_tien_trinh_dang_tai.has(id_the)) {
@@ -328,7 +393,7 @@ chrome.runtime.onMessage.addListener((tin_nhan, nguoi_gui, gui_phan_hoi) => {
             cac_tien_trinh_dang_tai.delete(id_the);
         }
     } else if (tin_nhan.hanhDong === 'thayDoiTrangThai' || tin_nhan.hanhDong === 'capNhatAnhBia') {
-        chrome.runtime.sendMessage(tin_nhan).catch(() => {});
+        chrome.runtime.sendMessage(tin_nhan).catch(() => { });
     }
 });
 
