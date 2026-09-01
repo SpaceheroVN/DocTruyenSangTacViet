@@ -1,4 +1,3 @@
-# Tạm dừng dự án vô thời hạn. Bận!
 <div align="center">
   <img src="docs/icons/logo.svg" alt="Đọc Truyện Cho Sáng Tác Việt" width="200" />
   <p>Tiện ích trình duyệt tự động đọc truyện trên <a href="https://sangtacviet.com">Sáng Tác Việt</a>, hỗ trợ nhiều engine TTS với giọng đọc tự nhiên.</p>
