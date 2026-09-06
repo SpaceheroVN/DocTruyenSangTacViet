@@ -8,7 +8,7 @@
 [![Edge Add-on](https://img.shields.io/badge/Microsoft%20Edge-Add--on-0078d4?logo=microsoftedge)](https://microsoftedge.microsoft.com/addons/detail/mabgcghglcjheefkkicmkpmlhaooiiae)
 
 ---
-
+# Lưu ý: Cần cài đặt gói ngôn ngữ trong window trước để có được giọng nói free.
 ## Tính năng
 
 **Engine giọng đọc**
