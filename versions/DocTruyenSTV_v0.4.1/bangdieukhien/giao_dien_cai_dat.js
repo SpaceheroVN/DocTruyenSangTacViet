@@ -1,21 +1,23 @@
 import { CauHinh } from './quan_ly_cau_hinh.js';
 import { DieuKhienTrinhPhat } from './dieu_khien_trinh_phat.js';
-import { showToast, showConfirm } from './tien_ich.js';
+import { hien_thong_bao, hien_xac_nhan } from './tien_ich.js';
 
 export const GiaoDienCaiDat = {
-    khoiTao() {
-        this.khoiTaoCauHinhGiaoDien();
-        this.khoiTaoTuyChon();
-        this.khoiTaoTuDongDung();
-        this.khoiTaoDongHoTron();
-        this.khoiTaoTuDien();
-        this.ganSuKienCaiDat();
-        this.ganSuKienPhimTat();
+    khoi_tao() {
+        this.khoi_tao_cau_hinh_giao_dien();
+        this.khoi_tao_tuy_chon();
+        this.khoi_tao_tu_dong_dung();
+        this.khoi_tao_dong_ho_tron();
+        this.khoi_tao_tu_dien();
+        this.gan_su_kien_cai_dat();
+        this.gan_su_kien_phim_tat();
     },
+    
 
-    khoiTaoCauHinhGiaoDien() {
-        const dienGiaTri = (id, khoa, laDongBo = true, loai = 'value') => {
-            const giaTri = CauHinh.lay(khoa, laDongBo);
+    khoi_tao_cau_hinh_giao_dien() {
+        const dienGiaTri = (id, khoa, laDongBo = true, loai = 'value', macDinh = undefined) => {
+            let giaTri = CauHinh.lay(khoa, laDongBo);
+            if (giaTri === undefined && macDinh !== undefined) giaTri = macDinh;
             const phanTu = document.getElementById(id);
             if (!phanTu || giaTri === undefined) return;
             if (loai === 'value') phanTu.value = giaTri;
@@ -26,16 +28,14 @@ export const GiaoDienCaiDat = {
         dienGiaTri('vol-slider', 'volume', true);
         dienGiaTri('engine-select', 'maydoc', true);
         dienGiaTri('voice-select', 'voiceIndex', true);
-        dienGiaTri('chk-auto-next', 'tudongchuyenchuong', true, 'checked');
+        dienGiaTri('chk-autonext', 'tudongchuyenchuong', true, 'checked');
         dienGiaTri('chk-shortcuts', 'batphimtat', true, 'checked');
         dienGiaTri('chk-read-book', 'doctentruyen', true, 'checked');
         dienGiaTri('chk-read-chap', 'doctenchuong', true, 'checked');
         dienGiaTri('select-auto-fallback', 'thayNhanhWeb', true);
-        dienGiaTri('pause-comma', 'smartPauses', true);
-
-        dienGiaTri('fpt-key', 'fpt_key', false);
-        dienGiaTri('azure-key', 'azure_key', false);
-        dienGiaTri('azure-region', 'azure_region', false);
+        dienGiaTri('pause-comma', 'pauseComma', true, 'value', 300);
+        dienGiaTri('pause-dot', 'pauseDot', true, 'value', 800);
+        dienGiaTri('pause-para', 'pausePara', true, 'value', CauHinh.lay('smartPauses', true) || 1200);
 
         const speedVal = document.getElementById('speed-val');
         const speedSlider = document.getElementById('speed-slider');
@@ -46,15 +46,15 @@ export const GiaoDienCaiDat = {
         if (volVal && volSlider) volVal.textContent = Math.round(volSlider.value * 100) + '%';
     },
 
-    ganSuKienCaiDat() {
+    gan_su_kien_cai_dat() {
         const ganDauVao = (id, khoa, laDongBo = true, loai = 'value') => {
             const phanTu = document.getElementById(id);
             if (!phanTu) return;
             phanTu.addEventListener('change', (e) => {
                 let giaTri = loai === 'checked' ? e.target.checked : (loai === 'number' ? parseFloat(e.target.value) : e.target.value);
-                if (loai === 'number' && giaTri < 0) { giaTri = 0; e.target.value = 0; }
-                CauHinh.dat(khoa, giaTri, laDongBo);
-                DieuKhienTrinhPhat.guiLenh('capNhatCaiDat');
+                if (loai === 'number' && (isNaN(giaTri) || giaTri < 0)) { giaTri = 0; e.target.value = 0; }
+                CauHinh.dat(khoa, giaTri, laDongBo, true);
+                DieuKhienTrinhPhat.gui_lenh('capNhatCaiDat', { [khoa]: giaTri });
             });
         };
 
@@ -67,7 +67,7 @@ export const GiaoDienCaiDat = {
             });
             theTocDo.addEventListener('change', (e) => {
                 CauHinh.dat('speed', parseFloat(e.target.value), true);
-                DieuKhienTrinhPhat.guiLenh('capNhatCaiDat');
+                DieuKhienTrinhPhat.gui_lenh('capNhatCaiDat', { speed: parseFloat(e.target.value) });
             });
         }
 
@@ -77,65 +77,86 @@ export const GiaoDienCaiDat = {
             });
             theAmLuong.addEventListener('change', (e) => {
                 CauHinh.dat('volume', parseFloat(e.target.value), true);
-                DieuKhienTrinhPhat.guiLenh('capNhatCaiDat');
+                DieuKhienTrinhPhat.gui_lenh('capNhatCaiDat', { volume: parseFloat(e.target.value) });
             });
         }
 
-        ganDauVao('voice-select', 'voiceIndex', true, 'number');
         const voiceSelect = document.getElementById('voice-select');
         if (voiceSelect) {
             voiceSelect.addEventListener('change', (e) => {
-                const theThongTin = document.getElementById('info-voice');
-                if (theThongTin) {
-                    const selectedOpt = e.target.options[e.target.selectedIndex];
-                    theThongTin.textContent = selectedOpt ? selectedOpt.text : 'Mặc định';
+                const chiSo = parseInt(e.target.value, 10);
+                const selectedOpt = e.target.options[e.target.selectedIndex];
+                const textGiong = selectedOpt ? selectedOpt.text : 'Mặc định';
+                const tenGiongFull = selectedOpt ? (selectedOpt.getAttribute('data-voice-name') || textGiong) : '';
+
+                // Bảo vệ chống ghi đè: Tuyệt đối không bao giờ lưu giọng ngoại ngữ (David, Zira...)
+                const tenThuong = (tenGiongFull || textGiong).toLowerCase();
+                const laGiongNgoai = tenThuong.includes('david') || tenThuong.includes('zira') || tenThuong.includes('english');
+                if (laGiongNgoai) {
+                    return; // Bỏ qua, giữ nguyên giọng tiếng Việt chuẩn
                 }
+
+                if (!isNaN(chiSo)) CauHinh.dat('voiceIndex', chiSo, true, true);
+                if (tenGiongFull) CauHinh.dat('voiceName', tenGiongFull, true, true);
+
+                const theThongTin = document.getElementById('info-voice');
+                if (theThongTin) theThongTin.textContent = textGiong;
+                const customVoiceText = document.getElementById('custom-voice-text');
+                if (customVoiceText) customVoiceText.textContent = textGiong;
+                DieuKhienTrinhPhat.gui_lenh('doiGiongDoc', { voiceIndex: chiSo, voiceName: tenGiongFull });
             });
         }
-        ganDauVao('chk-auto-next', 'tudongchuyenchuong', true, 'checked');
+        ganDauVao('chk-autonext', 'tudongchuyenchuong', true, 'checked');
         ganDauVao('chk-shortcuts', 'batphimtat', true, 'checked');
         ganDauVao('chk-read-book', 'doctentruyen', true, 'checked');
         ganDauVao('chk-read-chap', 'doctenchuong', true, 'checked');
         ganDauVao('select-auto-fallback', 'thayNhanhWeb', true);
-        ganDauVao('pause-comma', 'smartPauses', true, 'number');
+
+        // Thiết lập các khoảng nghỉ dấu phẩy, dấu chấm và xuống dòng
+        const thiet_lap_o_nghi = (ma_o, khoa_cau_hinh, kem_khoa_thong_minh = false) => {
+            const the_nhap = document.getElementById(ma_o);
+            if (!the_nhap) return;
+            const minVal = parseInt(the_nhap.getAttribute('min'), 10) || 0;
+            const luu_gia_tri = (e) => {
+                let gia_tri = parseFloat(the_nhap.value);
+                if (isNaN(gia_tri) || gia_tri < minVal) {
+                    gia_tri = minVal;
+                    if (e && e.type === 'change') {
+                        the_nhap.value = minVal;
+                        if (minVal > 0) {
+                            hien_thong_bao(`Khoảng nghỉ tối thiểu là ${minVal}ms để chống nuốt đoạn trình duyệt`, 'warning');
+                        }
+                    }
+                }
+                CauHinh.dat(khoa_cau_hinh, gia_tri, true, true);
+                if (kem_khoa_thong_minh) {
+                    CauHinh.dat('smartPauses', gia_tri, true, true);
+                    DieuKhienTrinhPhat.gui_lenh('capNhatCaiDat', { [khoa_cau_hinh]: gia_tri, smartPauses: gia_tri });
+                } else {
+                    DieuKhienTrinhPhat.gui_lenh('capNhatCaiDat', { [khoa_cau_hinh]: gia_tri });
+                }
+            };
+            the_nhap.addEventListener('change', luu_gia_tri);
+            the_nhap.addEventListener('input', luu_gia_tri);
+        };
+        thiet_lap_o_nghi('pause-comma', 'pauseComma');
+        thiet_lap_o_nghi('pause-dot', 'pauseDot');
+        thiet_lap_o_nghi('pause-para', 'pausePara', true);
 
         const engineSelect = document.getElementById('engine-select');
-        const apiBox = document.getElementById('api-settings-box');
-        const apiKeyInput = document.getElementById('api-key-input');
-        const apiRegionInput = document.getElementById('api-region-input');
-
-        if (apiBox && !document.getElementById('api-warning-container')) {
-            const container = document.createElement('div');
-            container.id = 'api-warning-container';
-            container.style.cssText = 'margin-top: 10px;';
-
-            const btn = document.createElement('button');
-            btn.className = 'btn-ctrl btn-sm';
-            btn.style.cssText = 'width: 100%; height: 30px; font-size: 11px; border-color: var(--accent); color: var(--accent); background: transparent; border-radius: 6px;';
-            btn.textContent = 'Xem lưu ý bảo mật';
-
-            const content = document.createElement('div');
-            content.style.cssText = 'display: none; font-size: 11.5px; margin-top: 8px; line-height: 1.4; padding: 10px; border: 1px dashed #ff9800; border-radius: 8px; background: rgba(255, 152, 0, 0.05); text-align: left;';
-            content.innerHTML = `<span style="color: #ff9800;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-4px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> <b>Bảo mật:</b></span> <span style="color: var(--text);">API Key của bạn được lưu cục bộ trên máy tính này. Vui lòng không chia sẻ máy tính hoặc để lộ khóa cho người khác.</span>`;
-
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                const isHidden = content.style.display === 'none';
-                content.style.display = isHidden ? 'block' : 'none';
-                btn.textContent = isHidden ? 'Ẩn lưu ý bảo mật' : 'Xem lưu ý bảo mật';
-            });
-
-            container.appendChild(btn);
-            container.appendChild(content);
-            apiBox.appendChild(container);
-        }
 
         if (engineSelect) {
             engineSelect.addEventListener('change', (e) => {
                 const congcu = e.target.value;
-                CauHinh.dat('maydoc', congcu, true);
-                DieuKhienTrinhPhat.guiLenh('capNhatCaiDat');
-                DieuKhienTrinhPhat.capNhatGiaoDienEngine(congcu);
+                CauHinh.dat('maydoc', congcu, true, true);
+                const ds_dong_co = CauHinh.lay('customEngines', false) || [];
+                const dong_co_khop = ds_dong_co.find(d => d.id === congcu);
+                if (dong_co_khop && dong_co_khop.isQuotaExceeded) {
+                    dong_co_khop.isQuotaExceeded = false;
+                    CauHinh.dat('customEngines', ds_dong_co, false);
+                }
+                DieuKhienTrinhPhat.gui_lenh('capNhatCaiDat', { maydoc: congcu });
+                DieuKhienTrinhPhat.cap_nhat_giao_dien_engine(congcu);
 
                 const volSlider = document.getElementById('vol-slider');
                 if (volSlider) {
@@ -146,13 +167,14 @@ export const GiaoDienCaiDat = {
                         const volVal = document.getElementById('vol-val');
                         if (volVal) volVal.textContent = Math.round(maxVol * 100) + '%';
                         CauHinh.dat('volume', maxVol, true);
-                        DieuKhienTrinhPhat.guiLenh('capNhatCaiDat');
+                        DieuKhienTrinhPhat.gui_lenh('capNhatCaiDat');
                     }
                 }
             });
             setTimeout(() => {
-                engineSelect.value = CauHinh.lay('maydoc', true) || 'web';
-                engineSelect.dispatchEvent(new Event('change'));
+                const giaTriMayDoc = CauHinh.lay('maydoc', true) || 'web';
+                engineSelect.value = giaTriMayDoc;
+                DieuKhienTrinhPhat.cap_nhat_giao_dien_engine(giaTriMayDoc);
             }, 100);
         }
 
@@ -175,10 +197,49 @@ export const GiaoDienCaiDat = {
                 const input = document.getElementById(btn.dataset.target);
                 if (!input) return;
                 const delta = parseInt(btn.dataset.delta, 10);
-                input.value = Math.max(0, (parseInt(input.value, 10) || 0) + delta);
+                const minVal = parseInt(input.getAttribute('min'), 10) || 0;
+                const hienTai = parseInt(input.value, 10) || 0;
+                let tiepTheo;
+                if (delta < 0) {
+                    if (hienTai <= minVal) {
+                        tiepTheo = minVal;
+                    } else if (hienTai - 100 < minVal) {
+                        tiepTheo = minVal;
+                    } else {
+                        tiepTheo = hienTai + delta;
+                    }
+                } else {
+                    if (hienTai === minVal && minVal % 100 !== 0) {
+                        tiepTheo = Math.ceil(minVal / 100) * 100;
+                    } else {
+                        tiepTheo = hienTai + delta;
+                    }
+                }
+                input.value = Math.max(minVal, tiepTheo);
+                input.dispatchEvent(new Event('input'));
                 input.dispatchEvent(new Event('change'));
             });
         });
+
+        const btnResetPauses = document.getElementById('btn-reset-pause-defaults');
+        if (btnResetPauses) {
+            btnResetPauses.addEventListener('click', () => {
+                const macDinh = {
+                    'pause-comma': 300,
+                    'pause-dot': 800,
+                    'pause-para': 1200
+                };
+                Object.entries(macDinh).forEach(([ma_o, gia_tri]) => {
+                    const the_nhap = document.getElementById(ma_o);
+                    if (the_nhap) {
+                        the_nhap.value = gia_tri;
+                        the_nhap.dispatchEvent(new Event('input'));
+                        the_nhap.dispatchEvent(new Event('change'));
+                    }
+                });
+                hien_thong_bao('Đã khôi phục khoảng nghỉ mặc định', 'success');
+            });
+        }
 
         const btnNote = document.getElementById('btn-show-pause-note');
         const noteContent = document.getElementById('pause-note-content');
@@ -187,15 +248,16 @@ export const GiaoDienCaiDat = {
                 e.stopPropagation();
                 const isHidden = noteContent.style.display === 'none';
                 noteContent.style.display = isHidden ? 'block' : 'none';
-                btnNote.textContent = isHidden ? 'Ẩn lưu ý' : 'Xem lưu ý';
+                const iconHtml = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
+                btnNote.innerHTML = isHidden ? `${iconHtml} Ẩn lưu ý` : `${iconHtml} Xem lưu ý`;
             });
         }
     },
 
-    hienThiTuDien() {
+    hien_thi_tu_dien() {
         const dictList = document.getElementById('dict-list');
         if (!dictList) return;
-        const dict = CauHinh.lay('customDict') || [];
+        const dict = CauHinh.lay('customDict', false) || [];
         dictList.innerHTML = '';
         if (dict.length === 0) {
             dictList.innerHTML = '<div style="font-size: 11px; color: var(--text-muted); text-align: center; padding: 10px 0; font-style: italic;">Chưa có quy tắc nào</div>';
@@ -204,20 +266,14 @@ export const GiaoDienCaiDat = {
 
         dict.forEach((item, index) => {
             const div = document.createElement('div');
-            div.style.display = 'flex';
-            div.style.alignItems = 'center';
-            div.style.gap = '6px';
-            div.style.padding = '4px 8px';
-            div.style.background = 'rgba(255,255,255,0.02)';
-            div.style.border = '1px solid rgba(255,255,255,0.05)';
-            div.style.borderRadius = '6px';
+            div.className = 'dict-item-row';
             const esc = (s) => (s || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
             div.innerHTML = `
                 <div style="flex: 1; min-width: 0; font-size: 11px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600;" title="${esc(item[0])}">${esc(item[0])}</div>
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; opacity: 0.7;"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                 <div style="flex: 1; min-width: 0; font-size: 11px; color: var(--accent2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600;" title="${esc(item[1])}">${esc(item[1])}</div>
                 <div style="width: 44px; display: flex; justify-content: flex-end; flex-shrink: 0;">
-                    <button class="btn-ctrl btn-sm btn-del-dict" data-idx="${index}" style="height: 24px; width: 28px; padding: 0; display: flex; align-items: center; justify-content: center; background: rgba(224, 92, 110, 0.1); color: #e05c6e; border: none; border-radius: 4px;" title="Xóa">
+                    <button class="btn-ctrl btn-sm btn-del-dict" data-idx="${index}" title="Xóa quy tắc">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                     </button>
                 </div>
@@ -228,17 +284,17 @@ export const GiaoDienCaiDat = {
         dictList.querySelectorAll('.btn-del-dict').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const idx = parseInt(e.currentTarget.getAttribute('data-idx'));
-                let currentDict = CauHinh.lay('customDict') || [];
+                let currentDict = CauHinh.lay('customDict', false) || [];
                 currentDict.splice(idx, 1);
-                CauHinh.luuTuDien(currentDict);
-                this.hienThiTuDien();
-                showToast('Đã xóa quy tắc!', 'success');
+                CauHinh.luu_tu_dien(currentDict);
+                this.hien_thi_tu_dien();
+                hien_thong_bao('Đã xóa quy tắc!', 'success');
             });
         });
     },
 
-    khoiTaoTuDien() {
-        this.hienThiTuDien();
+    khoi_tao_tu_dien() {
+        this.hien_thi_tu_dien();
         const btnAddDict = document.getElementById('btn-add-dict');
         if (btnAddDict) {
             btnAddDict.addEventListener('click', () => {
@@ -248,24 +304,24 @@ export const GiaoDienCaiDat = {
                 const origin = originEl.value.trim();
                 const replace = replaceEl.value.trim();
                 if (!origin) {
-                    showToast('Vui lòng nhập từ lỗi cần sửa!', 'warning');
+                    hien_thong_bao('Vui lòng nhập từ lỗi cần sửa!', 'warning');
                     return;
                 }
-                let dict = CauHinh.lay('customDict') || [];
+                let dict = CauHinh.lay('customDict', false) || [];
                 const idx = dict.findIndex(item => item[0].toLowerCase() === origin.toLowerCase());
                 if (idx !== -1) dict[idx][1] = replace;
                 else dict.push([origin, replace]);
 
-                CauHinh.luuTuDien(dict);
+                CauHinh.luu_tu_dien(dict);
                 originEl.value = '';
                 replaceEl.value = '';
-                this.hienThiTuDien();
-                showToast('Đã lưu quy tắc thành công!', 'success');
+                this.hien_thi_tu_dien();
+                hien_thong_bao('Đã lưu quy tắc thành công!', 'success');
             });
         }
     },
 
-    khoiTaoTuyChon() {
+    khoi_tao_tuy_chon() {
         document.addEventListener('click', (e) => {
             const trongVung = e.target.closest('.custom-select-container');
             if (!trongVung) {
@@ -283,18 +339,18 @@ export const GiaoDienCaiDat = {
             }
         });
 
-        this.caiDatOChonTinh('custom-left-type', 'text-left-type', 'dropdown-left-type');
-        this.caiDatOChonTinh('custom-right-type', 'text-right-type', 'dropdown-right-type');
-        this.caiDatOChonTinh('custom-operator', 'text-operator', 'dropdown-operator');
+        this.cai_dat_o_chon_tinh('custom-left-type', 'text-left-type', 'dropdown-left-type');
+        this.cai_dat_o_chon_tinh('custom-right-type', 'text-right-type', 'dropdown-right-type');
+        this.cai_dat_o_chon_tinh('custom-operator', 'text-operator', 'dropdown-operator');
 
         const engineSelect = document.getElementById('engine-select');
         if (engineSelect) {
-            engineSelect.addEventListener('change', () => this.renderDanhSachEngine());
-            engineSelect._capNhatGiaoDien = () => this.renderDanhSachEngine();
+            engineSelect.addEventListener('change', () => this.render_danh_sach_engine());
+            engineSelect._capNhatGiaoDien = () => this.render_danh_sach_engine();
         }
-        this.renderDanhSachEngine();
-        this.caiDatOChonTinh('select-auto-stop', 'custom-autostop-text', 'custom-autostop-dropdown', true);
-        this.caiDatOChonTinh('voice-select', 'custom-voice-text', 'custom-voice-dropdown', true);
+        this.render_danh_sach_engine();
+        this.cai_dat_o_chon_tinh('select-auto-stop', 'custom-autostop-text', 'custom-autostop-dropdown', true);
+        this.cai_dat_o_chon_tinh('voice-select', 'custom-voice-text', 'custom-voice-dropdown', true);
         const fallbackSeg = document.getElementById('fallback-seg');
         const selectFallback = document.getElementById('select-auto-fallback');
         if (fallbackSeg && selectFallback) {
@@ -320,11 +376,11 @@ export const GiaoDienCaiDat = {
         
         const btnDeleteEngine = document.getElementById('btn-delete-engine');
         if (btnDeleteEngine) {
-            btnDeleteEngine.addEventListener('click', () => this.xoaEngineHienTai());
+            btnDeleteEngine.addEventListener('click', () => this.xoa_engine_hien_tai());
         }
     },
 
-    caiDatOChonTinh(idChonGoc, idVanBan, idKhungChon, themIdVanBan = false) {
+    cai_dat_o_chon_tinh(idChonGoc, idVanBan, idKhungChon, themIdVanBan = false) {
         const oChonGoc = document.getElementById(idChonGoc);
         const khungChon = document.getElementById(idKhungChon);
         let vanBanHienThi = document.getElementById(idVanBan);
@@ -357,10 +413,10 @@ export const GiaoDienCaiDat = {
                     nhom.textContent = con.label;
                     khungChon.appendChild(nhom);
                     Array.from(con.children).forEach(opt => {
-                        khungChon.appendChild(this.taoMuc(opt, true, oChonGoc, khungChon));
+                        khungChon.appendChild(this.tao_muc(opt, true, oChonGoc, khungChon));
                     });
                 } else if (con.tagName === 'OPTION') {
-                    khungChon.appendChild(this.taoMuc(con, false, oChonGoc, khungChon));
+                    khungChon.appendChild(this.tao_muc(con, false, oChonGoc, khungChon));
                 }
             });
         };
@@ -370,7 +426,7 @@ export const GiaoDienCaiDat = {
         capNhat();
     },
 
-    taoMuc(opt, coThutLe, oChonGoc, khungChon) {
+    tao_muc(opt, coThutLe, oChonGoc, khungChon) {
         const muc = document.createElement('div');
         muc.className = 'custom-option';
         if (coThutLe) muc.style.paddingLeft = '24px';
@@ -387,14 +443,14 @@ export const GiaoDienCaiDat = {
         return muc;
     },
 
-    capNhatGiaoDien(idChonGoc) {
+    cap_nhat_giao_dien(idChonGoc) {
         const oChonGoc = document.getElementById(idChonGoc);
         if (oChonGoc && typeof oChonGoc._capNhatGiaoDien === 'function') {
-            oChonGoc._capNhatGiaoDien();
+            oChonGoc._cap_nhat_giao_dien();
         }
     },
 
-    renderDanhSachEngine() {
+    render_danh_sach_engine() {
         const engineSelect = document.getElementById('engine-select');
         const khungChon = document.getElementById('custom-engine-dropdown');
         let vanBanHienThi = document.getElementById('custom-engine-text');
@@ -442,10 +498,10 @@ export const GiaoDienCaiDat = {
                 nhom.textContent = con.label;
                 khungChon.appendChild(nhom);
                 Array.from(con.children).forEach(opt => {
-                    khungChon.appendChild(this.taoMuc(opt, true, engineSelect, khungChon));
+                    khungChon.appendChild(this.tao_muc(opt, true, engineSelect, khungChon));
                 });
             } else if (con.tagName === 'OPTION' && !con.value.startsWith('khac_')) {
-                khungChon.appendChild(this.taoMuc(con, false, engineSelect, khungChon));
+                khungChon.appendChild(this.tao_muc(con, false, engineSelect, khungChon));
             }
         });
 
@@ -458,7 +514,7 @@ export const GiaoDienCaiDat = {
 
             trueCustomEngines.forEach(engine => {
                 const opt = Array.from(engineSelect.options).find(o => o.value === engine.id);
-                if (opt) khungChon.appendChild(this.taoMuc(opt, true, engineSelect, khungChon));
+                if (opt) khungChon.appendChild(this.tao_muc(opt, true, engineSelect, khungChon));
             });
         }
 
@@ -478,12 +534,12 @@ export const GiaoDienCaiDat = {
         btnAdd.addEventListener('click', (e) => {
             e.stopPropagation();
             khungChon.classList.remove('show');
-            this.hienBangThemEngine();
+            this.hien_bang_them_engine();
         });
         khungChon.appendChild(btnAdd);
     },
 
-    hienBangThemEngine() {
+    hien_bang_them_engine() {
         let panel = document.getElementById('modal-add-engine');
         if (!panel) {
             panel = document.createElement('div');
@@ -493,7 +549,7 @@ export const GiaoDienCaiDat = {
                 <div class="modal">
                     <div class="modal-title" style="display: flex; justify-content: space-between; align-items: center;">
                         <span>Thêm Nguồn Đọc API</span>
-                        <a href="guide_v0.4.0.html" target="_blank" title="Xem Hướng dẫn cấu hình API" style="color: var(--accent); opacity: 0.8; transition: opacity 0.2s; display: flex; align-items: center;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.8">
+                        <a href="huong_dan.html" target="_blank" title="Xem Hướng dẫn cấu hình API" style="color: var(--accent); opacity: 0.8; transition: opacity 0.2s; display: flex; align-items: center;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.8">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                         </a>
                     </div>
@@ -572,7 +628,7 @@ export const GiaoDienCaiDat = {
                 });
             }
 
-            this.caiDatOChonTinh('ce-method', 'ce-method-text', 'ce-method-dropdown');
+            this.cai_dat_o_chon_tinh('ce-method', 'ce-method-text', 'ce-method-dropdown');
             
             ['ce-headers', 'ce-body'].forEach(id => {
                 const el = document.getElementById(id);
@@ -684,12 +740,12 @@ export const GiaoDienCaiDat = {
         let engineId = '';
 
         if (!name) {
-            showToast('Vui lòng nhập Tên nguồn đọc', 'warning');
+            hien_thong_bao('Vui lòng nhập Tên nguồn đọc', 'warning');
             return;
         }
 
         if (customEngines.find(e => e.name.toLowerCase() === name.toLowerCase() && e.id !== type)) {
-            showToast('Tên nguồn đọc đã tồn tại', 'warning');
+            hien_thong_bao('Tên nguồn đọc đã tồn tại', 'warning');
             return;
         }
 
@@ -701,13 +757,13 @@ export const GiaoDienCaiDat = {
             const audioPath = document.getElementById('ce-audiopath').value.trim();
 
             if (!url) {
-                showToast('Vui lòng nhập URL', 'warning');
+                hien_thong_bao('Vui lòng nhập URL', 'warning');
                 return;
             }
 
             if (headers) {
                 try { JSON.parse(headers); } catch (e) {
-                    showToast('Headers phải là JSON hợp lệ', 'warning');
+                    hien_thong_bao('Headers phải là JSON hợp lệ', 'warning');
                     return;
                 }
             }
@@ -721,7 +777,7 @@ export const GiaoDienCaiDat = {
         } else {
             const key = document.getElementById('ce-api-key').value.trim();
             if (!key) {
-                showToast('Vui lòng nhập API Key', 'warning');
+                hien_thong_bao('Vui lòng nhập API Key', 'warning');
                 return;
             }
             
@@ -737,7 +793,8 @@ export const GiaoDienCaiDat = {
                         headers: { 'api-key': key, 'voice': 'banmai', 'speed': '0' },
                         body: 'kiểm tra'
                     });
-                    if (res.ok) isValid = true;
+                    const duLieu = await res.json().catch(() => null);
+                    if (res.ok && duLieu && !duLieu.error) isValid = true;
                 } else if (type === 'azure') {
                     const res = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
                         method: 'POST',
@@ -755,13 +812,13 @@ export const GiaoDienCaiDat = {
                 }
 
                 if (!isValid) {
-                    showToast('API Key không hợp lệ hoặc đã hết hạn ngạch', 'warning');
+                    hien_thong_bao('API Key không hợp lệ hoặc đã hết hạn ngạch', 'warning');
                     btnSave.disabled = false;
                     btnSave.textContent = 'Thêm';
                     return;
                 }
             } catch(e) {
-                showToast('Lỗi kết nối kiểm tra API Key', 'warning');
+                hien_thong_bao('Lỗi kết nối kiểm tra API Key', 'warning');
                 btnSave.disabled = false;
                 btnSave.textContent = 'Thêm';
                 return;
@@ -784,21 +841,21 @@ export const GiaoDienCaiDat = {
 
         document.getElementById('modal-add-engine').classList.remove('show');
         
-        this.renderDanhSachEngine();
+        this.render_danh_sach_engine();
         
         const engineSelect = document.getElementById('engine-select');
         engineSelect.value = engineId;
         engineSelect.dispatchEvent(new Event('change'));
         
-        showToast('Đã thêm nguồn đọc mới', 'success');
+        hien_thong_bao('Đã thêm nguồn đọc mới', 'success');
     },
 
-    xoaEngineHienTai() {
+    xoa_engine_hien_tai() {
         const engineSelect = document.getElementById('engine-select');
         const idXoa = engineSelect.value;
         if (!idXoa || idXoa === 'web') return;
 
-        showConfirm('Xác nhận xóa', 'Bạn có chắc chắn muốn xóa nguồn đọc này không?', () => {
+        hien_xac_nhan('Xác nhận xóa', 'Bạn có chắc chắn muốn xóa nguồn đọc này không?', () => {
             let customEngines = CauHinh.lay('customEngines', false) || [];
             customEngines = customEngines.filter(e => e.id !== idXoa);
             CauHinh.dat('customEngines', customEngines, false);
@@ -812,20 +869,20 @@ export const GiaoDienCaiDat = {
 
             engineSelect.value = 'web';
             engineSelect.dispatchEvent(new Event('change'));
-            showToast('Đã xóa nguồn đọc', 'success');
+            hien_thong_bao('Đã xóa nguồn đọc', 'success');
         });
     },
 
-    khoiTaoTuDongDung() {
+    khoi_tao_tu_dong_dung() {
         this.gio_val_vt = 0;
         this.phut_val_vt = 0;
         this.laDauCong = true;
         this.boQuaThongBao = false;
 
-        this.ganSuKienAMPM();
-        this.ganSuKienMenuAutoStop();
-        this.ganSuKienCacNutApDung();
-        this.ganSuKienPhimNhanh();
+        this.gan_su_kien_am_pm();
+        this.gan_su_kien_menu_auto_stop();
+        this.gan_su_kien_cac_nut_ap_dung();
+        this.gan_su_kien_phim_nhanh();
 
         const nutDauHieu = document.getElementById('btn-toggle-sign');
         if (nutDauHieu) {
@@ -837,13 +894,13 @@ export const GiaoDienCaiDat = {
             });
         }
 
-        this.taoInputDieuKien('custom-left-input', '');
-        this.taoInputDieuKien('custom-right-input', '');
+        this.tao_input_dieu_kien('custom-left-input', '');
+        this.tao_input_dieu_kien('custom-right-input', '');
 
-        this.taiLaiDuLieuTuDongDung();
+        this.tai_lai_du_lieu_tu_dong_dung();
     },
 
-    taiLaiDuLieuMayDoc() {
+    tai_lai_du_lieu_may_doc() {
         const engineSelect = document.getElementById('engine-select');
         if (engineSelect) {
             engineSelect.value = CauHinh.lay('maydoc', true) || 'web';
@@ -857,7 +914,7 @@ export const GiaoDienCaiDat = {
         }
     },
 
-    taiLaiDuLieuTuDongDung() {
+    tai_lai_du_lieu_tu_dong_dung() {
         chrome.storage.local.get(['stopTime', 'stopRealtimeTarget', 'stopAfterChapters', 'customStopConfig'], data => {
             const selectAutoStop = document.getElementById('select-auto-stop');
             if (!selectAutoStop) return;
@@ -868,7 +925,7 @@ export const GiaoDienCaiDat = {
             else if (data.stopTime) selectAutoStop.value = 'time';
             else selectAutoStop.value = 'off';
 
-            this.capNhatGiaoDien('select-auto-stop');
+            this.cap_nhat_giao_dien('select-auto-stop');
 
             this.boQuaThongBao = true;
             selectAutoStop.dispatchEvent(new Event('change'));
@@ -876,7 +933,7 @@ export const GiaoDienCaiDat = {
         });
     },
 
-    capNhatGiaTriVT(kieu, gt) {
+    cap_nhat_gia_tri_vt(kieu, gt) {
         if (kieu === 'hour') this.gio_val_vt = Math.min(23, Math.max(0, gt));
         if (kieu === 'minute') this.phut_val_vt = Math.min(59, Math.max(0, gt));
 
@@ -887,15 +944,16 @@ export const GiaoDienCaiDat = {
         const tientringio = document.getElementById('hour-progress');
         const tientrinphut = document.getElementById('minute-progress');
         if (!nutgio || !nutphut) return;
-        const CENTER = 120, bankingio = 94, bankinhphut = 60;
+        // Bán kính: giờ ở trong (58px), phút ở ngoài (92px)
+        const CENTER = 120, ban_kinh_gio = 58, ban_kinh_phut = 92;
 
-        function setvitri(handle, banhkinh, deg) {
+        function dat_vi_tri(handle, ban_kinh, deg) {
             const rad = (deg - 90) * (Math.PI / 180);
-            handle.setAttribute('cx', CENTER + banhkinh * Math.cos(rad));
-            handle.setAttribute('cy', CENTER + banhkinh * Math.sin(rad));
+            handle.setAttribute('cx', CENTER + ban_kinh * Math.cos(rad));
+            handle.setAttribute('cy', CENTER + ban_kinh * Math.sin(rad));
         }
-        function settientrinhtronh(progress, banhkinh, deg) {
-            const c = 2 * Math.PI * banhkinh;
+        function dat_tien_trinh(progress, ban_kinh, deg) {
+            const c = 2 * Math.PI * ban_kinh;
             progress.style.strokeDasharray = `${c * (deg / 360)}, ${c}`;
         }
 
@@ -907,13 +965,13 @@ export const GiaoDienCaiDat = {
                 sogio.textContent = String(hienthi).padStart(2, '0');
             }
             const deg = (360 / 12) * (lay12gio(this.gio_val_vt) % 12);
-            setvitri(nutgio, bankingio, deg);
-            settientrinhtronh(tientringio, bankingio, deg);
+            dat_vi_tri(nutgio, ban_kinh_gio, deg);
+            dat_tien_trinh(tientringio, ban_kinh_gio, deg);
         } else {
             if (sophut) sophut.textContent = String(this.phut_val_vt).padStart(2, '0');
             const deg = (360 / 60) * this.phut_val_vt;
-            setvitri(nutphut, bankinhphut, deg);
-            settientrinhtronh(tientrinphut, bankinhphut, deg);
+            dat_vi_tri(nutphut, ban_kinh_phut, deg);
+            dat_tien_trinh(tientrinphut, ban_kinh_phut, deg);
         }
 
         const ampm = this.gio_val_vt >= 12 ? 'CH' : 'SA';
@@ -924,35 +982,38 @@ export const GiaoDienCaiDat = {
         });
     },
 
-    khoiTaoDongHoTron() {
+    khoi_tao_dong_ho_tron() {
         const nutgio = document.getElementById('hour-handle');
         const nutphut = document.getElementById('minute-handle');
         if (!nutgio || !nutphut) return;
 
-        const CENTER = 120, HOUR_R = 94, MIN_R = 60;
+        const CENTER = 120, ban_kinh_gio = 58, ban_kinh_phut = 92;
+
+        // Vạch chia giờ (12 mốc bên trong)
         const nhomgioch = document.getElementById('hour-ticks');
         if (nhomgioch) {
             nhomgioch.innerHTML = '';
-            for (let i = 0; i < 60; i++) {
-                const deg = i * 6 - 90, rad = deg * Math.PI / 180;
-                const lon = i % 5 === 0;
-                const outer = HOUR_R + 5, inner = HOUR_R - (lon ? 7 : 4);
+            for (let i = 0; i < 12; i++) {
+                const deg = i * 30 - 90, rad = deg * Math.PI / 180;
+                const outer = ban_kinh_gio + 5, inner = ban_kinh_gio - 5;
                 const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                 line.setAttribute('x1', CENTER + outer * Math.cos(rad));
                 line.setAttribute('y1', CENTER + outer * Math.sin(rad));
                 line.setAttribute('x2', CENTER + inner * Math.cos(rad));
                 line.setAttribute('y2', CENTER + inner * Math.sin(rad));
-                line.setAttribute('class', 'tick-mark' + (lon ? ' major' : ''));
+                line.setAttribute('class', 'tick-mark hour-tick');
                 nhomgioch.appendChild(line);
             }
         }
+
+        // Vạch chia phút (60 mốc bên ngoài)
         const nhomphut = document.getElementById('minute-ticks');
         if (nhomphut) {
             nhomphut.innerHTML = '';
             for (let i = 0; i < 60; i++) {
                 const deg = i * 6 - 90, rad = deg * Math.PI / 180;
-                const lon = i % 15 === 0;
-                const outer = MIN_R + 4, inner = MIN_R - (lon ? 6 : 3);
+                const lon = i % 5 === 0;
+                const outer = ban_kinh_phut + (lon ? 6 : 3), inner = ban_kinh_phut - (lon ? 6 : 3);
                 const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                 line.setAttribute('x1', CENTER + outer * Math.cos(rad));
                 line.setAttribute('y1', CENTER + outer * Math.sin(rad));
@@ -985,10 +1046,10 @@ export const GiaoDienCaiDat = {
                             let num = parseInt(dem.slice(-2));
                             if (type === 'hour') {
                                 num = Math.max(1, Math.min(12, num));
-                                this.capNhatGiaTriVT('hour', doi24gio(num, layampmhientai()));
+                                this.cap_nhat_gia_tri_vt('hour', doi24gio(num, layampmhientai()));
                             } else {
                                 num = Math.min(59, num);
-                                this.capNhatGiaTriVT('minute', num);
+                                this.cap_nhat_gia_tri_vt('minute', num);
                             }
                             dem = '';
                             digitEl.classList.remove('editing');
@@ -1003,8 +1064,8 @@ export const GiaoDienCaiDat = {
                             : String(this.phut_val_vt).padStart(2, '0');
                     } else if (['Enter', 'Tab', 'Escape'].includes(key)) {
                         const num = dem ? parseInt(dem) : (type === 'hour' ? lay12gio(this.gio_val_vt) : this.phut_val_vt);
-                        if (type === 'hour') this.capNhatGiaTriVT('hour', doi24gio(Math.max(1, Math.min(12, num)), layampmhientai()));
-                        else this.capNhatGiaTriVT('minute', Math.min(59, num));
+                        if (type === 'hour') this.cap_nhat_gia_tri_vt('hour', doi24gio(Math.max(1, Math.min(12, num)), layampmhientai()));
+                        else this.cap_nhat_gia_tri_vt('minute', Math.min(59, num));
                         dem = '';
                         digitEl.classList.remove('editing');
                         document.removeEventListener('keydown', xulyban);
@@ -1014,8 +1075,8 @@ export const GiaoDienCaiDat = {
                 const nhanrangoai = (e) => {
                     if (e.target !== digitEl) {
                         const num = dem ? parseInt(dem) : (type === 'hour' ? lay12gio(this.gio_val_vt) : this.phut_val_vt);
-                        if (type === 'hour') this.capNhatGiaTriVT('hour', doi24gio(Math.max(1, Math.min(12, num)), layampmhientai()));
-                        else this.capNhatGiaTriVT('minute', Math.min(59, num));
+                        if (type === 'hour') this.cap_nhat_gia_tri_vt('hour', doi24gio(Math.max(1, Math.min(12, num)), layampmhientai()));
+                        else this.cap_nhat_gia_tri_vt('minute', Math.min(59, num));
                         dem = '';
                         digitEl.classList.remove('editing');
                         document.removeEventListener('keydown', xulyban);
@@ -1031,70 +1092,97 @@ export const GiaoDienCaiDat = {
                 e.preventDefault();
                 const cur12h = lay12gio(this.gio_val_vt);
                 const next12h = ((cur12h - 1 + (e.deltaY < 0 ? 1 : -1) + 12) % 12) + 1;
-                this.capNhatGiaTriVT('hour', doi24gio(next12h, layampmhientai()));
+                this.cap_nhat_gia_tri_vt('hour', doi24gio(next12h, layampmhientai()));
             }, { passive: false });
             sophut.addEventListener('wheel', (e) => {
                 e.preventDefault();
-                this.capNhatGiaTriVT('minute', (this.phut_val_vt + (e.deltaY < 0 ? 1 : -1) + 60) % 60);
+                this.cap_nhat_gia_tri_vt('minute', (this.phut_val_vt + (e.deltaY < 0 ? 1 : -1) + 60) % 60);
             }, { passive: false });
         }
 
-        function laygoctoadochuot(clientX, clientY, svgEl, cx, cy) {
+        const svgEl = document.getElementById('circular-clock-svg') || nutgio.ownerSVGElement;
+        const tientringio = document.getElementById('hour-progress');
+        const tientrinphut = document.getElementById('minute-progress');
+
+        const cap_nhat_theo_toa_do = (clientX, clientY, kieu) => {
             const r = svgEl.getBoundingClientRect();
             const sx = 240 / r.width, sy = 240 / r.height;
             const mx = (clientX - r.left) * sx, my = (clientY - r.top) * sy;
-            return (Math.atan2(my - cy, mx - cx) * (180 / Math.PI) + 90 + 360) % 360;
-        }
+            const deg = (Math.atan2(my - CENTER, mx - CENTER) * (180 / Math.PI) + 90 + 360) % 360;
 
-        const khoitaokeonut = (handle, loaivong) => {
-            const svgEl = handle.ownerSVGElement;
-            const khididichcuyen = (clientX, clientY) => {
-                const deg = laygoctoadochuot(clientX, clientY, svgEl, CENTER, CENTER);
-                if (loaivong === 'hour') {
-                    const step = Math.round(deg / (360 / 12));
-                    const h12 = step === 0 ? 12 : step;
-                    this.capNhatGiaTriVT('hour', doi24gio(h12, layampmhientai()));
-                } else {
-                    this.capNhatGiaTriVT('minute', Math.round(deg / (360 / 60)) % 60);
-                }
-            };
-
-            const onMouseMove = (e) => khididichcuyen(e.clientX, e.clientY);
-            const onMouseUp = () => {
-                handle.classList.remove('dragging');
-                window.removeEventListener('mousemove', onMouseMove);
-                window.removeEventListener('mouseup', onMouseUp);
-            };
-
-            handle.addEventListener('mousedown', (e) => {
-                handle.classList.add('dragging');
-                e.preventDefault();
-                window.addEventListener('mousemove', onMouseMove);
-                window.addEventListener('mouseup', onMouseUp);
-            });
-
-            const onTouchMove = (e) => khididichcuyen(e.touches[0].clientX, e.touches[0].clientY);
-            const onTouchEnd = () => {
-                handle.classList.remove('dragging');
-                window.removeEventListener('touchmove', onTouchMove);
-                window.removeEventListener('touchend', onTouchEnd);
-            };
-
-            handle.addEventListener('touchstart', (e) => {
-                handle.classList.add('dragging');
-                e.preventDefault();
-                window.addEventListener('touchmove', onTouchMove, { passive: false });
-                window.addEventListener('touchend', onTouchEnd);
-            }, { passive: false });
+            if (kieu === 'hour') {
+                const buoc = Math.round(deg / (360 / 12));
+                const h12 = buoc === 0 ? 12 : buoc;
+                this.cap_nhat_gia_tri_vt('hour', doi24gio(h12, layampmhientai()));
+            } else {
+                const phut_moi = Math.round(deg / (360 / 60)) % 60;
+                this.cap_nhat_gia_tri_vt('minute', phut_moi);
+            }
         };
 
-        khoitaokeonut(nutgio, 'hour');
-        khoitaokeonut(nutphut, 'minute');
-        this.capNhatGiaTriVT('hour', this.gio_val_vt);
-        this.capNhatGiaTriVT('minute', this.phut_val_vt);
+        const bat_dau_keo = (clientX, clientY, kieu_uu_tien) => {
+            const r = svgEl.getBoundingClientRect();
+            const sx = 240 / r.width, sy = 240 / r.height;
+            const mx = (clientX - r.left) * sx, my = (clientY - r.top) * sy;
+            const dist = Math.hypot(mx - CENTER, my - CENTER);
+
+            // Bán kính <= 75px tương tác vòng giờ bên trong, > 75px tương tác vòng phút bên ngoài
+            let kieu = kieu_uu_tien;
+            if (!kieu) {
+                kieu = dist <= 75 ? 'hour' : 'minute';
+            }
+
+            const handle = kieu === 'hour' ? nutgio : nutphut;
+            const progress = kieu === 'hour' ? tientringio : tientrinphut;
+
+            handle.classList.add('dragging');
+            if (progress) progress.classList.add('dragging');
+
+            cap_nhat_theo_toa_do(clientX, clientY, kieu);
+
+            const onMove = (e) => {
+                const cx = e.touches ? e.touches[0].clientX : e.clientX;
+                const cy = e.touches ? e.touches[0].clientY : e.clientY;
+                cap_nhat_theo_toa_do(cx, cy, kieu);
+            };
+
+            const onEnd = () => {
+                handle.classList.remove('dragging');
+                if (progress) progress.classList.remove('dragging');
+                window.removeEventListener('mousemove', onMove);
+                window.removeEventListener('mouseup', onEnd);
+                window.removeEventListener('touchmove', onMove);
+                window.removeEventListener('touchend', onEnd);
+            };
+
+            window.addEventListener('mousemove', onMove);
+            window.addEventListener('mouseup', onEnd);
+            window.addEventListener('touchmove', onMove, { passive: false });
+            window.addEventListener('touchend', onEnd);
+        };
+
+        nutgio.addEventListener('mousedown', (e) => { e.preventDefault(); bat_dau_keo(e.clientX, e.clientY, 'hour'); });
+        nutgio.addEventListener('touchstart', (e) => { e.preventDefault(); bat_dau_keo(e.touches[0].clientX, e.touches[0].clientY, 'hour'); }, { passive: false });
+
+        nutphut.addEventListener('mousedown', (e) => { e.preventDefault(); bat_dau_keo(e.clientX, e.clientY, 'minute'); });
+        nutphut.addEventListener('touchstart', (e) => { e.preventDefault(); bat_dau_keo(e.touches[0].clientX, e.touches[0].clientY, 'minute'); }, { passive: false });
+
+        svgEl.addEventListener('mousedown', (e) => {
+            if (e.target === nutgio || e.target === nutphut) return;
+            e.preventDefault();
+            bat_dau_keo(e.clientX, e.clientY, null);
+        });
+        svgEl.addEventListener('touchstart', (e) => {
+            if (e.target === nutgio || e.target === nutphut) return;
+            e.preventDefault();
+            bat_dau_keo(e.touches[0].clientX, e.touches[0].clientY, null);
+        }, { passive: false });
+
+        this.cap_nhat_gia_tri_vt('hour', this.gio_val_vt);
+        this.cap_nhat_gia_tri_vt('minute', this.phut_val_vt);
     },
 
-    ganSuKienAMPM() {
+    gan_su_kien_am_pm() {
         const ampmContainer = document.getElementById('ampm-container');
         if (ampmContainer) {
             ampmContainer.addEventListener('click', (e) => {
@@ -1103,7 +1191,7 @@ export const GiaoDienCaiDat = {
                     const isPM = opt.dataset.val === 'CH';
                     if (isPM && this.gio_val_vt < 12) this.gio_val_vt += 12;
                     else if (!isPM && this.gio_val_vt >= 12) this.gio_val_vt -= 12;
-                    this.capNhatGiaTriVT('hour', this.gio_val_vt);
+                    this.cap_nhat_gia_tri_vt('hour', this.gio_val_vt);
                     const dropdown = document.getElementById('ampm-dropdown');
                     if (dropdown) dropdown.classList.remove('show');
                 }
@@ -1111,7 +1199,7 @@ export const GiaoDienCaiDat = {
         }
     },
 
-    anTatNhomTuDongDung() {
+    an_tat_nhom_tu_dong_dung() {
         const cacNhom = [
             document.getElementById('group-stop-time'),
             document.getElementById('group-stop-realtime'),
@@ -1121,13 +1209,13 @@ export const GiaoDienCaiDat = {
         cacNhom.forEach(nhom => { if (nhom) nhom.style.display = 'none'; });
     },
 
-    ganSuKienMenuAutoStop() {
+    gan_su_kien_menu_auto_stop() {
         const selectAutoStop = document.getElementById('select-auto-stop');
         if (!selectAutoStop) return;
 
         selectAutoStop.addEventListener('change', (e) => {
             const v = e.target.value;
-            this.anTatNhomTuDongDung();
+            this.an_tat_nhom_tu_dong_dung();
 
             if (v === 'time') {
                 const n = document.getElementById('group-stop-time');
@@ -1169,8 +1257,8 @@ export const GiaoDienCaiDat = {
                             mucTieuGio = bayGio.getHours();
                             mucTieuPhut = bayGio.getMinutes();
                         }
-                        this.capNhatGiaTriVT('hour', mucTieuGio);
-                        this.capNhatGiaTriVT('minute', mucTieuPhut);
+                        this.cap_nhat_gia_tri_vt('hour', mucTieuGio);
+                        this.cap_nhat_gia_tri_vt('minute', mucTieuPhut);
 
                     });
                 }
@@ -1211,11 +1299,11 @@ export const GiaoDienCaiDat = {
                     });
                 }
             } else if (v === 'off') {
-                DieuKhienTrinhPhat.guiLenh('henGioNgu', { minutes: 0 });
-                DieuKhienTrinhPhat.guiLenh('dungSauChuong', { count: 0 });
-                DieuKhienTrinhPhat.guiLenh('dungTuyChinh', { config: null });
+                DieuKhienTrinhPhat.gui_lenh('henGioNgu', { minutes: 0 });
+                DieuKhienTrinhPhat.gui_lenh('dungSauChuong', { count: 0 });
+                DieuKhienTrinhPhat.gui_lenh('dungTuyChinh', { config: null });
                 chrome.storage.local.remove(['stopTime', 'sleepTargetTimestamp', 'stopRealtimeTarget', 'customStopConfig', 'stopAfterChapters']);
-                if (!this.boQuaThongBao) showToast('Đã tắt tự động dừng', 'info');
+                if (!this.boQuaThongBao) hien_thong_bao('Đã tắt tự động dừng', 'info');
             }
         });
 
@@ -1236,26 +1324,28 @@ export const GiaoDienCaiDat = {
                 else opt.disabled = false;
             });
 
-            if (customLeftType._capNhatGiaoDien) customLeftType._capNhatGiaoDien();
-            if (customRightType._capNhatGiaoDien) customRightType._capNhatGiaoDien();
+            if (customLeftType._capNhatGiaoDien) customLeftType._cap_nhat_giao_dien();
+            if (customRightType._capNhatGiaoDien) customRightType._cap_nhat_giao_dien();
         };
 
         if (customLeftType) customLeftType.addEventListener('change', e => {
-            this.taoInputDieuKien('custom-left-input', e.target.value);
+            this.tao_input_dieu_kien('custom-left-input', e.target.value);
             capNhatKhoaTuyChinh();
         });
         if (customRightType) customRightType.addEventListener('change', e => {
-            this.taoInputDieuKien('custom-right-input', e.target.value);
+            this.tao_input_dieu_kien('custom-right-input', e.target.value);
             capNhatKhoaTuyChinh();
         });
     },
 
-    ganSuKienPhimTat() {
+    gan_su_kien_phim_tat() {
         const btnSettings = document.getElementById('btn-shortcuts-settings');
         const dropdown = document.getElementById('shortcuts-dropdown');
         if (btnSettings && dropdown) {
             btnSettings.addEventListener('click', () => {
-                dropdown.style.display = dropdown.style.display === 'none' ? 'flex' : 'none';
+                const mo_ra = dropdown.style.display === 'none';
+                dropdown.style.display = mo_ra ? 'flex' : 'none';
+                btnSettings.classList.toggle('active', mo_ra);
             });
 
             const defaultShortcuts = {
@@ -1353,9 +1443,9 @@ export const GiaoDienCaiDat = {
 
                     chrome.storage.local.get('customShortcuts', data => {
                         const shortcuts = data.customShortcuts || defaultShortcuts;
-                        shortcuts[keyName] = key;
+                        shortcuts[keyName] = keyStr;
                         chrome.storage.local.set({ customShortcuts: shortcuts }, () => {
-                            showToast('Đã lưu phím tắt', 'success');
+                            hien_thong_bao('Đã lưu phím tắt', 'success');
                         });
                     });
                 });
@@ -1374,7 +1464,7 @@ export const GiaoDienCaiDat = {
         }
     },
 
-    taoInputDieuKien(containerid, kieu) {
+    tao_input_dieu_kien(containerid, kieu) {
         const container = document.getElementById(containerid);
         if (!container) return;
         container.innerHTML = '';
@@ -1383,7 +1473,7 @@ export const GiaoDienCaiDat = {
         else if (kieu === 'chapters') container.innerHTML = `<input type="number" value="1" min="1" style="width:46px;" class="auto-stop-input cc-chapters"><span class="auto-stop-unit">chương</span>`;
     },
 
-    docGiaTriDieuKien(prefix) {
+    doc_gia_tri_dieu_kien(prefix) {
         const kieuElem = document.getElementById(`custom-${prefix}-type`);
         const kieu = kieuElem ? kieuElem.value : null;
         const container = document.getElementById(`custom-${prefix}-input`);
@@ -1410,7 +1500,7 @@ export const GiaoDienCaiDat = {
         return null;
     },
 
-    ganSuKienPhimNhanh() {
+    gan_su_kien_phim_nhanh() {
         document.querySelectorAll('.preset-time').forEach(btn => {
             btn.addEventListener('click', () => {
                 const luongThoiGian = parseInt(btn.dataset.min) || 0;
@@ -1427,19 +1517,19 @@ export const GiaoDienCaiDat = {
         });
     },
 
-    ganSuKienCacNutApDung() {
+    gan_su_kien_cac_nut_ap_dung() {
         const btnTime = document.getElementById('btn-apply-stop-time');
         if (btnTime) btnTime.addEventListener('click', () => {
             const gio = parseInt(document.getElementById('input-stop-hours').value) || 0;
             const phut = parseInt(document.getElementById('input-stop-minutes').value) || 0;
             const tongPhut = gio * 60 + phut;
-            if (tongPhut <= 0) { showToast('Vui lòng nhập thời gian lớn hơn 0', 'warning'); return; }
+            if (tongPhut <= 0) { hien_thong_bao('Vui lòng nhập thời gian lớn hơn 0', 'warning'); return; }
             chrome.storage.local.remove(['stopRealtimeTarget', 'stopAfterChapters', 'customStopConfig'], () => {
-                DieuKhienTrinhPhat.guiLenh('henGioNgu', { minutes: tongPhut });
-                DieuKhienTrinhPhat.guiLenh('dungSauChuong', { count: 0 });
+                DieuKhienTrinhPhat.gui_lenh('henGioNgu', { minutes: tongPhut });
+                DieuKhienTrinhPhat.gui_lenh('dungSauChuong', { count: 0 });
                 chrome.storage.local.set({ stopTime: tongPhut });
                 const moTa = gio > 0 ? `${gio}g${phut > 0 ? ` ${phut}p` : ''}` : `${phut} phút`;
-                showToast(`Sẽ dừng sau ${moTa}`, 'success');
+                hien_thong_bao(`Sẽ dừng sau ${moTa}`, 'success');
             });
         });
 
@@ -1455,10 +1545,10 @@ export const GiaoDienCaiDat = {
 
             const tongPhut = Math.ceil((mucTieu - bayGio) / 60000);
             chrome.storage.local.remove(['stopTime', 'stopAfterChapters', 'customStopConfig'], () => {
-                DieuKhienTrinhPhat.guiLenh('henGioNgu', { minutes: tongPhut });
-                DieuKhienTrinhPhat.guiLenh('dungSauChuong', { count: 0 });
+                DieuKhienTrinhPhat.gui_lenh('henGioNgu', { minutes: tongPhut });
+                DieuKhienTrinhPhat.gui_lenh('dungSauChuong', { count: 0 });
                 chrome.storage.local.set({ stopRealtimeTarget: gioTruc, stopTime: tongPhut });
-                showToast(`Sẽ dừng lúc ${gioTruc}`, 'success');
+                hien_thong_bao(`Sẽ dừng lúc ${gioTruc}`, 'success');
             });
         });
 
@@ -1467,32 +1557,32 @@ export const GiaoDienCaiDat = {
             const soChuong = parseInt(document.getElementById('input-stop-chapters').value);
             if (isNaN(soChuong) || soChuong <= 0) return;
             chrome.storage.local.remove(['stopTime', 'stopRealtimeTarget', 'customStopConfig'], () => {
-                DieuKhienTrinhPhat.guiLenh('henGioNgu', { minutes: 0 });
-                DieuKhienTrinhPhat.guiLenh('dungSauChuong', { count: soChuong });
+                DieuKhienTrinhPhat.gui_lenh('henGioNgu', { minutes: 0 });
+                DieuKhienTrinhPhat.gui_lenh('dungSauChuong', { count: soChuong });
                 chrome.storage.local.set({ stopAfterChapters: soChuong });
-                showToast(`Sẽ dừng sau ${soChuong} chương nữa`, 'success');
+                hien_thong_bao(`Sẽ dừng sau ${soChuong} chương nữa`, 'success');
             });
         });
 
         const btnCustom = document.getElementById('btn-apply-stop-custom');
         if (btnCustom) btnCustom.addEventListener('click', () => {
-            const trai = this.docGiaTriDieuKien('left');
-            const phai = this.docGiaTriDieuKien('right');
+            const trai = this.doc_gia_tri_dieu_kien('left');
+            const phai = this.doc_gia_tri_dieu_kien('right');
             const opElem = document.getElementById('custom-operator');
             const op = opElem ? opElem.value.toLowerCase() : 'or';
 
-            if (!trai && !phai) { showToast('Vui lòng chọn ít nhất một điều kiện hợp lệ', 'warning'); return; }
-            if (trai && phai && trai.type === phai.type) { showToast('Vui lòng chọn 2 điều kiện khác loại nhau', 'warning'); return; }
+            if (!trai && !phai) { hien_thong_bao('Vui lòng chọn ít nhất một điều kiện hợp lệ', 'warning'); return; }
+            if (trai && phai && trai.type === phai.type) { hien_thong_bao('Vui lòng chọn 2 điều kiện khác loại nhau', 'warning'); return; }
 
             const config = { operator: op, left: trai, right: phai };
             chrome.storage.local.remove(['stopTime', 'stopRealtimeTarget', 'stopAfterChapters'], () => {
-                DieuKhienTrinhPhat.guiLenh('dungTuyChinh', { config });
+                DieuKhienTrinhPhat.gui_lenh('dungTuyChinh', { config });
                 const cacDk = [trai, phai].filter(Boolean);
                 const dkTime = cacDk.find(c => c.type === 'time' || c.type === 'realtime');
                 const dkChuong = cacDk.find(c => c.type === 'chapters');
 
-                DieuKhienTrinhPhat.guiLenh('henGioNgu', { minutes: dkTime ? dkTime.minutes : 0 });
-                DieuKhienTrinhPhat.guiLenh('dungSauChuong', { count: dkChuong ? dkChuong.count : 0 });
+                DieuKhienTrinhPhat.gui_lenh('henGioNgu', { minutes: dkTime ? dkTime.minutes : 0 });
+                DieuKhienTrinhPhat.gui_lenh('dungSauChuong', { count: dkChuong ? dkChuong.count : 0 });
 
                 const moTa = cacDk.map(c => {
                     if (c.type === 'time') {
@@ -1505,7 +1595,7 @@ export const GiaoDienCaiDat = {
                     return '';
                 }).join(op === 'and' ? ' VÀ ' : ' HOẶC ');
 
-                showToast(`Sẽ dừng: ${moTa}`, 'success');
+                hien_thong_bao(`Sẽ dừng: ${moTa}`, 'success');
                 chrome.storage.local.set({ customStopConfig: config });
             });
         });

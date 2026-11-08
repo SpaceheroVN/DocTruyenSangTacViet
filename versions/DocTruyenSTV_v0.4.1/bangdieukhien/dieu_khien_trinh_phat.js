@@ -1,13 +1,15 @@
 import { CauHinh } from './quan_ly_cau_hinh.js';
 import { QuanLyThuVien } from './quan_ly_thu_vien.js';
 import { GiaoDienCaiDat } from './giao_dien_cai_dat.js';
-import { showToast, showConfirm } from './tien_ich.js';
+import { hien_thong_bao } from './tien_ich.js';
 
 export const DieuKhienTrinhPhat = {
-    idTabHienTai: null,
-    thongTinTruyenHienTai: null,
+    id_tab_hien_tai: null,
+    thong_tin_truyen_hien_tai: null,
+    thong_tin_tab_khac_dang_phat: null,
+    trang_thai_phat_hien_tai: null,
 
-    async khoiTao() {
+    async khoi_tao() {
         const versionBadge = document.getElementById('version-badge');
         if (versionBadge) versionBadge.textContent = 'v' + chrome.runtime.getManifest().version;
 
@@ -23,8 +25,8 @@ export const DieuKhienTrinhPhat = {
         }
 
         if (tab && tab.url && tab.url.includes('sangtacviet.com')) {
-            this.idTabHienTai = tab.id;
-            this.yeuCauTrangThaiBanDau();
+            this.id_tab_hien_tai = tab.id;
+            this.yeu_cau_trang_thai_ban_dau();
         } else {
             const btnOpenStv = document.getElementById('btn-open-stv');
             if (btnOpenStv) btnOpenStv.addEventListener('click', () => chrome.tabs.create({ url: 'https://sangtacviet.com/' }));
@@ -33,101 +35,230 @@ export const DieuKhienTrinhPhat = {
             if (bookEmptyState) bookEmptyState.style.display = 'block';
             const bookMeta = document.getElementById('book-meta');
             if (bookMeta) bookMeta.style.display = 'none';
+            const coverWrapper = document.getElementById('cover-wrapper');
+            if (coverWrapper) coverWrapper.style.display = 'none';
             const coverImg = document.getElementById('cover-img');
             if (coverImg) coverImg.style.display = 'none';
             const controls = document.querySelector('.controls');
             if (controls) controls.style.display = 'none';
             const statusBar = document.querySelector('.status-bar');
             if (statusBar) statusBar.style.display = 'none';
+
+            const engineHienTai = CauHinh.lay('maydoc') || 'web';
+            this.cap_nhat_danh_sach_giong(engineHienTai);
+            this.cap_nhat_giao_dien_engine(engineHienTai);
         }
 
-        this.ganSuKien();
+        this.gan_su_kien();
         
         chrome.runtime.onMessage.addListener((tinNhan) => {
             if (tinNhan.hanhDong === 'thayDoiTrangThai' && tinNhan.trangThai) {
-                this.capNhatTrangThaiPhat(tinNhan.trangThai);
+                this.cap_nhat_trang_thai_phat(tinNhan.trangThai);
             } else if (tinNhan.hanhDong === 'capNhatAnhBia' && tinNhan.imgUrl) {
                 const coverImg = document.getElementById('cover-img');
                 if (coverImg) coverImg.src = tinNhan.imgUrl;
-                if (this.thongTinTruyenHienTai) {
-                    this.thongTinTruyenHienTai.imgUrl = tinNhan.imgUrl;
+                if (this.thong_tin_truyen_hien_tai) {
+                    this.thong_tin_truyen_hien_tai.imgUrl = tinNhan.imgUrl;
                 }
+            }
+        });
+
+        chrome.storage.local.get(['stv_tab_dang_phat'], duLieu => {
+            this.kiem_tra_khoa_tab_khac(duLieu.stv_tab_dang_phat);
+        });
+
+        chrome.storage.onChanged.addListener((thayDoi, vungChon) => {
+            if (vungChon === 'local' && thayDoi.stv_tab_dang_phat) {
+                this.kiem_tra_khoa_tab_khac(thayDoi.stv_tab_dang_phat.newValue);
             }
         });
 
         document.body.style.opacity = '1';
     },
 
-    capNhatDanhSachGiong(engineId) {
-        const theChon = document.getElementById('voice-select');
-        const theThongTin = document.getElementById('info-voice');
-        if (!theChon) return;
-        const giaTriCu = CauHinh.lay('voiceIndex', true) || 0;
-
-        const taoOptions = (cacGiong) => {
-            theChon.innerHTML = cacGiong.map((ten, index) => {
-                const tenAnToan = ten.replace(/[&<>"'`=\/]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'}[s]));
-                return `<option value="${index}" ${index == giaTriCu ? 'selected' : ''}>${tenAnToan}</option>`;
-            }).join('');
-            GiaoDienCaiDat.capNhatGiaoDien('voice-select');
-            if (theThongTin) {
-                const selectedOpt = theChon.options[theChon.selectedIndex];
-                theThongTin.textContent = selectedOpt ? selectedOpt.text : 'Mặc định';
-            }
-        };
-
-        if (engineId === 'web') {
-            if (!this.idTabHienTai) return;
-            chrome.tabs.sendMessage(this.idTabHienTai, { hanhDong: 'layGiongDoc' }, phanHoi => {
-                if (chrome.runtime.lastError) return;
-                if (phanHoi && phanHoi.voices) {
-                    theChon.innerHTML = phanHoi.voices.map(v => {
-                        let ten = v.name.replace(/ - Vietnamese \(Vietnam\)/i, '').replace(/ \(Vietnam\)/i, '').replace(/Microsoft /i, 'MS ').replace(/Google /i, 'GG ');
-                        if (ten.length > 22) ten = ten.substring(0, 20) + '...';
-                        const tenAnToan = ten.replace(/[&<>"'`=\/]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'}[s]));
-                        const anToanIndex = String(v.index).replace(/[^0-9]/g, '');
-                        return `<option value="${anToanIndex}" ${anToanIndex == giaTriCu ? 'selected' : ''}>${tenAnToan}</option>`;
-                    }).join('');
-                    GiaoDienCaiDat.capNhatGiaoDien('voice-select');
-                    if (theThongTin) {
-                        const selectedOpt = theChon.options[theChon.selectedIndex];
-                        theThongTin.textContent = selectedOpt ? selectedOpt.text : 'Mặc định';
-                    }
+    kiem_tra_khoa_tab_khac(tabDangPhat) {
+        if (tabDangPhat && tabDangPhat.isPlaying && tabDangPhat.tabId && this.id_tab_hien_tai && tabDangPhat.tabId !== this.id_tab_hien_tai) {
+            this.thong_tin_tab_khac_dang_phat = tabDangPhat;
+            const btnPlay = document.getElementById('btn-play');
+            if (btnPlay) {
+                btnPlay.classList.add('tab-locked');
+                let chuoiTooltip = 'Đang có truyện khác đang phát...';
+                if (tabDangPhat.tenTruyen) {
+                    chuoiTooltip = tabDangPhat.tenChuong
+                        ? `${tabDangPhat.tenTruyen}: ${tabDangPhat.tenChuong} đang phát...`
+                        : `${tabDangPhat.tenTruyen} đang phát...`;
                 }
-            });
-        } else if (engineId.startsWith('fpt_')) {
-            taoOptions(['Ban Mai (Nữ miền Bắc)', 'Lê Minh (Nam miền Bắc)', 'Thu Minh (Nữ miền Bắc)', 'Mỹ An (Nữ miền Trung)', 'Gia Huy (Nam miền Trung)', 'Lan Nhi (Nữ miền Nam)', 'Linh San (Nữ miền Nam)']);
-        } else if (engineId.startsWith('azure_')) {
-            taoOptions(['Hoài My (Nữ)', 'Nam Minh (Nam)']);
-        } else if (engineId.startsWith('gcp_')) {
-            taoOptions(['Neural2 A (Nữ)', 'Neural2 D (Nam)', 'Wavenet A (Nữ)', 'Wavenet B (Nam)', 'Wavenet C (Nữ)', 'Wavenet D (Nam)', 'Standard A (Nữ)', 'Standard B (Nam)', 'Standard C (Nữ)', 'Standard D (Nam)']);
+                btnPlay.title = chuoiTooltip;
+            }
+            const statusText = document.getElementById('status-text');
+            if (statusText) {
+                statusText.textContent = 'Khóa (Tab khác đang phát)';
+                statusText.style.color = 'var(--text-muted)';
+            }
+            const statusIcon = document.getElementById('status-icon');
+            if (statusIcon) {
+                statusIcon.className = 'status-dot paused';
+            }
         } else {
-            if (theThongTin) theThongTin.textContent = 'Mặc định';
+            this.thong_tin_tab_khac_dang_phat = null;
+            const btnPlay = document.getElementById('btn-play');
+            if (btnPlay) {
+                btnPlay.classList.remove('tab-locked');
+                btnPlay.title = 'Phát / Tạm dừng [K] hoặc [Space]';
+            }
+            if (this.trang_thai_phat_hien_tai) {
+                this.cap_nhat_trang_thai_phat(this.trang_thai_phat_hien_tai);
+            }
         }
     },
 
-    yeuCauTrangThaiBanDau() {
-        if (!this.idTabHienTai) return;
-        chrome.tabs.sendMessage(this.idTabHienTai, { hanhDong: 'layThongTin' }, phanHoi => {
+    // Đồng bộ danh sách giọng đọc theo từng công cụ
+    cap_nhat_danh_sach_giong(ma_dong_co) {
+        const the_chon = document.getElementById('voice-select');
+        const the_thong_tin = document.getElementById('info-voice');
+        const the_chu_giong_tuy_chinh = document.getElementById('custom-voice-text');
+        if (!the_chon) return;
+        const gia_tri_cu = CauHinh.lay('voiceIndex', true);
+
+        const tao_danh_sach_lua_chon = (cac_giong) => {
+            let chi_so_chon = parseInt(gia_tri_cu, 10);
+            if (isNaN(chi_so_chon) || chi_so_chon < 0 || chi_so_chon >= cac_giong.length) {
+                chi_so_chon = 0;
+            }
+            the_chon.innerHTML = cac_giong.map((ten, chi_so) => {
+                const ten_an_toan = ten.replace(/[&<>"'`=\/]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'}[s]));
+                return `<option value="${chi_so}" ${chi_so == chi_so_chon ? 'selected' : ''}>${ten_an_toan}</option>`;
+            }).join('');
+            the_chon.value = String(chi_so_chon);
+            GiaoDienCaiDat.cap_nhat_giao_dien('voice-select');
+            const lua_chon_hien_tai = the_chon.options[the_chon.selectedIndex];
+            const ten_giong = lua_chon_hien_tai ? lua_chon_hien_tai.text : (cac_giong[0] || 'Mặc định');
+            if (the_thong_tin) the_thong_tin.textContent = ten_giong;
+            if (the_chu_giong_tuy_chinh) the_chu_giong_tuy_chinh.textContent = ten_giong;
+        };
+
+        if (ma_dong_co === 'web' || !ma_dong_co) {
+            const nap_giong_web = (danh_sach_giong) => {
+                if (!danh_sach_giong || danh_sach_giong.length === 0) {
+                    tao_danh_sach_lua_chon(['Giọng mặc định hệ thống']);
+                    return;
+                }
+                const co_giong_tieng_viet = danh_sach_giong.some(v => v.lang && v.lang.startsWith('vi'));
+                if (!co_giong_tieng_viet && !this._da_canh_bao_thieu_giong_web) {
+                    this._da_canh_bao_thieu_giong_web = true;
+                    hien_thong_bao('Máy tính chưa có gói giọng tiếng Việt. Khuyên dùng API FPT hoặc Azure.', 'warning');
+                }
+                const ten_giong_luu = CauHinh.lay('voiceName', true);
+                let chi_so_chon = parseInt(gia_tri_cu, 10);
+                if (ten_giong_luu) {
+                    const tim_theo_ten = danh_sach_giong.find(v => v.name === ten_giong_luu);
+                    if (tim_theo_ten) chi_so_chon = tim_theo_ten.index;
+                }
+                const co_vi_tri = danh_sach_giong.some(v => v.index == chi_so_chon);
+                if (!co_vi_tri) {
+                    const chi_so_viet = danh_sach_giong.findIndex(v => v.lang && v.lang.startsWith('vi'));
+                    chi_so_chon = chi_so_viet !== -1 ? danh_sach_giong[chi_so_viet].index : (danh_sach_giong[0] ? danh_sach_giong[0].index : 0);
+                }
+                the_chon.innerHTML = danh_sach_giong.map(v => {
+                    let ten = v.name.replace(/ - Vietnamese \(Vietnam\)/i, '').replace(/ \(Vietnam\)/i, '').replace(/Microsoft /i, 'MS ').replace(/Google /i, 'GG ');
+                    if (ten.length > 22) ten = ten.substring(0, 20) + '...';
+                    const ten_an_toan = ten.replace(/[&<>"'`=\/]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'}[s]));
+                    const chi_so_an_toan = String(v.index).replace(/[^0-9]/g, '');
+                    const ten_goc_an_toan = (v.name || '').replace(/[&<>"'`=\/]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#x60;','=':'&#x3D;'}[s]));
+                    return `<option value="${chi_so_an_toan}" data-voice-name="${ten_goc_an_toan}" ${chi_so_an_toan == chi_so_chon ? 'selected' : ''}>${ten_an_toan}</option>`;
+                }).join('');
+                the_chon.value = String(chi_so_chon);
+                GiaoDienCaiDat.cap_nhat_giao_dien('voice-select');
+                const lua_chon_hien_tai = the_chon.options[the_chon.selectedIndex];
+                const ten_giong = lua_chon_hien_tai ? lua_chon_hien_tai.text : 'Mặc định';
+                if (the_thong_tin) the_thong_tin.textContent = ten_giong;
+                if (the_chu_giong_tuy_chinh) the_chu_giong_tuy_chinh.textContent = ten_giong;
+            };
+
+            if (this.id_tab_hien_tai) {
+                chrome.tabs.sendMessage(this.id_tab_hien_tai, { hanhDong: 'layGiongDoc' }, phan_hoi => {
+                    if (chrome.runtime.lastError || !phan_hoi || !phan_hoi.voices) {
+                        this._nap_giong_web_fallback(nap_giong_web);
+                    } else {
+                        nap_giong_web(phan_hoi.voices);
+                    }
+                });
+            } else {
+                chrome.tabs.query({ url: '*://*.sangtacviet.com/*' }, tabs => {
+                    const tabStv = (tabs && tabs.length > 0) ? tabs[0] : null;
+                    if (tabStv && tabStv.id) {
+                        chrome.tabs.sendMessage(tabStv.id, { hanhDong: 'layGiongDoc' }, phan_hoi => {
+                            if (!chrome.runtime.lastError && phan_hoi && phan_hoi.voices && phan_hoi.voices.length > 0) {
+                                nap_giong_web(phan_hoi.voices);
+                                return;
+                            }
+                            this._nap_giong_web_fallback(nap_giong_web);
+                        });
+                    } else {
+                        this._nap_giong_web_fallback(nap_giong_web);
+                    }
+                });
+            }
+        } else if (ma_dong_co.startsWith('fpt_') || ma_dong_co === 'fpt') {
+            tao_danh_sach_lua_chon(['Ban Mai (Nữ miền Bắc)', 'Lê Minh (Nam miền Bắc)', 'Thu Minh (Nữ miền Bắc)', 'Mỹ An (Nữ miền Trung)', 'Gia Huy (Nam miền Trung)', 'Lan Nhi (Nữ miền Nam)', 'Linh San (Nữ miền Nam)']);
+        } else if (ma_dong_co.startsWith('azure_') || ma_dong_co === 'azure') {
+            tao_danh_sach_lua_chon(['Hoài My (Nữ)', 'Nam Minh (Nam)']);
+        } else if (ma_dong_co.startsWith('gcp_') || ma_dong_co === 'gcp') {
+            tao_danh_sach_lua_chon(['Neural2 A (Nữ)', 'Neural2 D (Nam)', 'Wavenet A (Nữ)', 'Wavenet B (Nam)', 'Wavenet C (Nữ)', 'Wavenet D (Nam)', 'Standard A (Nữ)', 'Standard B (Nam)', 'Standard C (Nữ)', 'Standard D (Nam)']);
+        } else if (ma_dong_co.startsWith('khac_')) {
+            const cac_dong_co = CauHinh.lay('customEngines', false) || [];
+            const dong_co = cac_dong_co.find(e => String(e.id) === String(ma_dong_co));
+            let danh_sach_ten_giong = [];
+            if (dong_co && dong_co.voices && Array.isArray(dong_co.voices) && dong_co.voices.length > 0) {
+                danh_sach_ten_giong = dong_co.voices;
+            } else {
+                danh_sach_ten_giong = Array.from({ length: 10 }, (_, i) => `Giọng đọc ${i + 1}`);
+            }
+            tao_danh_sach_lua_chon(danh_sach_ten_giong);
+        } else {
+            if (the_thong_tin) the_thong_tin.textContent = 'Mặc định';
+            if (the_chu_giong_tuy_chinh) the_chu_giong_tuy_chinh.textContent = 'Mặc định';
+        }
+    },
+
+    _nap_giong_web_fallback(nap_giong_web) {
+        const giong_cuc_bo = (typeof window !== 'undefined' && window.speechSynthesis) ? window.speechSynthesis.getVoices().map((v, i) => ({ name: v.name, lang: v.lang, index: i })) : [];
+        const giong_cuc_bo_viet = giong_cuc_bo.filter(v => v.lang && v.lang.startsWith('vi'));
+        if (giong_cuc_bo_viet.length > 0) {
+            nap_giong_web(giong_cuc_bo_viet);
+        } else {
+            const ten_luu = CauHinh.lay('voiceName', true);
+            const chi_so_luu = parseInt(CauHinh.lay('voiceIndex', true), 10) || 0;
+            if (ten_luu && !ten_luu.toLowerCase().includes('david') && !ten_luu.toLowerCase().includes('zira') && !ten_luu.toLowerCase().includes('english')) {
+                nap_giong_web([{ name: ten_luu, lang: 'vi-VN', index: chi_so_luu }]);
+            } else {
+                nap_giong_web([{ name: 'MS Hoài My Online (Tự động)', lang: 'vi-VN', index: 0 }]);
+            }
+        }
+    },
+
+    yeu_cau_trang_thai_ban_dau() {
+        if (!this.id_tab_hien_tai) return;
+        chrome.tabs.sendMessage(this.id_tab_hien_tai, { hanhDong: 'layThongTin' }, phanHoi => {
             if (chrome.runtime.lastError) {
-                showToast('Không thể kết nối đến trang', 'warning');
+                hien_thong_bao('Không thể kết nối đến trang', 'warning');
                 return;
             }
-            if (phanHoi) this.capNhatThongTinTruyen(phanHoi);
+            if (phanHoi) this.cap_nhat_thong_tin_truyen(phanHoi);
         });
         
         const engineHienTai = CauHinh.lay('maydoc') || 'web';
-        this.capNhatDanhSachGiong(engineHienTai);
+        this.cap_nhat_danh_sach_giong(engineHienTai);
     },
 
-    guiLenh(hanhDong, thamSoThem = {}) {
-        if (!this.idTabHienTai) return;
-        chrome.tabs.sendMessage(this.idTabHienTai, { hanhDong: hanhDong, ...thamSoThem }, () => {
+    gui_lenh(hanh_dong, tham_so_them = {}) {
+        if (!this.id_tab_hien_tai) return;
+        chrome.tabs.sendMessage(this.id_tab_hien_tai, { hanhDong: hanh_dong, ...tham_so_them }, () => {
             if (chrome.runtime.lastError) {  }
         });
     },
 
-    capNhatGiaoDienEngine(engineId) {
+    cap_nhat_giao_dien_engine(engineId) {
         if (!engineId) return;
 
         if (CauHinh && CauHinh.lay('maydoc', true) !== engineId) {
@@ -147,22 +278,22 @@ export const DieuKhienTrinhPhat = {
             if(footerEngine) footerEngine.textContent = 'Web Speech API';
         } else {
             isWeb = false;
-            const customEngines = CauHinh.lay('customEngines') || [];
+            const customEngines = CauHinh.lay('customEngines', false) || [];
             const matched = customEngines.find(e => e.id === engineId);
             if (matched) {
                 engineName = matched.name;
-            } else if (engineId.startsWith('fpt_')) {
+            } else if (engineId.startsWith('fpt_') || engineId === 'fpt') {
                 engineName = 'FPT.AI TTS';
-            } else if (engineId.startsWith('azure_')) {
+            } else if (engineId.startsWith('azure_') || engineId === 'azure') {
                 engineName = 'Azure TTS';
-            } else if (engineId.startsWith('gcp_')) {
+            } else if (engineId.startsWith('gcp_') || engineId === 'gcp') {
                 engineName = 'GCP TTS';
             } else {
                 engineName = 'Custom TTS';
             }
             if(footerEngine) footerEngine.textContent = engineName;
 
-            if (!engineId.startsWith('fpt_') && !engineId.startsWith('azure_') && !engineId.startsWith('gcp_')) {
+            if (!engineId.startsWith('fpt') && !engineId.startsWith('azure') && !engineId.startsWith('gcp') && engineId !== 'web') {
                 hasVoiceList = false;
             }
         }
@@ -180,8 +311,8 @@ export const DieuKhienTrinhPhat = {
         const engineSelect = document.getElementById('engine-select');
         if (engineSelect && engineSelect.value !== engineId) {
             engineSelect.value = engineId;
-            if (GiaoDienCaiDat && typeof GiaoDienCaiDat.capNhatGiaoDien === 'function') {
-                GiaoDienCaiDat.capNhatGiaoDien('engine-select');
+            if (GiaoDienCaiDat && typeof GiaoDienCaiDat.cap_nhat_giao_dien === 'function') {
+                GiaoDienCaiDat.cap_nhat_giao_dien('engine-select');
             }
         }
 
@@ -194,18 +325,19 @@ export const DieuKhienTrinhPhat = {
                 const volVal = document.getElementById('vol-val');
                 if (volVal) volVal.textContent = Math.round(maxVol * 100) + '%';
                 if (CauHinh) CauHinh.dat('volume', maxVol, true);
-                this.guiLenh('capNhatCaiDat');
+                this.gui_lenh('capNhatCaiDat');
             }
-            if (GiaoDienCaiDat && typeof GiaoDienCaiDat.capNhatGiaoDien === 'function') {
-                GiaoDienCaiDat.capNhatGiaoDien('vol-slider');
+            if (GiaoDienCaiDat && typeof GiaoDienCaiDat.cap_nhat_giao_dien === 'function') {
+                GiaoDienCaiDat.cap_nhat_giao_dien('vol-slider');
             }
         }
 
-        this.capNhatDanhSachGiong(engineId);
+        this.cap_nhat_danh_sach_giong(engineId);
     },
 
-    capNhatTrangThaiPhat(trangThai) {
+    cap_nhat_trang_thai_phat(trangThai) {
         if (!trangThai) return;
+        this.trang_thai_phat_hien_tai = trangThai;
 
         const dangPhat = trangThai.isPlaying;
         const dangTamDung = trangThai.isPaused;
@@ -258,6 +390,25 @@ export const DieuKhienTrinhPhat = {
             chuTrangThai.style.color = 'var(--text-muted)';
         }
 
+        // Nếu có tab khác đang phát truyện, luôn áp dụng trạng thái khóa cho nút phát
+        if (this.thong_tin_tab_khac_dang_phat) {
+            const btnPlay = document.getElementById('btn-play');
+            if (btnPlay) {
+                btnPlay.classList.add('tab-locked');
+                const tabKhac = this.thong_tin_tab_khac_dang_phat;
+                let chuoiTooltip = 'Đang có truyện khác đang phát...';
+                if (tabKhac.tenTruyen) {
+                    chuoiTooltip = tabKhac.tenChuong
+                        ? `${tabKhac.tenTruyen}: ${tabKhac.tenChuong} đang phát...`
+                        : `${tabKhac.tenTruyen} đang phát...`;
+                }
+                btnPlay.title = chuoiTooltip;
+            }
+            chamTrangThai.className = 'status-dot paused';
+            chuTrangThai.textContent = 'Khóa (Tab khác đang phát)';
+            chuTrangThai.style.color = 'var(--text-muted)';
+        }
+
         if (trangThai.progress) {
             const input = document.getElementById('progress-input');
             const total = document.getElementById('progress-total');
@@ -274,30 +425,36 @@ export const DieuKhienTrinhPhat = {
             }
         }
 
-        if (trangThai.engine) {
-            this.capNhatGiaoDienEngine(trangThai.engine);
+        if (trangThai.engine && trangThai.engine !== this._engineHienTaiUI) {
+            this._engineHienTaiUI = trangThai.engine;
+            this.cap_nhat_giao_dien_engine(trangThai.engine);
         }
     },
 
-    capNhatThongTinTruyen(thongTin) {
+    cap_nhat_thong_tin_truyen(thongTin) {
         if (!thongTin) return;
-        this.thongTinTruyenHienTai = thongTin;
+        this.thong_tin_truyen_hien_tai = thongTin;
         
         const laTrangChu = thongTin.pageUrl && !thongTin.pageUrl.includes('/truyen/');
         
         if (thongTin.bookTitle) {
             document.getElementById('current-title').textContent = thongTin.bookTitle;
             document.getElementById('current-chap').style.display = 'block';
+            const coverWrapper = document.getElementById('cover-wrapper');
+            if (coverWrapper) coverWrapper.style.display = 'block';
             document.getElementById('cover-img').style.display = 'block';
             document.getElementById('btn-save').style.display = 'flex';
             
+            const laDangDocChuong = Boolean(thongTin.chapTitle);
             const controls = document.querySelector('.controls');
-            if (controls) controls.style.display = thongTin.progress ? 'flex' : 'none';
+            if (controls) controls.style.display = (laDangDocChuong || thongTin.progress) ? 'flex' : 'none';
             const statusBar = document.querySelector('.status-bar');
-            if (statusBar) statusBar.style.display = thongTin.progress ? 'flex' : 'none';
+            if (statusBar) statusBar.style.display = (laDangDocChuong || thongTin.progress) ? 'flex' : 'none';
         } else if (laTrangChu) {
             document.getElementById('current-title').textContent = 'Đang ở trang chủ / tìm kiếm';
             document.getElementById('current-chap').style.display = 'none';
+            const coverWrapper = document.getElementById('cover-wrapper');
+            if (coverWrapper) coverWrapper.style.display = 'none';
             document.getElementById('cover-img').style.display = 'none';
             document.getElementById('btn-save').style.display = 'none';
             
@@ -353,56 +510,52 @@ export const DieuKhienTrinhPhat = {
             document.getElementById('cover-img').src = thongTin.imgUrl;
         }
         
-        if (QuanLyThuVien.danhSachDoc) {
-            navigator.locks.request('stv_readingList_lock', () => {
-                return new Promise(moKhoa => {
-                    chrome.storage.local.get('readingList', duLieu => {
-                        const danhSach = duLieu.readingList || [];
-                        const vt = danhSach.findIndex(i => (i.title || '').trim().toLowerCase() === (thongTin.bookTitle || '').trim().toLowerCase());
-                        
-                        if (!thongTin.imgUrl && vt !== -1 && danhSach[vt].imgUrl) {
-                            document.getElementById('cover-img').src = danhSach[vt].imgUrl;
-                        }
+        if (QuanLyThuVien.danh_sach_doc) {
+            chrome.storage.local.get('readingList', duLieu => {
+                try {
+                    const danhSach = duLieu.readingList || [];
+                    const vt = danhSach.findIndex(i => (i.title || '').trim().toLowerCase() === (thongTin.bookTitle || '').trim().toLowerCase());
+                    
+                    if (!thongTin.imgUrl && vt !== -1 && danhSach[vt].imgUrl) {
+                        document.getElementById('cover-img').src = danhSach[vt].imgUrl;
+                    }
 
-                        if (vt !== -1) {
-                            this.datTrangThaiLuu(true);
-                            let daCapNhat = false;
-                            const docHienTai = danhSach[vt];
-                            if (thongTin.pageUrl && docHienTai.url !== thongTin.pageUrl) { docHienTai.url = thongTin.pageUrl; daCapNhat = true; }
-                            if (thongTin.chapTitle && docHienTai.chap !== thongTin.chapTitle) { docHienTai.chap = thongTin.chapTitle; daCapNhat = true; }
-                            if (thongTin.imgUrl && docHienTai.imgUrl !== thongTin.imgUrl) {
-                                let safeImg = thongTin.imgUrl;
-                                if (safeImg.startsWith('data:')) safeImg = '';
-                                if (safeImg.toLowerCase().startsWith('http://')) safeImg = 'https://' + safeImg.substring(7);
-                                docHienTai.imgUrl = safeImg;
-                                daCapNhat = true;
-                            }
-                            const chunkMoi = (thongTin.absoluteProgress && thongTin.absoluteProgress.current)
-                                ? thongTin.absoluteProgress.current
-                                : (thongTin.progress && thongTin.progress.current ? thongTin.progress.current : null);
-                            if (chunkMoi !== null && docHienTai.chunkIndex !== chunkMoi) {
-                                docHienTai.chunkIndex = chunkMoi;
-                                daCapNhat = true;
-                            }
-                            if (daCapNhat) {
-                                chrome.storage.local.set({ readingList: danhSach }, () => {
-                                    QuanLyThuVien.danhSachDoc = danhSach;
-                                    QuanLyThuVien.hienThiDanhSach(QuanLyThuVien.sapXepDanhSach(danhSach));
-                                    moKhoa();
-                                });
-                            } else {
-                                moKhoa();
-                            }
-                        } else {
-                            this.datTrangThaiLuu(false);
-                            moKhoa();
+                    if (vt !== -1) {
+                        this.dat_trang_thai_luu(true);
+                        let daCapNhat = false;
+                        const docHienTai = danhSach[vt];
+                        if (thongTin.pageUrl && docHienTai.url !== thongTin.pageUrl) { docHienTai.url = thongTin.pageUrl; daCapNhat = true; }
+                        if (thongTin.chapTitle && docHienTai.chap !== thongTin.chapTitle) { docHienTai.chap = thongTin.chapTitle; daCapNhat = true; }
+                        if (thongTin.imgUrl && docHienTai.imgUrl !== thongTin.imgUrl) {
+                            let safeImg = thongTin.imgUrl;
+                            if (safeImg.startsWith('data:')) safeImg = '';
+                            if (safeImg.toLowerCase().startsWith('http://')) safeImg = 'https://' + safeImg.substring(7);
+                            docHienTai.imgUrl = safeImg;
+                            daCapNhat = true;
                         }
-                    });
-                });
+                        const chunkMoi = (thongTin.absoluteProgress && thongTin.absoluteProgress.current)
+                            ? thongTin.absoluteProgress.current
+                            : (thongTin.progress && thongTin.progress.current ? thongTin.progress.current : null);
+                        if (chunkMoi !== null && docHienTai.chunkIndex !== chunkMoi) {
+                            docHienTai.chunkIndex = chunkMoi;
+                            daCapNhat = true;
+                        }
+                        if (daCapNhat) {
+                            chrome.storage.local.set({ readingList: danhSach }, () => {
+                                QuanLyThuVien.danh_sach_doc = danhSach;
+                                QuanLyThuVien.hien_thi_danh_sach(QuanLyThuVien.sap_xep_danh_sach(danhSach));
+                            });
+                        }
+                    } else {
+                        this.dat_trang_thai_luu(false);
+                    }
+                } catch (e) {
+                    console.error('[DocTruyenSTV] Lỗi cập nhật thư viện:', e);
+                }
             });
         }
         
-        this.capNhatTrangThaiPhat({
+        this.cap_nhat_trang_thai_phat({
             isPlaying: thongTin.isPlaying,
             isPaused: thongTin.isPaused,
             isBuffering: thongTin.isBuffering,
@@ -412,81 +565,126 @@ export const DieuKhienTrinhPhat = {
         });
     },
 
-    datTrangThaiLuu(daLuu) {
+    dat_trang_thai_luu(daLuu) {
         const nut = document.getElementById('btn-save');
         if (!nut) return;
         nut.className = `btn-save${daLuu ? ' saved' : ''}`;
         nut.innerHTML = daLuu ? 
-            '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path><polyline points="9 11 12 14 22 4"></polyline></svg>Đã lưu' : 
-            '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>Lưu';
+            `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                <path d="m9 10 2 2 4-4"></path>
+            </svg><span>Đã lưu</span>` : 
+            `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+            </svg><span>Lưu</span>`;
     },
 
-    ganSuKien() {
+    gan_su_kien() {
         document.getElementById('btn-play')?.addEventListener('click', () => {
-            this.guiLenh('daoTrangThaiPhat');
+            if (this.thong_tin_tab_khac_dang_phat) {
+                hien_thong_bao('Đang có truyện khác đang phát!', 'warning');
+                return;
+            }
+            this.gui_lenh('daoTrangThaiPhat');
             const btnPlay = document.getElementById('btn-play');
             if (btnPlay) {
                 btnPlay.classList.add('active');
                 setTimeout(() => btnPlay.classList.remove('active'), 200);
             }
         });
-        document.getElementById('btn-stop')?.addEventListener('click', () => this.guiLenh('dungPhat'));
-        document.getElementById('btn-next')?.addEventListener('click', () => this.guiLenh('chuongTiep'));
-        document.getElementById('btn-prev')?.addEventListener('click', () => this.guiLenh('chuongTruoc'));
-        document.getElementById('btn-replay')?.addEventListener('click', () => this.guiLenh('phatLai'));
+        document.getElementById('btn-stop')?.addEventListener('click', () => this.gui_lenh('dungPhat'));
+        document.getElementById('btn-next')?.addEventListener('click', () => this.gui_lenh('chuongTiep'));
+        document.getElementById('btn-prev')?.addEventListener('click', () => this.gui_lenh('chuongTruoc'));
+        document.getElementById('btn-replay')?.addEventListener('click', () => this.gui_lenh('phatLai'));
+
+        // Xử lý xem chi tiết ảnh bìa truyện ngoài màn hình trang web
+        const wrapper_anh_bia = document.getElementById('cover-wrapper');
+        const the_anh_bia = document.getElementById('cover-img');
+        if (wrapper_anh_bia) {
+            wrapper_anh_bia.addEventListener('click', () => {
+                const duong_dan_anh = the_anh_bia ? the_anh_bia.src : '';
+                if (!duong_dan_anh || duong_dan_anh.includes('icon128.png')) {
+                    hien_thong_bao('Chưa có ảnh bìa để phóng to', 'warning');
+                    return;
+                }
+                const ten_truyen = (this.thong_tin_truyen_hien_tai && this.thong_tin_truyen_hien_tai.bookTitle)
+                    ? this.thong_tin_truyen_hien_tai.bookTitle
+                    : 'Ảnh bìa truyện';
+
+                // Gửi tin nhắn đến tab hiện tại để mở modal Lightbox giữa trang web
+                if (this.id_tab_hien_tai) {
+                    const chu_de_hien_tai = document.documentElement.getAttribute('data-theme') || 'dark';
+                    chrome.tabs.sendMessage(this.id_tab_hien_tai, {
+                        hanhDong: 'moModalXemAnh',
+                        duongDanAnh: duong_dan_anh,
+                        tenTruyen: ten_truyen,
+                        chuDe: chu_de_hien_tai
+                    }, (phan_hoi) => {
+                        if (chrome.runtime.lastError || !phan_hoi) {
+                            // Fallback nếu trang không phải STV hoặc chưa inject script
+                            window.open(duong_dan_anh, '_blank');
+                        } else {
+                            // Đóng popup extension để người dùng xem trọn vẹn modal giữa màn hình
+                            setTimeout(() => window.close(), 80);
+                        }
+                    });
+                } else {
+                    window.open(duong_dan_anh, '_blank');
+                }
+            });
+        }
 
         const btnSave = document.getElementById('btn-save');
         if (btnSave) {
             btnSave.addEventListener('click', () => {
-                const hienTai = this.thongTinTruyenHienTai;
+                const hienTai = this.thong_tin_truyen_hien_tai;
                 if (!hienTai || !hienTai.bookTitle) {
-                    showToast('Không có truyện nào đang mở', 'warning');
+                    hien_thong_bao('Không có truyện nào đang mở', 'warning');
                     return;
                 }
                 
-                navigator.locks.request('stv_readingList_lock', () => {
-                    return new Promise(moKhoa => {
-                        chrome.storage.local.get('readingList', duLieu => {
-                            const danhSach = duLieu.readingList || [];
-                            const vitri = danhSach.findIndex(i => (i.title || '').trim().toLowerCase() === hienTai.bookTitle.trim().toLowerCase());
-                            
-                            if (vitri !== -1) {
-                                danhSach.splice(vitri, 1);
-                                chrome.storage.local.set({ readingList: danhSach }, () => {
-                                    QuanLyThuVien.danhSachDoc = danhSach;
-                                    QuanLyThuVien.hienThiDanhSach(QuanLyThuVien.sapXepDanhSach(danhSach));
-                                    this.datTrangThaiLuu(false);
-                                    const infoCount = document.getElementById('info-count');
-                                    if (infoCount) infoCount.textContent = `${danhSach.length} truyện`;
-                                    showToast('Đã bỏ lưu truyện', 'info');
-                                    moKhoa();
-                                });
-                            } else {
-                                if (danhSach.length >= 50) danhSach.shift();
-                                let safeImg = hienTai.imgUrl || '';
-                                if (safeImg.startsWith('data:')) safeImg = '';
-                                if (safeImg.toLowerCase().startsWith('http://')) safeImg = 'https://' + safeImg.substring(7);
-                                danhSach.push({
-                                    title: hienTai.bookTitle,
-                                    url: hienTai.pageUrl || hienTai.bookUrl,
-                                    imgUrl: safeImg,
-                                    timestamp: Date.now(),
-                                    savedAt: new Date().toLocaleDateString('vi-VN'),
-                                    chap: hienTai.chapTitle || 'Chưa đọc chương nào',
-                                    chunkIndex: (hienTai.absoluteProgress && hienTai.absoluteProgress.current) ? hienTai.absoluteProgress.current : ((hienTai.progress && hienTai.progress.current) ? hienTai.progress.current : 0)
-                                });
-                                chrome.storage.local.set({ readingList: danhSach }, () => {
-                                    QuanLyThuVien.danhSachDoc = danhSach;
-                                    QuanLyThuVien.hienThiDanhSach(QuanLyThuVien.sapXepDanhSach(danhSach));
-                                    this.datTrangThaiLuu(true);
-                                    const infoCount = document.getElementById('info-count');
-                                    if (infoCount) infoCount.textContent = `${danhSach.length} truyện`;
-                                    showToast('Đã lưu truyện thành công!', 'success');
-                                    moKhoa();
-                                });
-                            }
-                        });
-                    });
+                chrome.storage.local.get('readingList', duLieu => {
+                    try {
+                        const danhSach = duLieu.readingList || [];
+                        const vitri = danhSach.findIndex(i => (i.title || '').trim().toLowerCase() === hienTai.bookTitle.trim().toLowerCase());
+                        
+                        if (vitri !== -1) {
+                            danhSach.splice(vitri, 1);
+                            chrome.storage.local.set({ readingList: danhSach }, () => {
+                                QuanLyThuVien.danh_sach_doc = danhSach;
+                                QuanLyThuVien.hien_thi_danh_sach(QuanLyThuVien.sap_xep_danh_sach(danhSach));
+                                QuanLyThuVien.cap_nhat_dung_luong();
+                                this.dat_trang_thai_luu(false);
+                                const infoCount = document.getElementById('info-count');
+                                if (infoCount) infoCount.textContent = `${danhSach.length} truyện`;
+                                hien_thong_bao('Đã bỏ lưu truyện', 'info');
+                            });
+                        } else {
+                            let safeImg = hienTai.imgUrl || '';
+                            if (safeImg.startsWith('data:')) safeImg = '';
+                            if (safeImg.toLowerCase().startsWith('http://')) safeImg = 'https://' + safeImg.substring(7);
+                            danhSach.push({
+                                title: hienTai.bookTitle,
+                                url: hienTai.pageUrl || hienTai.bookUrl,
+                                imgUrl: safeImg,
+                                timestamp: Date.now(),
+                                savedAt: new Date().toLocaleDateString('vi-VN'),
+                                chap: hienTai.chapTitle || 'Chưa đọc chương nào',
+                                chunkIndex: (hienTai.absoluteProgress && hienTai.absoluteProgress.current) ? hienTai.absoluteProgress.current : ((hienTai.progress && hienTai.progress.current) ? hienTai.progress.current : 0)
+                            });
+                            chrome.storage.local.set({ readingList: danhSach }, () => {
+                                QuanLyThuVien.danh_sach_doc = danhSach;
+                                QuanLyThuVien.hien_thi_danh_sach(QuanLyThuVien.sap_xep_danh_sach(danhSach));
+                                QuanLyThuVien.cap_nhat_dung_luong();
+                                this.dat_trang_thai_luu(true);
+                                const infoCount = document.getElementById('info-count');
+                                if (infoCount) infoCount.textContent = `${danhSach.length} truyện`;
+                                hien_thong_bao('Đã lưu truyện thành công!', 'success');
+                            });
+                        }
+                    } catch (e) {
+                        console.error('[DocTruyenSTV] Lỗi lưu truyện:', e);
+                    }
                 });
             });
         }
@@ -512,14 +710,22 @@ export const DieuKhienTrinhPhat = {
                     if (nutMain) nutMain.classList.add('active');
                     const panelMain = document.getElementById('panel-main');
                     if (panelMain) panelMain.classList.add('active');
+                    if (QuanLyThuVien && QuanLyThuVien.tam_dung_marquee) {
+                        QuanLyThuVien.tam_dung_marquee();
+                    }
                 } else {
                     e.currentTarget.classList.add('active');
                     const panel = document.getElementById('panel-' + e.currentTarget.dataset.tab);
                     if (panel) panel.classList.add('active');
+                    if (e.currentTarget.dataset.tab === 'reading-list' && QuanLyThuVien && QuanLyThuVien.kich_hoat_marquee) {
+                        QuanLyThuVien.kich_hoat_marquee();
+                    } else if (QuanLyThuVien && QuanLyThuVien.tam_dung_marquee) {
+                        QuanLyThuVien.tam_dung_marquee();
+                    }
                 }
                 
-                GiaoDienCaiDat.taiLaiDuLieuTuDongDung();
-                GiaoDienCaiDat.taiLaiDuLieuMayDoc();
+                GiaoDienCaiDat.tai_lai_du_lieu_tu_dong_dung();
+                GiaoDienCaiDat.tai_lai_du_lieu_may_doc();
             });
         });
 
@@ -532,9 +738,40 @@ export const DieuKhienTrinhPhat = {
         document.addEventListener('dragstart', e => { if (e.target.tagName !== 'INPUT') e.preventDefault(); });
 
         const btnNextChunk = document.getElementById('btn-next-chunk');
-        if (btnNextChunk) btnNextChunk.addEventListener('click', () => this.guiLenh('doanTiep'));
+        if (btnNextChunk) {
+            btnNextChunk.addEventListener('click', () => {
+                const input = document.getElementById('progress-input');
+                const totalEl = document.getElementById('progress-total');
+                if (input && totalEl) {
+                    const cur = parseInt(input.value, 10) || 0;
+                    const tot = parseInt(totalEl.textContent, 10) || 0;
+                    if (cur < tot) {
+                        input.value = cur + 1;
+                        const fill = document.getElementById('progress-bar-fill');
+                        if (fill && tot > 0) fill.style.width = Math.round(((cur + 1) / tot) * 100) + '%';
+                    }
+                }
+                this.gui_lenh('doanTiep');
+            });
+        }
+
         const btnPrevChunk = document.getElementById('btn-prev-chunk');
-        if (btnPrevChunk) btnPrevChunk.addEventListener('click', () => this.guiLenh('doanTruoc'));
+        if (btnPrevChunk) {
+            btnPrevChunk.addEventListener('click', () => {
+                const input = document.getElementById('progress-input');
+                const totalEl = document.getElementById('progress-total');
+                if (input && totalEl) {
+                    const cur = parseInt(input.value, 10) || 0;
+                    const tot = parseInt(totalEl.textContent, 10) || 0;
+                    if (cur > 1) {
+                        input.value = cur - 1;
+                        const fill = document.getElementById('progress-bar-fill');
+                        if (fill && tot > 0) fill.style.width = Math.round(((cur - 1) / tot) * 100) + '%';
+                    }
+                }
+                this.gui_lenh('doanTruoc');
+            });
+        }
 
         const progressInput = document.getElementById('progress-input');
         if (progressInput) {
@@ -545,7 +782,7 @@ export const DieuKhienTrinhPhat = {
                     const val = parseInt(progressInput.value);
                     const total = parseInt(document.getElementById('progress-total')?.textContent || '0');
                     if (val >= 1 && val <= total) {
-                        this.guiLenh('nhayDenDoan', { chiSo: val - 1 });
+                        this.gui_lenh('nhayDenDoan', { chiSo: val - 1 });
                     }
                     progressInput.blur();
                 }

@@ -1,276 +1,265 @@
 'use strict';
 var DocTruyenSTV_Ext = window.DocTruyenSTV_Ext || {};
 
+// Quản lý từ điển, cache âm thanh IndexedDB và tiến trình đọc
 DocTruyenSTV_Ext.LuuTruSTV = {
-    boNhoDemDB: [],
-    tuDienTuyChinh: [],
-    tuDienDaBienDich: [],
-    dangLuuTrangThai: false,
-    dangChoLuu: false,
+    tu_dien_tuy_chinh: [],
+    tu_dien_da_bien_dich: [],
+    _dong_ho_cho: null,
+    _du_lieu_luu_cho: null,
 
-    async khoiTao() {
-        try {
-            this.boNhoDemDB = JSON.parse(sessionStorage.getItem('STV_bo_nho_dem_db') || '[]');
-        } catch(l) {}
-        
-        return new Promise(dongY => {
-            chrome.storage.local.get('customDict', duLieu => {
-                this.tuDienTuyChinh = duLieu.customDict || [];
-                this.capNhatTuDien(this.tuDienTuyChinh);
-                dongY();
+    async khoi_tao() {
+        return new Promise(dong_y => {
+            chrome.storage.local.get('customDict', du_lieu => {
+                this.tu_dien_tuy_chinh = du_lieu.customDict || [];
+                this.cap_nhat_tu_dien(this.tu_dien_tuy_chinh);
+                dong_y();
             });
         });
     },
 
-    capNhatTuDien(tuDien) {
-        this.tuDienDaBienDich = tuDien.slice(0, 50).map(quyTac => {
+    cap_nhat_tu_dien(tu_dien) {
+        if (!Array.isArray(tu_dien)) return;
+        this.tu_dien_da_bien_dich = tu_dien.map(quy_tac => {
             try {
-                let theHienRe = this.thoatKyTuRegex(quyTac[0]);
-                if (!theHienRe.startsWith('^') && !theHienRe.endsWith('$')) {
-                    theHienRe = '(^|[^\\p{L}\\p{N}_])' + theHienRe + '(?=[^\\p{L}\\p{N}_]|$)';
+                if (!quy_tac || !quy_tac[0] || typeof quy_tac[0] !== 'string') return null;
+                const tu_goc = quy_tac[0].trim();
+                if (!tu_goc) return null;
+                const bat_dau_dau = tu_goc.startsWith('^');
+                const ket_thuc_duoi = tu_goc.endsWith('$');
+                const tu_da_cat = tu_goc.slice(bat_dau_dau ? 1 : 0, ket_thuc_duoi ? -1 : undefined).trim();
+                if (!tu_da_cat) return null;
+                let the_hien_re = this.thoat_ky_tu_regex(tu_da_cat);
+
+                if (bat_dau_dau && ket_thuc_duoi) {
+                    the_hien_re = '^' + the_hien_re + '$';
+                } else if (bat_dau_dau) {
+                    the_hien_re = '^' + the_hien_re + '(?=[^\\p{L}\\p{N}_]|$)';
+                } else if (ket_thuc_duoi) {
+                    the_hien_re = '(^|[^\\p{L}\\p{N}_])' + the_hien_re + '$';
+                } else {
+                    the_hien_re = '(^|[^\\p{L}\\p{N}_])' + the_hien_re + '(?=[^\\p{L}\\p{N}_]|$)';
                 }
                 return {
-                    regex: new RegExp(theHienRe, 'giu'),
-                    thayThe: '$1' + quyTac[1].replace(/\$/g, '$$$$')
+                    regex: new RegExp(the_hien_re, 'giu'),
+                    thayThe: (bat_dau_dau ? '' : '$1') + (quy_tac[1] || '').replace(/\$/g, '$$$$')
                 };
             } catch(l) { return null; }
         }).filter(Boolean);
     },
 
-    thoatKyTuRegex(chuoi) {
+    thoat_ky_tu_regex(chuoi) {
         return chuoi.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    },
-
-    anToanUrl(url) {
-        const u = String(url).trim();
-        if (/^(https?:\/\/|data:image\/)/i.test(u)) return u;
-        return 'https://sangtacviet.com/homepage/img/sangtacviet-logo.png';
     },
 
     _db_instance: null,
 
-    layKetNoiDB() {
+    lay_ket_noi_db() {
         if (this._db_instance) return Promise.resolve(this._db_instance);
-        return new Promise((dongY, tuChoi) => {
-            const yeuCau = indexedDB.open('STV_TTS_Cache', 1);
-            yeuCau.onupgradeneeded = (suKien) => {
-                if (!suKien.target.result.objectStoreNames.contains('audioBlobs')) {
-                    suKien.target.result.createObjectStore('audioBlobs');
+        return new Promise((dong_y, tu_choi) => {
+            const yeu_cau = indexedDB.open('STV_TTS_Cache', 1);
+            yeu_cau.onupgradeneeded = (su_kien) => {
+                if (!su_kien.target.result.objectStoreNames.contains('audioBlobs')) {
+                    su_kien.target.result.createObjectStore('audioBlobs');
                 }
             };
-            yeuCau.onsuccess = (suKien) => {
-                this._db_instance = suKien.target.result;
+            yeu_cau.onsuccess = (su_kien) => {
+                this._db_instance = su_kien.target.result;
                 this._db_instance.onclose = () => { this._db_instance = null; };
-                dongY(this._db_instance);
+                dong_y(this._db_instance);
             };
-            yeuCau.onerror = (suKien) => tuChoi(suKien.target.error);
+            yeu_cau.onerror = (su_kien) => tu_choi(su_kien.target.error);
         });
     },
 
-    async luuAmThanh(khoa, blob) {
+    async luu_am_thanh(khoa, blob) {
         try {
-            const db = await this.layKetNoiDB();
-            return await new Promise((dongY, tuChoi) => {
-                const giaoDich = db.transaction('audioBlobs', 'readwrite');
-                giaoDich.objectStore('audioBlobs').put({ blob: blob, timestamp: Date.now() }, khoa);
-                giaoDich.oncomplete = () => {
-                    if (!this.boNhoDemDB.includes(khoa)) {
-                        this.boNhoDemDB.push(khoa);
-                        sessionStorage.setItem('STV_bo_nho_dem_db', JSON.stringify(this.boNhoDemDB));
-                    }
-                    dongY();
-                };
-                giaoDich.onerror = (suKien) => tuChoi(suKien.target.error);
+            const db = await this.lay_ket_noi_db();
+            return await new Promise((dong_y, tu_choi) => {
+                const giao_dich = db.transaction('audioBlobs', 'readwrite');
+                giao_dich.objectStore('audioBlobs').put({ blob: blob, timestamp: Date.now() }, khoa);
+                giao_dich.oncomplete = () => dong_y();
+                giao_dich.onerror = (su_kien) => tu_choi(su_kien.target.error);
             });
         } catch (l) { console.warn('Lỗi ghi IDB:', l); }
     },
 
-    async layAmThanh(khoa) {
+    async lay_am_thanh(khoa) {
         try {
-            const db = await this.layKetNoiDB();
-            return await new Promise((dongY) => {
-                const giaoDich = db.transaction('audioBlobs', 'readonly');
-                const yeuCau = giaoDich.objectStore('audioBlobs').get(khoa);
-                yeuCau.onsuccess = () => {
-                    if (!yeuCau.result) dongY(null);
-                    else dongY(yeuCau.result instanceof Blob ? yeuCau.result : yeuCau.result.blob);
+            const db = await this.lay_ket_noi_db();
+            return await new Promise((dong_y) => {
+                const giao_dich = db.transaction('audioBlobs', 'readonly');
+                const yeu_cau = giao_dich.objectStore('audioBlobs').get(khoa);
+                yeu_cau.onsuccess = () => {
+                    if (!yeu_cau.result) dong_y(null);
+                    else dong_y(yeu_cau.result instanceof Blob ? yeu_cau.result : yeu_cau.result.blob);
                 };
-                yeuCau.onerror = () => dongY(null);
+                yeu_cau.onerror = () => dong_y(null);
             });
         } catch (l) { return null; }
     },
 
-    async donDepCacheCu() {
-        const lanCuoi = localStorage.getItem('STV_last_cleanup');
-        const bayGio = Date.now();
-        if (lanCuoi && bayGio - parseInt(lanCuoi) < 12 * 60 * 60 * 1000) return;
-        localStorage.setItem('STV_last_cleanup', bayGio.toString());
+    async don_dep_cache_cu() {
+        const lan_cuoi = localStorage.getItem('STV_last_cleanup');
+        const bay_gio = Date.now();
+        if (lan_cuoi && bay_gio - parseInt(lan_cuoi) < 12 * 60 * 60 * 1000) return;
+        localStorage.setItem('STV_last_cleanup', bay_gio.toString());
         try {
-            const db = await this.layKetNoiDB();
-            return await new Promise((dongY) => {
-                const giaoDich = db.transaction('audioBlobs', 'readwrite');
-                const khoChua = giaoDich.objectStore('audioBlobs');
-                const yeuCau = khoChua.openCursor();
-                const bayGio = Date.now();
-                const thoiGianHetHan = 12 * 60 * 60 * 1000;
-                let tatCaBanGhi = [];
+            const db = await this.lay_ket_noi_db();
+            return await new Promise((dong_y) => {
+                const giao_dich = db.transaction('audioBlobs', 'readwrite');
+                const kho_chua = giao_dich.objectStore('audioBlobs');
+                const yeu_cau = kho_chua.openCursor();
+                const thoi_gian_het_han = 12 * 60 * 60 * 1000;
+                let tat_ca_ban_ghi = [];
                 
-                yeuCau.onsuccess = (suKien) => {
-                    const conTro = suKien.target.result;
-                    if (conTro) {
-                        const giaTri = conTro.value;
-                        if (!(giaTri instanceof Blob) && giaTri.timestamp) {
-                            if (bayGio - giaTri.timestamp > thoiGianHetHan) {
-                                conTro.delete();
+                yeu_cau.onsuccess = (su_kien) => {
+                    const con_tro = su_kien.target.result;
+                    if (con_tro) {
+                        const gia_tri = con_tro.value;
+                        if (gia_tri instanceof Blob) {
+                            con_tro.delete();
+                        } else if (gia_tri && gia_tri.timestamp) {
+                            if (bay_gio - gia_tri.timestamp > thoi_gian_het_han) {
+                                con_tro.delete();
                             } else {
-                                tatCaBanGhi.push({ khoa: conTro.key, thoiGian: giaTri.timestamp });
+                                tat_ca_ban_ghi.push({ khoa: con_tro.key, thoi_gian: gia_tri.timestamp });
                             }
                         }
-                        conTro.continue();
+                        con_tro.continue();
                     } else {
-                        if (tatCaBanGhi.length > 500) {
-                            tatCaBanGhi.sort((a, b) => a.thoiGian - b.thoiGian);
-                            const soLuongCanXoa = tatCaBanGhi.length - 500;
-                            for (let i = 0; i < soLuongCanXoa; i++) {
-                                khoChua.delete(tatCaBanGhi[i].khoa);
+                        if (tat_ca_ban_ghi.length > 500) {
+                            tat_ca_ban_ghi.sort((a, b) => a.thoi_gian - b.thoi_gian);
+                            const so_luong_can_xoa = tat_ca_ban_ghi.length - 500;
+                            for (let i = 0; i < so_luong_can_xoa; i++) {
+                                kho_chua.delete(tat_ca_ban_ghi[i].khoa);
                             }
                         }
-                        dongY();
+                        dong_y();
                     }
                 };
-                yeuCau.onerror = () => dongY();
+                yeu_cau.onerror = () => dong_y();
             });
         } catch (l) {}
     },
 
-    async xoaToanBoDuLieu() {
-        try {
-            const db = await this.layKetNoiDB();
-            return await new Promise((dongY) => {
-                const giaoDich = db.transaction('audioBlobs', 'readwrite');
-                giaoDich.objectStore('audioBlobs').clear();
-                giaoDich.oncomplete = () => {
-                    this.boNhoDemDB = [];
-                    sessionStorage.removeItem('STV_bo_nho_dem_db');
-                    dongY();
-                };
-                giaoDich.onerror = () => dongY();
-            });
-        } catch (l) {
-            this.boNhoDemDB = [];
-            sessionStorage.removeItem('STV_bo_nho_dem_db');
-        }
-    },
-
-    async layAnhBia() {
-        let linkTruyen = '';
-        const theTenTruyen = document.getElementById('booknameholder');
-        if (theTenTruyen && theTenTruyen.getAttribute('href')) {
-            linkTruyen = theTenTruyen.getAttribute('href');
+    async lay_anh_bia() {
+        let link_truyen = '';
+        const the_ten_truyen = document.getElementById('booknameholder');
+        if (the_ten_truyen && the_ten_truyen.getAttribute('href')) {
+            link_truyen = the_ten_truyen.getAttribute('href');
         } else {
-            const duongDan = window.location.pathname.split('/').filter(Boolean);
-            if (duongDan.length >= 4 && duongDan[0] === 'truyen') {
-                linkTruyen = `/${duongDan[0]}/${duongDan[1]}/${duongDan[2]}/${duongDan[3]}/`;
+            const duong_dan = window.location.pathname.split('/').filter(Boolean);
+            if (duong_dan.length >= 4 && duong_dan[0] === 'truyen') {
+                link_truyen = `/${duong_dan[0]}/${duong_dan[1]}/${duong_dan[2]}/${duong_dan[3]}/`;
             }
         }
         
-        if (!linkTruyen) return null;
+        if (!link_truyen) return null;
 
-        const parts = linkTruyen.split('/').filter(Boolean);
+        const parts = link_truyen.split('/').filter(Boolean);
         if (parts.length < 4) return null;
-        const idTruyen = parts[3];
-        const khoa = `bia_${idTruyen}`;
-        const khoaCu = `cover_${idTruyen}`;
+        const id_truyen = parts[3];
+        const khoa = `bia_${id_truyen}`;
+        const khoa_cu = `cover_${id_truyen}`;
         
-        return new Promise(dongY => {
-            chrome.storage.local.get([khoa, khoaCu], async duLieu => {
-                if (duLieu[khoa] && duLieu[khoa].startsWith('http')) { dongY(duLieu[khoa]); return; }
-                if (duLieu[khoaCu] && duLieu[khoaCu].startsWith('http')) {
-                    chrome.storage.local.set({ [khoa]: duLieu[khoaCu] });
-                    dongY(duLieu[khoaCu]);
+        return new Promise(dong_y => {
+            chrome.storage.local.get([khoa, khoa_cu], async du_lieu => {
+                if (du_lieu[khoa] && du_lieu[khoa].startsWith('http')) { dong_y(du_lieu[khoa]); return; }
+                if (du_lieu[khoa_cu] && du_lieu[khoa_cu].startsWith('http')) {
+                    chrome.storage.local.set({ [khoa]: du_lieu[khoa_cu] });
+                    dong_y(du_lieu[khoa_cu]);
                     return;
                 }
                 try {
-                    const boDieuKhien = new AbortController();
-                    const dongHo = setTimeout(() => boDieuKhien.abort(), 15000);
-                    const phanHoi = await fetch(linkTruyen, { signal: boDieuKhien.signal });
-                    const html = await phanHoi.text();
-                    clearTimeout(dongHo);
+                    const bo_dieu_khien = new AbortController();
+                    const dong_ho = setTimeout(() => bo_dieu_khien.abort(), 15000);
+                    const phan_hoi = await fetch(link_truyen, { signal: bo_dieu_khien.signal });
+                    const html = await phan_hoi.text();
+                    clearTimeout(dong_ho);
                     
                     const doc = new DOMParser().parseFromString(html, 'text/html');
-                    let duongDanAnh = '';
-                    const danhSachThe = ['#thumb-prop', '#book_img', '.book-thumb img', '.book-cover img', '.itembox img', 'meta[property="og:image"]'];
-                    for (const the of danhSachThe) {
+                    let duong_dan_anh = '';
+                    const danh_sach_the = ['#thumb-prop', '#book_img', '.book-thumb img', '.book-cover img', '.itembox img', 'meta[property="og:image"]'];
+                    for (const the of danh_sach_the) {
                         const anh = doc.querySelector(the);
-                        const linkGoc = anh?.getAttribute('src') || anh?.getAttribute('content');
-                        if (linkGoc && linkGoc.trim()) { duongDanAnh = linkGoc.trim(); break; }
+                        const link_goc = anh?.getAttribute('src') || anh?.getAttribute('content');
+                        if (link_goc && link_goc.trim()) { duong_dan_anh = link_goc.trim(); break; }
                     }
                     
-                    if (duongDanAnh) {
-                        if (duongDanAnh.startsWith('//')) duongDanAnh = window.location.protocol + duongDanAnh;
-                        else if (duongDanAnh.startsWith('/')) duongDanAnh = window.location.origin + duongDanAnh;
-                        else if (!duongDanAnh.startsWith('http')) duongDanAnh = window.location.origin + '/' + duongDanAnh;
+                    if (duong_dan_anh) {
+                        if (duong_dan_anh.startsWith('//')) duong_dan_anh = window.location.protocol + duong_dan_anh;
+                        else if (duong_dan_anh.startsWith('/')) duong_dan_anh = window.location.origin + duong_dan_anh;
+                        else if (!duong_dan_anh.startsWith('http')) duong_dan_anh = window.location.origin + '/' + duong_dan_anh;
                         
-                        if (duongDanAnh.toLowerCase().startsWith('http://')) {
-                            duongDanAnh = 'https://' + duongDanAnh.substring(7);
+                        if (duong_dan_anh.toLowerCase().startsWith('http://')) {
+                            duong_dan_anh = 'https://' + duong_dan_anh.substring(7);
                         }
 
-                        chrome.storage.local.set({ [khoa]: duongDanAnh });
-                        dongY(duongDanAnh);
-                    } else dongY(null);
-                } catch { dongY(null); }
+                        chrome.storage.local.set({ [khoa]: duong_dan_anh });
+                        dong_y(duong_dan_anh);
+                    } else dong_y(null);
+                } catch { dong_y(null); }
             });
         });
     },
 
-    async luuTienTrinhDoc(trangThai) {
-        if (!trangThai.tenTruyen || trangThai.tongSoDoan === 0) return;
+    async luu_tien_trinh_doc(trang_thai) {
+        if (!trang_thai.tenTruyen || trang_thai.tongSoDoan === 0) return;
 
-        const chunkHienTai = trangThai.chiSoTuyetDoi || trangThai.tienDoHienTai;
+        const chunk_hien_tai = trang_thai.chiSoTuyetDoi || trang_thai.tienDoHienTai;
 
-        const duLieuGoc = {
-            isPlaying: trangThai.dangPhat,
-            isPaused: trangThai.dangTamDung,
-            engine: trangThai.congCu,
-            progress: { current: chunkHienTai, total: trangThai.tongSoDoan },
-            bookTitle: trangThai.tenTruyen,
-            chapTitle: trangThai.tenChuong,
-            pageUrl: trangThai.duongDanTrang
+        const du_lieu_goc = {
+            isPlaying: trang_thai.dangPhat,
+            isPaused: trang_thai.dangTamDung,
+            engine: trang_thai.congCu,
+            progress: { current: chunk_hien_tai, total: trang_thai.tongSoDoan },
+            bookTitle: trang_thai.tenTruyen,
+            chapTitle: trang_thai.tenChuong,
+            pageUrl: trang_thai.duongDanTrang
         };
-        chrome.storage.local.set({ last_active_state: duLieuGoc });
+        chrome.storage.local.set({ last_active_state: du_lieu_goc });
 
-        this._thucHienLuuDanhSach(duLieuGoc);
+        this._thuc_hien_luu_danh_sach(du_lieu_goc);
     },
 
-    _thucHienLuuDanhSach(duLieuGoc) {
-        if (this._debounceTimer) {
-            clearTimeout(this._debounceTimer);
+    _thuc_hien_luu_danh_sach(du_lieu_goc) {
+        this._du_lieu_luu_cho = du_lieu_goc;
+        if (this._dong_ho_cho) {
+            clearTimeout(this._dong_ho_cho);
         }
-        this._debounceTimer = setTimeout(() => {
-            navigator.locks.request('stv_readingList_lock', () => {
-                return new Promise(moKhoa => {
-                    chrome.storage.local.get('readingList', duLieu => {
-                        let danhSach = duLieu.readingList || [];
-                        let viTri = danhSach.findIndex(i => (i.title || '').trim().toLowerCase() === (duLieuGoc.bookTitle || '').trim().toLowerCase());
-                        
-                        const hoanTat = () => { moKhoa(); };
-                        
-                        if (viTri !== -1) {
-                            let canCapNhat = false;
-                            if (danhSach[viTri].url !== duLieuGoc.pageUrl) { danhSach[viTri].url = duLieuGoc.pageUrl; canCapNhat = true; }
-                            if (danhSach[viTri].chap !== duLieuGoc.chapTitle) { danhSach[viTri].chap = duLieuGoc.chapTitle; canCapNhat = true; }
-                            const chunkMoi = duLieuGoc.progress.current;
-                            if (danhSach[viTri].chunkIndex !== chunkMoi) {
-                                danhSach[viTri].chunkIndex = chunkMoi;
-                                canCapNhat = true;
-                            }
-                            
-                            if (canCapNhat) chrome.storage.local.set({ readingList: danhSach }, hoanTat);
-                            else hoanTat();
-                        } else hoanTat();
-                    });
-                });
-            });
+        this._dong_ho_cho = setTimeout(() => {
+            this.flush_luu_danh_sach_ngay();
         }, 3000);
+    },
+
+    flush_luu_danh_sach_ngay() {
+        if (this._dong_ho_cho) {
+            clearTimeout(this._dong_ho_cho);
+            this._dong_ho_cho = null;
+        }
+        const du_lieu_goc = this._du_lieu_luu_cho;
+        if (!du_lieu_goc || !du_lieu_goc.bookTitle) return;
+        this._du_lieu_luu_cho = null;
+
+        try {
+            chrome.storage.local.get('readingList', du_lieu => {
+                let danh_sach = du_lieu.readingList || [];
+                let vi_tri = danh_sach.findIndex(i => (i.title || '').trim().toLowerCase() === (du_lieu_goc.bookTitle || '').trim().toLowerCase());
+                
+                if (vi_tri !== -1) {
+                    let can_cap_nhat = false;
+                    if (danh_sach[vi_tri].url !== du_lieu_goc.pageUrl) { danh_sach[vi_tri].url = du_lieu_goc.pageUrl; can_cap_nhat = true; }
+                    if (danh_sach[vi_tri].chap !== du_lieu_goc.chapTitle) { danh_sach[vi_tri].chap = du_lieu_goc.chapTitle; can_cap_nhat = true; }
+                    const chunk_moi = du_lieu_goc.progress ? du_lieu_goc.progress.current : null;
+                    if (chunk_moi !== null && danh_sach[vi_tri].chunkIndex !== chunk_moi) {
+                        danh_sach[vi_tri].chunkIndex = chunk_moi;
+                        can_cap_nhat = true;
+                    }
+                    
+                    if (can_cap_nhat) chrome.storage.local.set({ readingList: danh_sach });
+                }
+            });
+        } catch (e) {}
     }
 };

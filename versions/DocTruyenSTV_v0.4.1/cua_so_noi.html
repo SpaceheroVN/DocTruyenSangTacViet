@@ -1,14 +1,11 @@
 <!DOCTYPE html>
-<html lang="vi" style="background: #0f0e17;">
+<html lang="vi" style="background: var(--bg);">
 
 <head>
   <meta charset="UTF-8">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link
-    href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&family=Baloo+2:wght@800&family=Dancing+Script:wght@700&display=swap"
-    rel="stylesheet">
   <style>
-    :root {
+    :root,
+    html[data-theme="dark"] {
       --bg: #0f0e17;
       --surface: #1a1929;
       --surface2: #222136;
@@ -21,6 +18,45 @@
       --danger: #e05c6e;
       --warning: #f0c040;
       --radius: 10px;
+      --hover-bg: rgba(255, 255, 255, 0.08);
+      --hover-border: rgba(255, 255, 255, 0.18);
+      --hover-filter: brightness(1.15);
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root:not([data-theme="dark"]) {
+        --bg: #ece9f5;
+        --surface: #ffffff;
+        --surface2: #f3f1f9;
+        --border: #d4cee5;
+        --accent: #f27212;
+        --accent2: #d946ef;
+        --text: #13111f;
+        --text-muted: #575273;
+        --success: #059669;
+        --danger: #e11d48;
+        --warning: #d97706;
+        --hover-bg: rgba(242, 114, 18, 0.08);
+        --hover-border: rgba(242, 114, 18, 0.35);
+        --hover-filter: brightness(0.97);
+      }
+    }
+
+    html[data-theme="light"] {
+      --bg: #ece9f5;
+      --surface: #ffffff;
+      --surface2: #f3f1f9;
+      --border: #d4cee5;
+      --accent: #f27212;
+      --accent2: #d946ef;
+      --text: #13111f;
+      --text-muted: #575273;
+      --success: #059669;
+      --danger: #e11d48;
+      --warning: #d97706;
+      --hover-bg: rgba(242, 114, 18, 0.08);
+      --hover-border: rgba(242, 114, 18, 0.35);
+      --hover-filter: brightness(0.97);
     }
 
     * {
@@ -44,7 +80,7 @@
       max-height: 600px;
       background: var(--bg);
       color: var(--text);
-      font-family: 'Be Vietnam Pro', sans-serif;
+      font-family: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
       font-size: 13px;
       overflow: hidden;
       display: flex;
@@ -62,6 +98,7 @@
       border: 1px solid var(--border);
       color: var(--text);
       font-size: 11px;
+      font-weight: 600;
       padding: 6px 14px;
       border-radius: 99px;
       white-space: nowrap;
@@ -69,12 +106,33 @@
       pointer-events: none;
       transition: opacity 0.25s, transform 0.25s;
       z-index: 99999;
-      max-width: 280px;
+      max-width: 290px;
       overflow: hidden;
       text-overflow: ellipsis;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 7px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+    }
+
+    .toast-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: 16px;
+      height: 16px;
+      line-height: 1;
+    }
+
+    .toast-icon svg {
+      display: block;
+    }
+
+    .toast-message {
+      line-height: 1;
+      display: flex;
+      align-items: center;
     }
 
     .toast.show {
@@ -85,20 +143,39 @@
     .toast-success {
       border-color: var(--success);
       color: var(--success);
+      background: var(--surface);
+      box-shadow: 0 4px 16px rgba(76, 175, 134, 0.25);
+    }
+
+    .toast-unsave {
+      border-color: var(--warning);
+      color: var(--warning);
+      background: var(--surface);
+      box-shadow: 0 4px 16px rgba(240, 192, 64, 0.25);
     }
 
     .toast-warning {
       border-color: var(--warning);
       color: var(--warning);
+      background: var(--surface);
+      box-shadow: 0 4px 16px rgba(240, 192, 64, 0.2);
+    }
+
+    .toast-error {
+      border-color: var(--danger);
+      color: var(--danger);
+      background: var(--surface);
+      box-shadow: 0 4px 16px rgba(255, 77, 79, 0.25);
     }
 
     .toast-info {
       border-color: var(--accent);
       color: var(--accent);
+      background: var(--surface);
     }
 
     .header {
-      background: linear-gradient(135deg, #1a1929 0%, #12111e 100%);
+      background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
       padding: 10px 14px 10px 18px;
       border-bottom: 1px solid var(--border);
       display: flex;
@@ -147,11 +224,14 @@
       border-radius: 6px;
       cursor: pointer;
       transition: all 0.2s;
+      position: relative;
     }
 
     .header-btn:hover {
       border-color: var(--accent);
       color: var(--accent);
+      background: var(--hover-bg);
+      filter: var(--hover-filter);
     }
 
     .header-btn.active {
@@ -159,6 +239,413 @@
       color: #0f0e17;
       border-color: var(--accent);
       box-shadow: 0 0 10px rgba(232, 160, 69, 0.3);
+    }
+
+    html[data-theme="light"] #theme-icon-sun { display: block !important; }
+    html[data-theme="light"] #theme-icon-moon { display: none !important; }
+    html:not([data-theme="light"]) #theme-icon-sun { display: none !important; }
+    html:not([data-theme="light"]) #theme-icon-moon { display: block !important; }
+
+    /* Huy hiệu chữ R xanh lục khuyên dùng (Recommended) riêng cho theme Tối */
+    .theme-recommend-badge {
+      position: absolute;
+      bottom: 1.5px;
+      right: 2.5px;
+      font-size: 8px;
+      font-weight: 500;
+      line-height: 1;
+      color: #22c55e;
+      text-shadow: 0 0 2px rgba(34, 197, 94, 0.35);
+      user-select: none;
+      pointer-events: none;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    html[data-theme="light"] .theme-recommend-badge { display: none !important; }
+    html:not([data-theme="light"]) .theme-recommend-badge { display: block !important; }
+
+    html[data-theme="light"] .stv-logo-sub { fill: #334155 !important; }
+    html:not([data-theme="light"]) .stv-logo-sub { fill: #ffffff !important; }
+
+    /* Hiệu ứng phân tầng nổi bật cho theme Sáng */
+    html[data-theme="light"] .header {
+      background: linear-gradient(135deg, #ffffff 0%, #f7f5fd 100%);
+      box-shadow: 0 1px 3px rgba(24, 21, 40, 0.04);
+    }
+
+    html[data-theme="light"] .btn-ctrl:not(.btn-lg) {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      box-shadow: 0 1px 2px rgba(24, 21, 40, 0.05);
+    }
+
+    html[data-theme="light"] .btn-ctrl:not(.btn-lg):hover:not(:disabled) {
+      background: rgba(242, 114, 18, 0.10);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    html[data-theme="light"] #btn-play,
+    html[data-theme="light"] .btn-lg:not(#btn-open-stv) {
+      background: linear-gradient(135deg, #f27212 0%, #db2777 100%) !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 14px rgba(242, 114, 18, 0.35) !important;
+    }
+
+    html[data-theme="light"] #btn-play:hover,
+    html[data-theme="light"] .btn-lg:not(#btn-open-stv):hover {
+      background: linear-gradient(135deg, #ea580c 0%, #db2777 100%) !important;
+      transform: translateY(-1.5px) scale(1.02);
+      box-shadow: 0 6px 20px rgba(234, 88, 12, 0.55), 0 0 12px rgba(219, 39, 119, 0.35) !important;
+      filter: brightness(1.06);
+      opacity: 1 !important;
+    }
+
+    html[data-theme="light"] #btn-play:active,
+    html[data-theme="light"] .btn-lg:not(#btn-open-stv):active {
+      transform: scale(0.97);
+      box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3) !important;
+    }
+
+    html[data-theme="light"] .header-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      box-shadow: 0 1px 2px rgba(24, 21, 40, 0.04);
+    }
+
+    html[data-theme="light"] .header-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(242, 114, 18, 0.10);
+    }
+
+    html[data-theme="light"] .header-btn.active {
+      background: var(--accent) !important;
+      color: #ffffff !important;
+      border-color: var(--accent) !important;
+      box-shadow: 0 2px 8px rgba(242, 114, 18, 0.35) !important;
+    }
+
+    html[data-theme="light"] .chunk-nav {
+      background: var(--surface2);
+      box-shadow: 0 1px 2px rgba(24, 21, 40, 0.03);
+    }
+
+    html[data-theme="light"] .cover-wrapper {
+      box-shadow: 0 4px 14px rgba(24, 21, 40, 0.12);
+      border: 1.5px solid rgba(234, 88, 12, 0.25);
+    }
+
+    html[data-theme="light"] .cover-wrapper:hover {
+      box-shadow: 0 8px 22px rgba(234, 88, 12, 0.35), 0 0 0 2px rgba(234, 88, 12, 0.35);
+      border-color: #ea580c;
+    }
+
+    html[data-theme="light"] .cover-wrapper:active {
+      transform: scale(0.96);
+      box-shadow: 0 2px 8px rgba(234, 88, 12, 0.25);
+    }
+
+    html[data-theme="light"] .cover-overlay {
+      background: rgba(24, 21, 40, 0.42);
+    }
+
+    html[data-theme="light"] .pause-reset-btn {
+      background: #ffffff;
+      border: 1px solid #dcd8ea;
+      color: #6b6985;
+    }
+
+    html[data-theme="light"] .pause-reset-btn:hover {
+      background: #fffbeb;
+      border-color: #ea580c;
+      color: #ea580c;
+      box-shadow: 0 2px 6px rgba(234, 88, 12, 0.15);
+    }
+
+    html[data-theme="light"] .pause-card {
+      background: #ffffff;
+      border: 1px solid #e2deec;
+      box-shadow: 0 1px 4px rgba(24, 21, 40, 0.04);
+    }
+
+    html[data-theme="light"] .pause-card:hover {
+      border-color: #ea580c;
+      box-shadow: 0 3px 10px rgba(234, 88, 12, 0.1);
+    }
+
+    html[data-theme="light"] .pause-card:focus-within {
+      border-color: #ea580c;
+      box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.2), 0 4px 12px rgba(24, 21, 40, 0.08);
+    }
+
+    html[data-theme="light"] .pause-step-btn {
+      background: #f5f3fa;
+      border: 1px solid #dcd8ea;
+      color: #6b6985;
+    }
+
+    html[data-theme="light"] .pause-step-btn:hover {
+      background: rgba(234, 88, 12, 0.12);
+      border-color: #ea580c;
+      color: #ea580c;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px rgba(234, 88, 12, 0.18);
+    }
+
+    html[data-theme="light"] .pause-step-btn:active {
+      transform: scale(0.92) translateY(0);
+      background: rgba(234, 88, 12, 0.22);
+    }
+
+    html[data-theme="light"] #btn-show-pause-note {
+      background: #fffbeb;
+      border: 1px solid #f59e0b;
+      color: #b45309;
+    }
+
+    html[data-theme="light"] #btn-show-pause-note:hover {
+      background: #fef3c7;
+      border-color: #d97706;
+      box-shadow: 0 2px 8px rgba(217, 119, 6, 0.2);
+    }
+
+    html[data-theme="light"] .toast {
+      background: #ffffff;
+      box-shadow: 0 4px 16px rgba(24, 21, 40, 0.12);
+    }
+
+    html[data-theme="light"] .toast-success {
+      border-color: #16a34a;
+      color: #15803d;
+      background: #f0fdf4;
+      box-shadow: 0 4px 16px rgba(22, 163, 74, 0.18);
+    }
+
+    html[data-theme="light"] .toast-unsave {
+      border-color: #d97706;
+      color: #b45309;
+      background: #fffbeb;
+      box-shadow: 0 4px 16px rgba(217, 119, 6, 0.18);
+    }
+
+    html[data-theme="light"] .btn-save.saved {
+      border-color: #16a34a;
+      color: #15803d;
+      background: #dcfce7;
+    }
+
+    html[data-theme="light"] .btn-save.saved:hover {
+      border-color: #16a34a;
+      background: #bbf7d0;
+      box-shadow: 0 2px 8px rgba(22, 163, 74, 0.2);
+    }
+
+    html[data-theme="light"] .custom-select-dropdown {
+      background: #ffffff;
+      box-shadow: 0 8px 24px rgba(24, 21, 40, 0.12);
+    }
+
+    html[data-theme="light"] #btn-open-stv {
+      background: #ffffff !important;
+      border: 1px solid #dcd8ea !important;
+      color: #ea580c !important;
+      font-weight: 600 !important;
+      box-shadow: 0 1px 4px rgba(24, 21, 40, 0.05) !important;
+      transform: none !important;
+      filter: none !important;
+    }
+
+    html[data-theme="light"] #btn-open-stv:hover {
+      background: #fff7ed !important;
+      border-color: #ea580c !important;
+      color: #c2410c !important;
+      box-shadow: 0 2px 8px rgba(234, 88, 12, 0.16) !important;
+      transform: translateY(-1px) !important;
+      filter: none !important;
+      opacity: 1 !important;
+    }
+
+    html[data-theme="light"] #btn-open-stv:active {
+      transform: scale(0.98) !important;
+      background: #ffedd5 !important;
+    }
+
+    html[data-theme="light"] #progress-text {
+      background: rgba(242, 114, 18, 0.10) !important;
+      border-color: rgba(242, 114, 18, 0.35) !important;
+      color: #c2410c !important;
+    }
+
+    html[data-theme="light"] #progress-text:hover {
+      background: rgba(242, 114, 18, 0.18) !important;
+      border-color: var(--accent) !important;
+    }
+
+
+    /* Thay thế màu vàng nhạt/xanh nhạt bằng tông màu đậm nét, rõ chữ trong theme Sáng */
+    html[data-theme="light"] #speed-val {
+      color: #b45309 !important;
+    }
+
+    html[data-theme="light"] .label-speed {
+      color: #b45309 !important;
+    }
+
+    html[data-theme="light"] input[type=range].speed-range::-webkit-slider-thumb {
+      background: #d97706 !important;
+      box-shadow: 0 0 6px rgba(217, 119, 6, 0.4) !important;
+    }
+
+    html[data-theme="light"] #vol-val {
+      color: #0284c7 !important;
+    }
+
+    html[data-theme="light"] .label-vol {
+      color: #0284c7 !important;
+    }
+
+    html[data-theme="light"] input[type=range].vol-range::-webkit-slider-thumb {
+      background: #0284c7 !important;
+      box-shadow: 0 0 6px rgba(2, 132, 199, 0.4) !important;
+    }
+
+    html[data-theme="light"] .hourglass-spin {
+      color: #d97706 !important;
+    }
+
+    /* Thiết kế nút Xuất / Nhập Backup tạo điểm nhấn mạnh mẽ */
+    #btn-export-data,
+    #btn-import-data {
+      flex: 1;
+      height: 32px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Giao diện nút Backup theme Tối (Mặc định) */
+    #btn-export-data {
+      background: rgba(56, 189, 248, 0.12) !important;
+      border: 1px solid rgba(56, 189, 248, 0.35) !important;
+      color: #38bdf8 !important;
+    }
+
+    #btn-export-data:hover {
+      background: #0284c7 !important;
+      border-color: #38bdf8 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.45) !important;
+      transform: translateY(-1.5px);
+    }
+
+    #btn-export-data:active {
+      transform: scale(0.97);
+    }
+
+    #btn-import-data {
+      background: rgba(245, 158, 11, 0.12) !important;
+      border: 1px solid rgba(245, 158, 11, 0.35) !important;
+      color: #fbbf24 !important;
+    }
+
+    #btn-import-data:hover {
+      background: #d97706 !important;
+      border-color: #fbbf24 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 14px rgba(217, 119, 6, 0.45) !important;
+      transform: translateY(-1.5px);
+    }
+
+    #btn-import-data:active {
+      transform: scale(0.97);
+    }
+
+    /* Giao diện nút Backup theme Sáng */
+    html[data-theme="light"] #btn-export-data {
+      background: #f0f9ff !important;
+      border: 1.5px solid #7dd3fc !important;
+      color: #0369a1 !important;
+      box-shadow: 0 1px 3px rgba(2, 132, 199, 0.08) !important;
+    }
+
+    html[data-theme="light"] #btn-export-data:hover {
+      background: #0284c7 !important;
+      border-color: #0284c7 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35) !important;
+      transform: translateY(-1.5px);
+    }
+
+    html[data-theme="light"] #btn-import-data {
+      background: #fffbeb !important;
+      border: 1.5px solid #fcd34d !important;
+      color: #b45309 !important;
+      box-shadow: 0 1px 3px rgba(180, 83, 9, 0.08) !important;
+    }
+
+    html[data-theme="light"] #btn-import-data:hover {
+      background: #d97706 !important;
+      border-color: #d97706 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 14px rgba(217, 119, 6, 0.35) !important;
+      transform: translateY(-1.5px);
+    }
+
+    /* Hiệu ứng nổi bật cho nút Xóa tất cả */
+    #btn-clear-all {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    #btn-clear-all:hover {
+      background: #e11d48 !important;
+      color: #ffffff !important;
+      border-color: #e11d48 !important;
+      box-shadow: 0 4px 12px rgba(225, 29, 72, 0.35) !important;
+      transform: translateY(-1px);
+    }
+
+    #btn-clear-all:active {
+      transform: scale(0.97);
+    }
+
+    html[data-theme="light"] .modal {
+      background: #ffffff;
+      box-shadow: 0 16px 40px rgba(24, 21, 40, 0.2);
+    }
+
+    html[data-theme="light"] .list-item {
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 1px 3px rgba(24, 21, 40, 0.04);
+    }
+
+    html[data-theme="light"] .list-item:hover {
+      background: #fffdfa;
+      border-color: var(--accent);
+      box-shadow: 0 4px 12px rgba(255, 122, 0, 0.12);
+    }
+
+    html[data-theme="light"] .list-col-thumb {
+      background: #f0edf7;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    html[data-theme="light"] .list-chunk-badge {
+      background: rgba(255, 122, 0, 0.08);
+      border-color: rgba(255, 122, 0, 0.28);
+    }
+
+    html[data-theme="light"] #panel-settings > div > div[style*="background: var(--surface)"] {
+      box-shadow: 0 2px 8px rgba(24, 21, 40, 0.05) !important;
     }
 
     .header-info-group {
@@ -169,7 +656,7 @@
     }
 
     .info-badge {
-      background: rgba(255, 255, 255, 0.05);
+      background: var(--surface2);
       border: 1px solid var(--border);
       color: var(--text-muted);
       font-size: 9px;
@@ -205,6 +692,8 @@
     .info-badge.clickable:hover {
       border-color: var(--accent);
       color: var(--accent);
+      background: var(--hover-bg);
+      filter: var(--hover-filter);
     }
 
     .timer-selector {
@@ -244,7 +733,7 @@
     }
 
     .auto-stop-select option {
-      background: #1a1929;
+      background: var(--surface);
       color: var(--text);
       padding: 10px;
     }
@@ -300,15 +789,76 @@
       border-bottom: 1px solid var(--border);
     }
 
-    #cover-img {
+    .cover-wrapper {
+      position: relative;
       width: 54px;
       height: 78px;
-      object-fit: cover;
-      border-radius: 5px;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
       flex-shrink: 0;
-      border: 1px solid var(--border);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
+      border: 1.5px solid var(--border);
       background: var(--surface2);
+      transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease, border-color 0.22s ease;
+    }
+
+    .cover-wrapper:hover {
+      transform: scale(1.05);
+      border-color: var(--accent);
+      box-shadow: 0 8px 24px rgba(232, 160, 69, 0.5), 0 0 0 2px rgba(232, 160, 69, 0.3);
+    }
+
+    .cover-wrapper:active {
+      transform: scale(0.96);
+      box-shadow: 0 2px 8px rgba(232, 160, 69, 0.3);
+    }
+
+    #cover-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: filter 0.22s ease, transform 0.22s ease;
+    }
+
+    .cover-wrapper:hover #cover-img {
+      filter: brightness(0.6) blur(0.4px);
+      transform: scale(1.06);
+    }
+
+    .cover-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      background: rgba(15, 14, 23, 0.48);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      pointer-events: none;
+      transition: opacity 0.22s ease;
+    }
+
+    .cover-wrapper:hover .cover-overlay {
+      opacity: 1;
+    }
+
+    .cover-overlay-text {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #ffffff;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9), 0 0 10px rgba(0, 0, 0, 0.7);
+      user-select: none;
+      transform: scale(0.9);
+      transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .cover-wrapper:hover .cover-overlay-text {
+      transform: scale(1);
     }
 
     .book-meta {
@@ -352,25 +902,45 @@
       color: var(--text-muted);
       font-family: inherit;
       font-size: 10px;
-      padding: 4px 10px;
+      padding: 3px 9px;
       border-radius: 6px;
       cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: inline-flex;
       align-items: center;
-      gap: 6px;
-      font-weight: 500;
+      gap: 5px;
+      font-weight: 600;
+      user-select: none;
+    }
+
+    .btn-save svg {
+      display: block;
+      flex-shrink: 0;
     }
 
     .btn-save:hover {
       border-color: var(--accent);
       color: var(--accent);
+      background: var(--hover-bg);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(232, 160, 69, 0.2);
+    }
+
+    .btn-save:active {
+      transform: scale(0.95);
     }
 
     .btn-save.saved {
       border-color: var(--success);
       color: var(--success);
-      background: rgba(76, 175, 134, 0.1);
+      background: rgba(76, 175, 134, 0.12);
+    }
+
+    .btn-save.saved:hover {
+      border-color: var(--success);
+      color: var(--success);
+      background: rgba(76, 175, 134, 0.2);
+      box-shadow: 0 2px 8px rgba(76, 175, 134, 0.25);
     }
 
     .status-bar {
@@ -408,6 +978,53 @@
       color: var(--warning);
     }
 
+    .pause-reset-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      font-size: 9.5px;
+      font-weight: 600;
+      height: 20px;
+      border-radius: 5px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+      font-family: inherit;
+    }
+
+    .pause-reset-btn:hover {
+      background: rgba(232, 160, 69, 0.15);
+      border-color: var(--accent);
+      color: var(--accent);
+      box-shadow: 0 0 8px rgba(232, 160, 69, 0.25);
+    }
+
+    .pause-reset-btn:hover .pause-reset-icon {
+      transform: rotate(-180deg);
+    }
+
+    .pause-reset-btn:active {
+      transform: scale(0.94);
+    }
+
+    .pause-reset-btn:active .pause-reset-icon {
+      transform: rotate(-360deg);
+    }
+
+    .pause-reset-icon {
+      display: block;
+      flex-shrink: 0;
+      width: 10px;
+      height: 10px;
+      pointer-events: none;
+      transform-origin: 50% 50%;
+      transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+      will-change: transform;
+    }
+
     .pause-card {
       flex: 1;
       min-width: 0;
@@ -419,13 +1036,18 @@
       flex-direction: column;
       align-items: center;
       gap: 3px;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
       overflow: hidden;
+    }
+
+    .pause-card:hover {
+      border-color: rgba(232, 160, 69, 0.4);
+      transform: translateY(-1px);
     }
 
     .pause-card:focus-within {
       border-color: var(--accent);
-      box-shadow: 0 0 0 2px rgba(232, 160, 69, 0.1);
+      box-shadow: 0 0 0 2px rgba(232, 160, 69, 0.25), 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 
     .pause-symbol {
@@ -450,48 +1072,60 @@
     .pause-stepper {
       display: flex;
       align-items: center;
-      gap: 2px;
+      justify-content: space-between;
+      gap: 3px;
       width: 100%;
-      margin-top: 2px;
+      margin-top: 3px;
+      box-sizing: border-box;
     }
 
     .pause-step-btn {
-      width: 18px;
-      height: 18px;
-      background: var(--border);
-      border: none;
-      border-radius: 4px;
+      width: 22px;
+      height: 22px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      border-radius: 6px;
       color: var(--text-muted);
       cursor: pointer;
-      font-size: 13px;
-      line-height: 1;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      transition: background 0.15s, color 0.15s;
-      font-family: inherit;
+      transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
       padding: 0;
+      user-select: none;
+    }
+
+    .pause-step-btn svg {
+      pointer-events: none;
+      display: block;
     }
 
     .pause-step-btn:hover {
-      background: var(--accent);
-      color: #0f0e17;
+      background: rgba(232, 160, 69, 0.16);
+      border-color: rgba(232, 160, 69, 0.55);
+      color: #e8a045;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
     }
 
     .pause-step-btn:active {
-      transform: scale(0.92);
+      transform: scale(0.92) translateY(0);
+      background: rgba(232, 160, 69, 0.28);
     }
 
     .pause-num-input {
       flex: 1;
       min-width: 0;
+      height: 22px;
+      line-height: 22px;
       text-align: center;
       background: transparent;
       border: none;
       color: var(--accent);
-      font-size: 10.5px;
+      font-size: 11px;
       font-weight: 700;
+      font-variant-numeric: tabular-nums;
       font-family: inherit;
       outline: none;
       padding: 0;
@@ -503,6 +1137,34 @@
     .pause-num-input::-webkit-outer-spin-button {
       -webkit-appearance: none;
       margin: 0;
+    }
+
+    #btn-show-pause-note {
+      width: 100%;
+      height: 28px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 7px;
+      border: 1px solid rgba(240, 192, 64, 0.4);
+      color: var(--warning);
+      background: rgba(240, 192, 64, 0.06);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.18s ease;
+    }
+
+    #btn-show-pause-note:hover {
+      background: rgba(240, 192, 64, 0.14);
+      border-color: var(--warning);
+      box-shadow: 0 0 10px rgba(240, 192, 64, 0.2);
+      transform: translateY(-1px);
+    }
+
+    #btn-show-pause-note:active {
+      transform: scale(0.98);
     }
 
     @keyframes pulse {
@@ -541,28 +1203,6 @@
       display: flex;
       align-items: center;
       gap: 4px;
-    }
-
-    .sleep-timer-btn {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      font-size: 9px;
-      padding: 1px 6px;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .sleep-timer-btn:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    .sleep-timer-btn.active {
-      background: var(--accent);
-      color: #0f0e17;
-      border-color: var(--accent);
     }
 
     #progress-text {
@@ -687,6 +1327,56 @@
       border: 1px solid var(--border);
     }
 
+    .chunk-nav-btn {
+      padding: 4px 10px;
+      font-size: 11.5px;
+      font-weight: 600;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+    }
+
+    .chunk-nav-btn:hover:not(:disabled) {
+      color: var(--accent);
+      background: rgba(232, 160, 69, 0.12);
+      border-color: rgba(232, 160, 69, 0.35);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    }
+
+    .chunk-nav-btn:active:not(:disabled) {
+      transform: scale(0.94) translateY(0);
+      background: rgba(232, 160, 69, 0.2);
+    }
+
+    .chunk-nav-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    html[data-theme="light"] .chunk-nav-btn {
+      color: #716c88;
+    }
+
+    html[data-theme="light"] .chunk-nav-btn:hover:not(:disabled) {
+      color: var(--accent);
+      background: rgba(234, 88, 12, 0.1);
+      border-color: rgba(234, 88, 12, 0.3);
+      box-shadow: 0 2px 8px rgba(234, 88, 12, 0.15);
+    }
+
+    html[data-theme="light"] .chunk-nav-btn:active:not(:disabled) {
+      transform: scale(0.94) translateY(0);
+      background: rgba(234, 88, 12, 0.18);
+    }
+
     .btn-ctrl {
       background: var(--surface2);
       border: 1px solid var(--border);
@@ -708,7 +1398,8 @@
     .btn-ctrl:hover:not(:disabled) {
       border-color: var(--accent);
       color: var(--accent);
-      background: rgba(232, 160, 69, 0.05);
+      background: var(--hover-bg);
+      filter: var(--hover-filter);
     }
 
     .btn-ctrl:active:not(:disabled) {
@@ -731,19 +1422,64 @@
       border: none;
       color: #fff;
       letter-spacing: 0.2px;
-    }
-
-    .btn-lg:hover {
-      opacity: 0.9;
-      color: #fff;
-      border: none;
+      box-shadow: 0 4px 14px rgba(232, 160, 69, 0.35);
+      transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     #btn-play:hover {
-      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%) !important;
-      opacity: 0.85 !important;
+      background: linear-gradient(135deg, #f59e0b 0%, #ec4899 100%) !important;
       color: #fff !important;
       border: none !important;
+      transform: translateY(-1.5px) scale(1.02);
+      box-shadow: 0 6px 20px rgba(232, 160, 69, 0.55), 0 0 12px rgba(219, 39, 119, 0.35) !important;
+      filter: brightness(1.06);
+      opacity: 1 !important;
+    }
+
+    #btn-play:active {
+      transform: scale(0.97);
+      box-shadow: 0 2px 8px rgba(232, 160, 69, 0.3) !important;
+    }
+
+    /* Nút mở trang STV kiểu cổ điển tối giản, sang trọng */
+    #btn-open-stv {
+      width: 100%;
+      height: 40px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--surface2) !important;
+      border: 1px solid var(--border) !important;
+      color: var(--accent) !important;
+      letter-spacing: normal;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+      transform: none !important;
+      filter: none !important;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    #btn-open-stv:hover {
+      background: rgba(232, 160, 69, 0.14) !important;
+      border-color: var(--accent) !important;
+      color: #fbbf24 !important;
+      box-shadow: 0 2px 10px rgba(232, 160, 69, 0.25) !important;
+      transform: translateY(-1px) !important;
+      filter: none !important;
+      opacity: 1 !important;
+    }
+
+    #btn-open-stv:active {
+      transform: scale(0.98) !important;
+      background: rgba(232, 160, 69, 0.2) !important;
+      box-shadow: 0 1px 4px rgba(232, 160, 69, 0.15) !important;
+    }
+
+    .btn-lg.tab-locked,
+    #btn-play.tab-locked {
+      opacity: 0.55 !important;
+      filter: grayscale(0.6) !important;
+      cursor: not-allowed !important;
+      box-shadow: none !important;
+      transform: none !important;
     }
 
     .sliders-row {
@@ -983,6 +1719,8 @@
     .sort-btn:hover {
       border-color: var(--accent);
       color: var(--text);
+      background: var(--hover-bg);
+      filter: var(--hover-filter);
     }
 
     .sort-btn.active {
@@ -992,73 +1730,186 @@
       font-weight: 600;
     }
 
+    #list-container {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      padding: 6px 0 16px 0;
+    }
+
     .list-empty {
       text-align: center;
       color: var(--text-muted);
-      font-size: 11px;
-      padding: 16px 0;
+      font-size: 12px;
+      padding: 36px 0;
     }
 
+    /* Thẻ truyện thư viện: 4 cột, kích thước lớn, bo góc cao cấp */
     .list-item {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 7px 4px;
-      border-bottom: 1px solid var(--border);
-      border-radius: 4px;
-      transition: background 0.15s;
-    }
-
-    .list-item:last-child {
-      border-bottom: none;
+      gap: 10px;
+      padding: 9px 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      position: relative;
+      box-sizing: border-box;
+      transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
     }
 
     .list-item:hover {
       background: var(--surface2);
+      border-color: rgba(255, 122, 0, 0.45);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+    }
+
+    /* Cột 1: Bìa truyện lớn */
+    .list-col-thumb {
+      flex: 0 0 50px;
+      width: 50px;
+      height: 70px;
+      border-radius: 6px;
+      overflow: hidden;
+      background: var(--surface2);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
     }
 
     .list-thumb {
-      width: 28px;
-      height: 40px;
+      width: 100%;
+      height: 100%;
       object-fit: cover;
-      border-radius: 3px;
-      flex-shrink: 0;
-      background: var(--surface2);
+      display: block;
     }
 
-    .list-info {
-      flex: 1;
+    /* Cột 2: Gồm 3 hàng: Tên truyện, Tên chương, Đoạn đọc hiện tại */
+    .list-col-info {
+      flex: 1 1 auto;
       min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 3px;
     }
 
-    .list-name {
-      font-size: 12px;
-      font-weight: 500;
-      white-space: nowrap;
+    /* Đường chạy chữ Marquee */
+    .marquee-track {
+      width: 100%;
       overflow: hidden;
-      text-overflow: ellipsis;
+      white-space: nowrap;
+      position: relative;
     }
 
-    .list-chap {
-      font-size: 10px;
+    .marquee-text {
+      display: inline-block;
+      white-space: nowrap;
+      will-change: transform;
+    }
+
+    /* Mặt nạ làm mờ rìa chữ khi tràn */
+    .marquee-track.has-overflow {
+      mask-image: linear-gradient(to right, black calc(100% - 14px), transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, black calc(100% - 14px), transparent 100%);
+    }
+
+    .marquee-track.has-overflow.is-scrolling {
+      mask-image: linear-gradient(to right, transparent 0%, black 14px, black calc(100% - 14px), transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 14px, black calc(100% - 14px), transparent 100%);
+    }
+
+    .marquee-track.has-overflow.is-at-end {
+      mask-image: linear-gradient(to right, transparent 0%, black 14px, black 100%);
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, black 14px, black 100%);
+    }
+
+    /* Hàng 1: Tên truyện */
+    .list-row-title {
+      width: 100%;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.35;
+    }
+
+    /* Hàng 2: Tên chương */
+    .list-row-chap {
+      width: 100%;
+      font-size: 11.5px;
+      font-weight: 400;
       color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    /* Hàng 3: Đoạn đọc hiện tại */
+    .list-row-chunk {
+      display: flex;
+      align-items: center;
       margin-top: 1px;
     }
 
+    .list-chunk-badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--accent);
+      background: rgba(255, 122, 0, 0.08);
+      border: 1px solid rgba(255, 122, 0, 0.22);
+      padding: 1px 7px;
+      border-radius: 10px;
+      line-height: 1.35;
+    }
+
+    /* Cột 3: Ngày tháng năm xem */
+    .list-col-date {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 2px;
+      text-align: right;
+    }
+
+    .list-date-text {
+      font-size: 10px;
+      font-weight: 500;
+      white-space: nowrap;
+      line-height: 1.2;
+    }
+
+    /* Cột 4: Nút X xóa truyện */
+    .list-col-action {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     .btn-remove {
-      background: none;
+      background: transparent;
       border: none;
       color: var(--text-muted);
       cursor: pointer;
-      font-size: 13px;
-      padding: 2px 4px;
-      border-radius: 4px;
-      transition: color 0.2s;
-      flex-shrink: 0;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      padding: 0;
     }
 
     .btn-remove:hover {
+      background: rgba(255, 77, 79, 0.12);
       color: var(--danger);
+      transform: scale(1.08);
     }
 
     .setting-row {
@@ -1090,7 +1941,7 @@
       justify-content: center;
       gap: 8px;
       font-size: 10px;
-      color: rgba(255, 255, 255, 0.55);
+      color: var(--text-muted);
       border-top: 1px solid var(--border);
       background: var(--surface);
       letter-spacing: 0.3px;
@@ -1099,43 +1950,6 @@
 
     .footer span {
       color: var(--accent);
-    }
-
-    #api-settings-box {
-      width: 100%;
-      background: var(--surface2);
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px dashed var(--border);
-      margin-top: 4px;
-    }
-
-    #api-key-input,
-    #api-region-input {
-      width: 100%;
-      margin-bottom: 8px;
-      padding: 6px 8px;
-      font-size: 11px;
-      border-radius: 4px;
-      border: 1px solid var(--border);
-      background: var(--bg);
-      color: var(--text);
-      outline: none;
-      font-family: monospace;
-    }
-
-    #api-key-input:focus,
-    #api-region-input:focus {
-      border-color: var(--accent);
-    }
-
-    #btn-save-api {
-      width: 100%;
-      font-size: 11px;
-      height: 28px;
-      background: rgba(232, 160, 69, 0.1);
-      color: var(--accent);
-      border-color: var(--accent);
     }
 
     .icon-text {
@@ -1202,6 +2016,8 @@
       gap: 10px;
       justify-content: flex-end;
     }
+
+
 
     .custom-select-container {
       position: relative;
@@ -1460,34 +2276,74 @@
     }
 
     .digital-digit {
-      background: rgba(232, 160, 69, 0.08);
-      color: var(--accent);
       font-size: 22px;
       font-family: 'Baloo 2', monospace;
       font-weight: 800;
       padding: 4px 10px;
       border-radius: 8px;
-      border: 1px solid rgba(232, 160, 69, 0.3);
       min-width: 40px;
       text-align: center;
       cursor: text;
-      transition: all 0.2s;
-      text-shadow: 0 0 12px rgba(232, 160, 69, 0.5);
-      box-shadow: inset 0 0 10px rgba(232, 160, 69, 0.05);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       user-select: none;
     }
 
-    .digital-digit:hover {
-      border-color: var(--accent);
-      background: rgba(232, 160, 69, 0.15);
-      box-shadow: 0 0 10px rgba(232, 160, 69, 0.2), inset 0 0 10px rgba(232, 160, 69, 0.05);
+    .digital-digit.digit-h {
+      background: rgba(232, 160, 69, 0.1);
+      color: #fbbf24;
+      border: 1.5px solid rgba(232, 160, 69, 0.4);
+      text-shadow: 0 0 10px rgba(232, 160, 69, 0.4);
     }
 
-    .digital-digit.editing {
-      border-color: var(--accent);
+    .digital-digit.digit-h:hover,
+    .digital-digit.digit-h.editing {
+      border-color: #f59e0b;
       background: rgba(232, 160, 69, 0.2);
-      box-shadow: 0 0 14px rgba(232, 160, 69, 0.4);
+      box-shadow: 0 0 12px rgba(232, 160, 69, 0.35);
       outline: none;
+    }
+
+    .digital-digit.digit-m {
+      background: rgba(196, 92, 138, 0.1);
+      color: #f472b6;
+      border: 1.5px solid rgba(196, 92, 138, 0.45);
+      text-shadow: 0 0 10px rgba(196, 92, 138, 0.4);
+    }
+
+    .digital-digit.digit-m:hover,
+    .digital-digit.digit-m.editing {
+      border-color: #ec4899;
+      background: rgba(196, 92, 138, 0.2);
+      box-shadow: 0 0 12px rgba(196, 92, 138, 0.35);
+      outline: none;
+    }
+
+    html[data-theme="light"] .digital-digit.digit-h {
+      color: #b45309;
+      background: #fffbeb;
+      border: 1.5px solid #fcd34d;
+      text-shadow: none;
+    }
+
+    html[data-theme="light"] .digital-digit.digit-h:hover,
+    html[data-theme="light"] .digital-digit.digit-h.editing {
+      border-color: #d97706;
+      background: #fef3c7;
+      box-shadow: 0 2px 8px rgba(180, 83, 9, 0.15);
+    }
+
+    html[data-theme="light"] .digital-digit.digit-m {
+      color: #be185d;
+      background: #fdf2f8;
+      border: 1.5px solid #fbcfe8;
+      text-shadow: none;
+    }
+
+    html[data-theme="light"] .digital-digit.digit-m:hover,
+    html[data-theme="light"] .digital-digit.digit-m.editing {
+      border-color: #db2777;
+      background: #fce7f3;
+      box-shadow: 0 2px 8px rgba(190, 24, 93, 0.15);
     }
 
     .digit-input-overlay {
@@ -1573,110 +2429,534 @@
     }
 
     .circular-picker-svg {
-      filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.5));
-      background: radial-gradient(ellipse at center, rgba(34, 33, 54, 0.8) 0%, rgba(15, 14, 23, 0) 70%);
+      filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.6));
+      background: radial-gradient(circle at center, rgba(30, 27, 46, 0.95) 0%, rgba(18, 16, 28, 0.75) 65%, transparent 72%);
       border-radius: 50%;
+      user-select: none;
+      touch-action: none;
+    }
+
+    html[data-theme="light"] .circular-picker-svg {
+      filter: drop-shadow(0 4px 14px rgba(24, 21, 40, 0.08));
+      background: radial-gradient(circle at center, rgba(255, 255, 255, 0.95) 0%, rgba(245, 243, 250, 0.6) 65%, transparent 72%);
     }
 
     .base-circle {
       fill: none;
       stroke: var(--surface2);
       stroke-width: 1px;
+      opacity: 0.6;
+    }
+
+    html[data-theme="light"] .base-circle {
+      stroke: #e2e8f0;
+      opacity: 0.9;
     }
 
     .ring-path {
       fill: none;
-      stroke: rgba(255, 255, 255, 0.06);
+      stroke: var(--border);
       stroke-width: 4px;
+      opacity: 0.7;
+    }
+
+    html[data-theme="light"] .ring-path {
+      stroke: #e2e8f0;
+      opacity: 1;
     }
 
     .active-progress {
       fill: none;
-      stroke: var(--accent);
-      stroke-width: 4px;
+      stroke-width: 4.5px;
       stroke-linecap: round;
       transform: rotate(-90deg);
-      transform-origin: center;
+      transform-origin: 120px 120px;
       stroke-dasharray: 0, 999;
-      filter: drop-shadow(0 0 4px rgba(232, 160, 69, 0.6));
-      transition: stroke-dasharray 0.08s linear;
+      transition: stroke-dasharray 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .active-progress.hour-prog {
+      stroke: var(--accent);
+      filter: drop-shadow(0 0 6px rgba(232, 160, 69, 0.8));
     }
 
     .active-progress.minute-prog {
       stroke: var(--accent2);
-      filter: drop-shadow(0 0 4px rgba(196, 92, 138, 0.6));
+      filter: drop-shadow(0 0 6px rgba(196, 92, 138, 0.8));
     }
 
     .drag-handle {
-      fill: var(--accent);
       stroke: #ffffff;
-      stroke-width: 2px;
+      stroke-width: 2.5px;
       cursor: grab;
-      filter: drop-shadow(0 0 5px rgba(232, 160, 69, 0.8));
       transition:
-        r 0.15s,
-        cx 0.08s linear,
-        cy 0.08s linear,
-        filter 0.2s ease;
+        r 0.15s ease,
+        filter 0.2s ease,
+        cx 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+        cy 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .drag-handle.hour-handle {
+      fill: var(--accent);
+      filter: drop-shadow(0 0 6px rgba(232, 160, 69, 0.9));
     }
 
     .drag-handle.minute-handle {
       fill: var(--accent2);
-      filter: drop-shadow(0 0 5px rgba(196, 92, 138, 0.8));
+      filter: drop-shadow(0 0 6px rgba(196, 92, 138, 0.9));
     }
 
     .drag-handle:hover {
-      r: 11.5px;
+      r: 12px;
     }
 
     .drag-handle.dragging {
       cursor: grabbing;
-      r: 12px;
+      r: 13px !important;
+      stroke-width: 3px;
+    }
+
+    .drag-handle.hour-handle.dragging {
+      filter: drop-shadow(0 0 12px rgba(232, 160, 69, 1)) !important;
+    }
+
+    .drag-handle.minute-handle.dragging {
+      filter: drop-shadow(0 0 12px rgba(196, 92, 138, 1)) !important;
+    }
+
+    .drag-handle.dragging,
+    .active-progress.dragging {
+      transition: none !important;
     }
 
     .picker-number {
-      fill: var(--text);
-      font-size: 13px;
-      font-weight: 700;
+      font-family: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
       text-anchor: middle;
-      dominant-baseline: middle;
-      opacity: 0.65;
+      dominant-baseline: central;
+      pointer-events: none;
+      user-select: none;
     }
 
-    .picker-number.sm {
-      font-size: 7.5px;
-      opacity: 0.45;
-    }
-
-    .picker-center-label {
+    .picker-number.minute-num {
       fill: var(--text-muted);
-      font-size: 7.5px;
+      font-size: 11px;
+      font-weight: 700;
+      opacity: 0.75;
+    }
+
+    .picker-number.hour-num {
+      fill: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+      opacity: 0.9;
+      text-shadow: 0 0 6px rgba(232, 160, 69, 0.4);
+    }
+
+    html[data-theme="light"] .picker-number.minute-num {
+      fill: #64748b;
+      opacity: 0.9;
+    }
+
+    html[data-theme="light"] .picker-number.hour-num {
+      fill: #b45309;
+      opacity: 1;
+      text-shadow: none;
+    }
+
+    .center-hub {
+      fill: var(--surface2);
+      stroke: var(--border);
+      stroke-width: 1.5px;
+      pointer-events: none;
+    }
+
+    .center-hub-label {
+      font-family: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
       text-anchor: middle;
-      dominant-baseline: middle;
-      opacity: 0.5;
-      font-weight: 600;
+      dominant-baseline: central;
+      pointer-events: none;
+      user-select: none;
+      font-weight: 800;
       letter-spacing: 0.5px;
     }
 
-    .picker-ring-label {
+    .center-hub-label.hub-h {
+      font-size: 9.5px;
       fill: var(--accent);
-      font-size: 6.5px;
-      text-anchor: middle;
-      dominant-baseline: middle;
-      opacity: 0.7;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      text-shadow: 0 0 6px rgba(232, 160, 69, 0.4);
+    }
+
+    .center-hub-label.hub-m {
+      font-size: 8.5px;
+      fill: var(--accent2);
+      text-shadow: 0 0 6px rgba(196, 92, 138, 0.4);
+    }
+
+    html[data-theme="light"] .center-hub {
+      fill: #f8fafc;
+      stroke: #cbd5e1;
+    }
+
+    html[data-theme="light"] .center-hub-label.hub-h {
+      fill: #b45309;
+      text-shadow: none;
+    }
+
+    html[data-theme="light"] .center-hub-label.hub-m {
+      fill: #be185d;
+      text-shadow: none;
     }
 
     .tick-mark {
-      stroke: rgba(255, 255, 255, 0.12);
+      stroke: var(--border);
       stroke-width: 1px;
+      pointer-events: none;
     }
 
     .tick-mark.major {
-      stroke: rgba(255, 255, 255, 0.25);
+      stroke: var(--text-muted);
       stroke-width: 1.5px;
+      opacity: 0.65;
+    }
+
+    .tick-mark.hour-tick {
+      stroke: var(--accent);
+      stroke-width: 1.5px;
+      opacity: 0.45;
+    }
+
+    html[data-theme="light"] .tick-mark {
+      stroke: #cbd5e1;
+    }
+
+    html[data-theme="light"] .tick-mark.major {
+      stroke: #94a3b8;
+      opacity: 0.9;
+    }
+
+    html[data-theme="light"] .tick-mark.hour-tick {
+      stroke: #f59e0b;
+      opacity: 0.65;
+    }
+
+    /* Nút Lưu thời gian cao cấp */
+    #btn-apply-stop-realtime {
+      height: 34px;
+      font-size: 12px;
+      padding: 0 16px;
+      width: 100%;
+      background: linear-gradient(135deg, rgba(232, 160, 69, 0.18) 0%, rgba(196, 92, 138, 0.18) 100%);
+      color: #fbbf24;
+      border: 1.5px solid rgba(232, 160, 69, 0.45);
+      border-radius: 8px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      cursor: pointer;
+      transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      letter-spacing: 0.3px;
+    }
+
+    #btn-apply-stop-realtime svg {
+      transition: transform 0.2s ease;
+      flex-shrink: 0;
+      transform-origin: 50% 85%;
+    }
+
+    #btn-apply-stop-realtime:hover {
+      background: linear-gradient(135deg, #e8a045 0%, #c45c8a 100%);
+      border-color: #fde68a;
+      color: #ffffff;
+      transform: translateY(-1.5px);
+      box-shadow: 0 4px 18px rgba(232, 160, 69, 0.45), 0 0 12px rgba(196, 92, 138, 0.35);
+    }
+
+    #btn-apply-stop-realtime:hover svg {
+      animation: alarm-shake 1.4s ease-in-out infinite;
+    }
+
+    @keyframes alarm-shake {
+      /* Nhịp rung 1 */
+      0% {
+        transform: rotate(0deg) scale(1.15);
+      }
+      4% {
+        transform: rotate(-16deg) scale(1.18);
+      }
+      8% {
+        transform: rotate(16deg) scale(1.18);
+      }
+      12% {
+        transform: rotate(-12deg) scale(1.18);
+      }
+      16% {
+        transform: rotate(12deg) scale(1.18);
+      }
+      20% {
+        transform: rotate(0deg) scale(1.15);
+      }
+      /* Nhịp rung 2 */
+      26% {
+        transform: rotate(-16deg) scale(1.18);
+      }
+      30% {
+        transform: rotate(16deg) scale(1.18);
+      }
+      34% {
+        transform: rotate(-12deg) scale(1.18);
+      }
+      38% {
+        transform: rotate(12deg) scale(1.18);
+      }
+      42% {
+        transform: rotate(0deg) scale(1.15);
+      }
+      /* Nghỉ 2 nhịp */
+      100% {
+        transform: rotate(0deg) scale(1.15);
+      }
+    }
+
+    #btn-apply-stop-realtime:active {
+      transform: translateY(0.5px);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    html[data-theme="light"] #btn-apply-stop-realtime {
+      background: #fff7ed;
+      border: 1.5px solid #fed7aa;
+      color: #c2410c;
+      box-shadow: 0 1px 3px rgba(194, 65, 12, 0.08);
+    }
+
+    html[data-theme="light"] #btn-apply-stop-realtime:hover {
+      background: linear-gradient(135deg, #ea580c 0%, #db2777 100%);
+      border-color: #ea580c;
+      color: #ffffff;
+      transform: translateY(-1.5px);
+      box-shadow: 0 4px 16px rgba(234, 88, 12, 0.35);
+    }
+
+    html[data-theme="light"] #btn-apply-stop-realtime:active {
+      transform: translateY(0.5px);
+    }
+
+    /* Nút bánh răng Cài đặt phím tắt */
+    #btn-shortcuts-settings {
+      height: 24px;
+      width: 24px;
+      padding: 0;
+      margin: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      cursor: pointer;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      line-height: 0;
+      flex-shrink: 0;
+      transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    #btn-shortcuts-settings .gear-icon-group {
+      transform-origin: 12px 12px;
+      transform-box: view-box;
+      transition: transform 0.45s cubic-bezier(0.25, 1, 0.5, 1);
+      will-change: transform;
+    }
+
+    #btn-shortcuts-settings:hover {
+      background: rgba(232, 160, 69, 0.15);
+      border-color: rgba(232, 160, 69, 0.6);
+      color: #fbbf24;
+      box-shadow: 0 2px 10px rgba(232, 160, 69, 0.25);
+    }
+
+    #btn-shortcuts-settings:hover .gear-icon-group {
+      transform: rotate(90deg);
+    }
+
+    #btn-shortcuts-settings.active {
+      background: linear-gradient(135deg, #e8a045 0%, #c45c8a 100%);
+      border-color: #fde68a;
+      color: #ffffff;
+      box-shadow: 0 3px 12px rgba(232, 160, 69, 0.4);
+    }
+
+    #btn-shortcuts-settings.active .gear-icon-group {
+      transform: rotate(180deg);
+    }
+
+    #btn-shortcuts-settings.active:hover .gear-icon-group {
+      transform: rotate(270deg);
+    }
+
+    html[data-theme="light"] #btn-shortcuts-settings {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      box-shadow: 0 1px 2px rgba(24, 21, 40, 0.04);
+    }
+
+    html[data-theme="light"] #btn-shortcuts-settings:hover {
+      background: #fffbeb;
+      border-color: #f59e0b;
+      color: #d97706;
+      box-shadow: 0 2px 8px rgba(217, 119, 6, 0.2);
+    }
+
+    html[data-theme="light"] #btn-shortcuts-settings.active {
+      background: linear-gradient(135deg, #ea580c 0%, #db2777 100%);
+      border-color: #ea580c;
+      color: #ffffff;
+      box-shadow: 0 3px 10px rgba(234, 88, 12, 0.3);
+    }
+
+    /* Nút Thêm sửa lỗi phát âm */
+    #btn-add-dict {
+      height: 32px;
+      width: 58px;
+      flex-shrink: 0;
+      font-size: 11.5px;
+      font-weight: 700;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+      background: rgba(34, 197, 94, 0.15);
+      border: 1.5px solid rgba(34, 197, 94, 0.45);
+      color: #4ade80;
+      transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    #btn-add-dict svg {
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    #btn-add-dict:hover {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      border-color: #34d399;
+      color: #ffffff;
+      transform: translateY(-1.5px);
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+    }
+
+    #btn-add-dict:hover svg {
+      transform: scale(1.2) rotate(90deg);
+    }
+
+    #btn-add-dict:active {
+      transform: translateY(0.5px);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    html[data-theme="light"] #btn-add-dict {
+      background: #f0fdf4;
+      border: 1.5px solid #86efac;
+      color: #15803d;
+      box-shadow: 0 1px 2px rgba(21, 128, 61, 0.08);
+    }
+
+    html[data-theme="light"] #btn-add-dict:hover {
+      background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+      border-color: #16a34a;
+      color: #ffffff;
+      transform: translateY(-1.5px);
+      box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+    }
+
+    html[data-theme="light"] #btn-add-dict:active {
+      transform: translateY(0.5px);
+    }
+
+    /* Danh sách và nút Xóa quy tắc phát âm */
+    .dict-item-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      transition: all 0.2s ease;
+    }
+
+    .dict-item-row:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    html[data-theme="light"] .dict-item-row {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 2px rgba(24, 21, 40, 0.03);
+    }
+
+    html[data-theme="light"] .dict-item-row:hover {
+      border-color: #cbd5e1;
+      background: #f8fafc;
+    }
+
+    .btn-del-dict {
+      height: 24px;
+      width: 28px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      cursor: pointer;
+      background: rgba(244, 63, 94, 0.12);
+      border: 1px solid rgba(244, 63, 94, 0.35);
+      color: #fb7185;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-del-dict svg {
+      transition: transform 0.2s ease;
+    }
+
+    .btn-del-dict:hover {
+      background: #e11d48 !important;
+      border-color: #f43f5e !important;
+      color: #ffffff !important;
+      transform: translateY(-1px);
+      box-shadow: 0 3px 10px rgba(225, 29, 72, 0.45);
+    }
+
+    .btn-del-dict:hover svg {
+      transform: scale(1.15);
+    }
+
+    .btn-del-dict:active {
+      transform: translateY(0.5px);
+    }
+
+    html[data-theme="light"] .btn-del-dict {
+      background: #fff1f2;
+      border: 1.5px solid #fecdd3;
+      color: #e11d48;
+      box-shadow: 0 1px 2px rgba(225, 29, 72, 0.06);
+    }
+
+    html[data-theme="light"] .btn-del-dict:hover {
+      background: #e11d48 !important;
+      border-color: #e11d48 !important;
+      color: #ffffff !important;
+      transform: translateY(-1px);
+      box-shadow: 0 3px 10px rgba(225, 29, 72, 0.35);
+    }
+
+    html[data-theme="light"] .btn-del-dict:active {
+      transform: translateY(0.5px);
     }
 
     .support-box {
@@ -1694,47 +2974,111 @@
       align-items: center;
       justify-content: center;
       gap: 5px;
-      padding: 10px 4px;
+      padding: 9px 4px;
       border-radius: 8px;
       text-decoration: none;
       font-size: 10px;
-      font-weight: 600;
+      font-weight: 700;
       text-align: center;
-      transition: all 0.2s;
-      border: 1px solid var(--border);
-      background: var(--surface2);
-      color: var(--text-muted);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
     }
 
-    .sp-link:hover {
-      transform: translateY(-2px);
+    .sp-link svg {
+      transition: transform 0.2s;
     }
 
+    .sp-link:hover svg {
+      transform: scale(1.15);
+    }
+
+    /* Giao diện nút liên kết hỗ trợ theme Tối (Mặc định) */
     .sp-rate {
-      color: #f0c040;
+      color: #fbbf24;
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.35);
     }
 
     .sp-rate:hover {
-      border-color: #f0c040;
-      background: rgba(240, 192, 64, 0.1);
+      background: #d97706 !important;
+      border-color: #fbbf24 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(217, 119, 6, 0.4) !important;
+      transform: translateY(-2px);
     }
 
     .sp-mail {
-      color: #40c0f0;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.35);
     }
 
     .sp-mail:hover {
-      border-color: #40c0f0;
-      background: rgba(64, 192, 240, 0.1);
+      background: #0284c7 !important;
+      border-color: #38bdf8 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4) !important;
+      transform: translateY(-2px);
     }
 
     .sp-donate {
-      color: #e05c6e;
+      color: #fb7185;
+      background: rgba(244, 63, 94, 0.1);
+      border: 1px solid rgba(244, 63, 94, 0.35);
     }
 
     .sp-donate:hover {
-      border-color: #e05c6e;
-      background: rgba(224, 92, 110, 0.1);
+      background: #e11d48 !important;
+      border-color: #fb7185 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(225, 29, 72, 0.4) !important;
+      transform: translateY(-2px);
+    }
+
+    /* Giao diện nút liên kết hỗ trợ theme Sáng (Đậm nét, không bị chìm/mờ) */
+    html[data-theme="light"] .sp-rate {
+      background: #fffbeb !important;
+      border: 1.5px solid #fcd34d !important;
+      color: #b45309 !important;
+      box-shadow: 0 1px 3px rgba(180, 83, 9, 0.08) !important;
+    }
+
+    html[data-theme="light"] .sp-rate:hover {
+      background: #d97706 !important;
+      border-color: #d97706 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 14px rgba(217, 119, 6, 0.35) !important;
+      transform: translateY(-2px) !important;
+    }
+
+    html[data-theme="light"] .sp-mail {
+      background: #f0f9ff !important;
+      border: 1.5px solid #7dd3fc !important;
+      color: #0369a1 !important;
+      box-shadow: 0 1px 3px rgba(2, 132, 199, 0.08) !important;
+    }
+
+    html[data-theme="light"] .sp-mail:hover {
+      background: #0284c7 !important;
+      border-color: #0284c7 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35) !important;
+      transform: translateY(-2px) !important;
+    }
+
+    html[data-theme="light"] .sp-donate {
+      background: #fff1f2 !important;
+      border: 1.5px solid #fecdd3 !important;
+      color: #be123c !important;
+      box-shadow: 0 1px 3px rgba(190, 18, 60, 0.08) !important;
+    }
+
+    html[data-theme="light"] .sp-donate:hover {
+      background: #e11d48 !important;
+      border-color: #e11d48 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 14px rgba(225, 29, 72, 0.35) !important;
+      transform: translateY(-2px) !important;
     }
 
     .sp-icon {
@@ -1743,8 +3087,8 @@
     }
 
     /* Hiệu ứng bổ sung (hover/focus) */
-    .btn-ctrl:hover {
-      filter: brightness(1.2);
+    .btn-ctrl:hover:not(:disabled) {
+      filter: var(--hover-filter);
     }
 
     .toggle:hover .toggle-slider {
@@ -1752,9 +3096,10 @@
       border-color: rgba(232, 160, 69, 0.6);
     }
 
+    a[href*="huong_dan"]:hover,
     a[href*="guide"]:hover {
       text-decoration: underline !important;
-      filter: brightness(1.2);
+      filter: var(--hover-filter);
     }
 
     input[type="text"],
@@ -1778,9 +3123,9 @@
 
     /* Nút GitHub footer */
     .github-btn {
-      color: var(--text);
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-muted);
+      background: var(--surface2);
+      border: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1792,10 +3137,11 @@
     }
 
     .github-btn:hover {
-      background: rgba(232, 160, 69, 0.25);
-      color: #fff;
+      background: var(--hover-bg);
+      color: var(--accent);
       border-color: var(--accent);
-      box-shadow: 0 0 8px rgba(232, 160, 69, 0.4);
+      filter: var(--hover-filter);
+      box-shadow: 0 0 8px rgba(232, 160, 69, 0.3);
     }
   </style>
 </head>
@@ -1803,13 +3149,10 @@
 <body style="opacity: 0; transition: opacity 0.1s ease-out;">
 
   <div class="header">
-    <div class="header-logo tab" data-tab="main" style="cursor: pointer; pointer-events: auto;" title="Về trang chủ">
-      <svg xmlns="http://www.w3.org/2000/svg" width="78" height="52" viewBox="0 0 120 80"
-        preserveAspectRatio="xMinYMid meet">
+    <div class="header-logo">
+      <svg xmlns="http://www.w3.org/2000/svg" width="92" height="52" viewBox="0 0 150 80"
+        preserveAspectRatio="xMinYMid meet" style="overflow: visible;">
         <defs>
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&amp;family=Dancing+Script:wght@700&amp;display=swap');
-          </style>
           <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stop-color="#e8a045" />
             <stop offset="100%" stop-color="#c45c8a" />
@@ -1822,15 +3165,33 @@
             </feMerge>
           </filter>
         </defs>
-        <text x="60" y="50" text-anchor="middle" font-family="'Baloo 2', cursive" font-size="57" font-weight="800"
+        <text x="75" y="50" text-anchor="middle" font-family="'Baloo 2', 'Be Vietnam Pro', system-ui, cursive, sans-serif" font-size="52" font-weight="800"
           font-style="italic" fill="url(#g1)" filter="url(#glow)">STV</text>
-        <text x="60" y="70" text-anchor="middle" font-family="'Dancing Script', cursive" font-size="20"
-          font-weight="700" fill="#ffffff" stroke="#5CAAFC" stroke-width="0.4"
+        <text class="stv-logo-sub" x="75" y="70" text-anchor="middle" font-family="'Dancing Script', cursive, -apple-system, sans-serif" font-size="15"
+          font-weight="700" stroke="#5CAAFC" stroke-width="0.3"
+          textLength="128" lengthAdjust="spacingAndGlyphs"
           letter-spacing="0.5">sangtacviet.com</text>
       </svg>
     </div>
     <div class="header-actions">
-      <div class="header-badge" id="version-badge">v0.1</div>
+      <div class="header-badge" id="version-badge">v0.4.1</div>
+      <button class="header-btn" id="btn-toggle-theme" title="Chuyển chế độ Sáng / Tối">
+        <svg id="theme-icon-sun" class="lucide lucide-sun" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2" />
+          <path d="M12 20v2" />
+          <path d="m4.93 4.93 1.41 1.41" />
+          <path d="m17.66 17.66 1.41 1.41" />
+          <path d="M2 12h2" />
+          <path d="M20 12h2" />
+          <path d="m6.34 17.66-1.41 1.41" />
+          <path d="m19.07 4.93-1.41 1.41" />
+        </svg>
+        <svg id="theme-icon-moon" class="lucide lucide-moon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+        </svg>
+        <span class="theme-recommend-badge" title="Khuyên dùng (Recommended)">R</span>
+      </button>
       <button class="header-btn tab" id="btn-show-list" data-tab="reading-list" title="Danh sách đọc">
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1854,23 +3215,27 @@
   </div>
   <div class="panel active" id="panel-main" style="padding:0; border:none; max-height:none; overflow:visible;">
     <div class="book-card" id="book-card-content">
-      <img id="cover-img" alt="Bìa truyện" style="display: none;" referrerpolicy="no-referrer">
+      <div class="cover-wrapper" id="cover-wrapper" style="display: none;">
+        <img id="cover-img" alt="Bìa truyện" referrerpolicy="no-referrer">
+        <div class="cover-overlay">
+          <span class="cover-overlay-text">Xem</span>
+        </div>
+      </div>
       <div class="book-meta" id="book-meta">
         <div class="book-label">Đang mở</div>
         <div id="current-title">Đang kiểm tra trang...</div>
 
         <div id="current-chap" style="display: none;">—</div>
         <button class="btn-save" id="btn-save" style="display: none;">
-          <svg id="save-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
+          <svg id="save-icon" xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
           </svg>
           <span id="save-text">Lưu</span>
         </button>
       </div>
       <div id="book-empty-state" style="display: none; width: 100%; padding: 4px 0;">
-        <button class="btn-ctrl btn-lg" id="btn-open-stv"
-          style="width: 100%; font-size: 12px; background: var(--surface2); border: 1px solid var(--border); color: var(--accent);">
+        <button class="btn-ctrl btn-lg" id="btn-open-stv">
           Mở trang sangtacviet.com ngay!
         </button>
       </div>
@@ -1890,39 +3255,21 @@
       </div>
     </div>
     <div class="controls" style="display: none;">
-      <div id="interaction-warning"
-        style="display: none; background: rgba(240, 192, 64, 0.15); color: var(--warning); padding: 8px; border-radius: 6px; font-size: 10.5px; text-align: center; margin-bottom: 10px; border: 1px solid rgba(240, 192, 64, 0.3);">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-          style="vertical-align: text-bottom; margin-right: 4px;">
-          <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
-          <line x1="12" y1="9" x2="12" y2="13" />
-          <line x1="12" y1="17" x2="12.01" y2="17" />
-        </svg>
-        Trình duyệt chặn tự động phát!<br>Vui lòng <strong>nhấn chuột vào trang web truyện</strong> một lần trước khi
-        bấm Nghe.
-      </div>
       <div class="chunk-nav" style="margin-bottom: 8px;">
-        <button class="btn-ctrl" id="btn-prev-chunk"
-          style="padding: 4px 8px; font-size: 11px; border: none; background: transparent; color: var(--text-muted);"
-          title="Lùi lại một đoạn">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-            style="vertical-align:text-bottom; margin-right:2px">
+        <button class="chunk-nav-btn" id="btn-prev-chunk" title="Lùi lại một đoạn (,)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="15 18 9 12 15 6" />
-          </svg>Lùi
+          </svg><span>Lùi</span>
         </button>
         <div id="progress-text" title="Nhấn để nhập số đoạn muốn nhảy tới">
           <input type="number" id="progress-input" value="0" min="1">
           <span class="progress-divider">/</span>
           <span id="progress-total">0</span>
         </div>
-        <button class="btn-ctrl" id="btn-next-chunk"
-          style="padding: 4px 8px; font-size: 11px; border: none; background: transparent; color: var(--text-muted);"
-          title="Chuyển đoạn tiếp theo">
-          Tiếp<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-            style="vertical-align:text-bottom; margin-left:2px">
+        <button class="chunk-nav-btn" id="btn-next-chunk" title="Chuyển đoạn tiếp theo (.)">
+          <span>Tiếp</span><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="9 18 15 12 9 6" />
           </svg>
         </button>
@@ -2017,10 +3364,6 @@
           </label>
           <span style="font-size: 9.5px; color: var(--text); white-space: nowrap;">Tự qua chương</span>
         </div>
-      </div>
-      <div id="voice-hint"
-        style="color: var(--danger); font-size: 10px; text-align: center; margin-top: 6px; display: none;">
-        Hệ điều hành chưa có giọng Tiếng Việt.
       </div>
 
     </div>
@@ -2120,6 +3463,7 @@
                 border-radius: 20px;
                 padding: 3px;
                 border: 1px solid var(--border);
+                box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25);
               }
               .seg-item {
                 flex: 1;
@@ -2129,27 +3473,69 @@
                 border-radius: 18px;
                 cursor: pointer;
                 z-index: 1;
-                transition: color 0.3s;
+                transition: color 0.18s ease, background 0.18s ease, transform 0.15s ease, box-shadow 0.18s ease;
                 color: var(--text-muted);
-                font-weight: 500;
+                font-weight: 600;
+                user-select: none;
+              }
+              .seg-item:hover:not(.active) {
+                color: #ffffff;
+                background: rgba(255, 255, 255, 0.08);
+              }
+              .seg-item:active {
+                transform: scale(0.94);
               }
               .seg-item.active {
-                color: #fff;
+                color: #ffffff;
                 font-weight: 700;
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+              }
+              .seg-item.active:hover {
+                filter: brightness(1.06);
+                box-shadow: 0 3px 10px rgba(234, 88, 12, 0.48);
               }
               .seg-indicator {
                 position: absolute;
                 top: 3px;
                 bottom: 3px;
                 width: calc(33.333% - 2px);
-                background: var(--accent);
+                background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
                 border-radius: 18px;
                 transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+                box-shadow: 0 2px 9px rgba(234, 88, 12, 0.42), inset 0 1px 1px rgba(255, 255, 255, 0.25);
                 z-index: 0;
               }
               .seg-control[data-val="off"] .seg-indicator { left: 3px; }
               .seg-control[data-val="on"] .seg-indicator { left: calc(33.333% + 1px); }
               .seg-control[data-val="extreme"] .seg-indicator { left: calc(66.666% - 1px); }
+
+              html[data-theme="light"] .seg-control {
+                background: #f1edf7;
+                border-color: #dcd8ea;
+                box-shadow: inset 0 1px 3px rgba(24, 21, 40, 0.06);
+              }
+              html[data-theme="light"] .seg-item {
+                color: #635f7d;
+                font-weight: 600;
+              }
+              html[data-theme="light"] .seg-item:hover:not(.active) {
+                color: #1e1b4b;
+                background: rgba(255, 255, 255, 0.88);
+                box-shadow: 0 1px 4px rgba(24, 21, 40, 0.08);
+              }
+              html[data-theme="light"] .seg-item.active {
+                color: #ffffff !important;
+                font-weight: 700;
+                text-shadow: 0 1px 2px rgba(180, 70, 0, 0.25) !important;
+              }
+              html[data-theme="light"] .seg-item.active:hover {
+                filter: brightness(1.04);
+                box-shadow: 0 3px 10px rgba(234, 88, 12, 0.38);
+              }
+              html[data-theme="light"] .seg-indicator {
+                background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+                box-shadow: 0 2px 8px rgba(234, 88, 12, 0.32), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+              }
             </style>
             <div class="seg-control" id="fallback-seg" data-val="off">
               <div class="seg-indicator"></div>
@@ -2168,54 +3554,80 @@
           style="flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--border);">
           <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
             <span class="setting-label" style="font-size: 11px;">Khoảng nghỉ các đoạn</span>
-            <span style="font-size: 9px; color: var(--text-muted); font-variant-numeric: tabular-nums;">ms</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button id="btn-reset-pause-defaults" type="button" class="pause-reset-btn"
+                title="Khôi phục khoảng nghỉ mặc định (Phẩy: 300ms, Chấm: 800ms, Xuống dòng: 1200ms)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="pause-reset-icon"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                Mặc định
+              </button>
+              <span style="font-size: 9px; color: var(--text-muted); font-variant-numeric: tabular-nums;">ms</span>
+            </div>
           </div>
           <div style="display: flex; gap: 4px; width: 100%;">
             <div class="pause-card">
               <div class="pause-symbol">,</div>
               <div class="pause-type-label">Dấu phẩy</div>
               <div class="pause-stepper">
-                <button class="pause-step-btn" data-target="pause-comma" data-delta="-100">−</button>
-                <input class="pause-num-input" type="number" id="pause-comma" value="300" min="0" step="100">
-                <button class="pause-step-btn" data-target="pause-comma" data-delta="100">+</button>
+                <button class="pause-step-btn" data-target="pause-comma" data-delta="-100" title="Giảm 100ms">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+                <input class="pause-num-input" type="number" id="pause-comma" value="300" min="0" step="50">
+                <button class="pause-step-btn" data-target="pause-comma" data-delta="100" title="Tăng 100ms">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
               </div>
             </div>
             <div class="pause-card">
               <div class="pause-symbol">.</div>
               <div class="pause-type-label">Dấu chấm</div>
               <div class="pause-stepper">
-                <button class="pause-step-btn" data-target="pause-dot" data-delta="-100">−</button>
-                <input class="pause-num-input" type="number" id="pause-dot" value="800" min="0" step="100">
-                <button class="pause-step-btn" data-target="pause-dot" data-delta="100">+</button>
+                <button class="pause-step-btn" data-target="pause-dot" data-delta="-100" title="Giảm 100ms">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+                <input class="pause-num-input" type="number" id="pause-dot" value="800" min="50" step="50">
+                <button class="pause-step-btn" data-target="pause-dot" data-delta="100" title="Tăng 100ms">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
               </div>
             </div>
             <div class="pause-card">
               <div class="pause-symbol">↵</div>
               <div class="pause-type-label">Xuống dòng</div>
               <div class="pause-stepper">
-                <button class="pause-step-btn" data-target="pause-para" data-delta="-100">−</button>
-                <input class="pause-num-input" type="number" id="pause-para" value="1200" min="0" step="100">
-                <button class="pause-step-btn" data-target="pause-para" data-delta="100">+</button>
+                <button class="pause-step-btn" data-target="pause-para" data-delta="-100" title="Giảm 100ms">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+                <input class="pause-num-input" type="number" id="pause-para" value="1200" min="50" step="50">
+                <button class="pause-step-btn" data-target="pause-para" data-delta="100" title="Tăng 100ms">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
               </div>
             </div>
           </div>
           <div style="margin-top: 10px; width: 100%;">
-            <button id="btn-show-pause-note" class="btn-ctrl"
-              style="width: 100%; height: 26px; font-size: 11px; border-color: var(--warning); color: var(--warning); background: rgba(240, 192, 64, 0.05); border-radius: 6px; cursor: pointer;">
+            <button id="btn-show-pause-note" type="button">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
               Xem lưu ý
             </button>
             <div id="pause-note-content"
-              style="display: none; font-size: 12px; margin-top: 8px; line-height: 1.5; padding: 10px; border: 1px dashed var(--warning); border-radius: 8px; background: rgba(240, 192, 64, 0.02);">
-              <span style="color: var(--warning);"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                  stroke-linejoin="round" style="vertical-align:-4px;">
+              style="display: none; font-size: 11.5px; margin-top: 8px; line-height: 1.55; padding: 10px; border: 1px dashed var(--warning); border-radius: 8px; background: rgba(240, 192, 64, 0.03);">
+              <div style="color: var(--warning); font-weight: 700; margin-bottom: 5px; display: flex; align-items: center; gap: 4px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="10"></circle>
                   <line x1="12" y1="8" x2="12" y2="12"></line>
                   <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                </svg> <strong style="font-weight: 700;">Lưu ý:</strong></span> <span style="color: var(--text);">Khoảng
-                nghỉ dấu câu (phẩy/chấm) chỉ hoạt động tại các
-                điểm nối khi văn bản quá dài bị cắt nhỏ, hoặc khi chuyển đoạn. Không áp dụng cho mọi dấu câu do giới hạn
-                API.</span>
+                </svg>
+                Lưu ý quan trọng:
+              </div>
+              <div style="color: var(--text); display: flex; flex-direction: column; gap: 5px;">
+                <div>• <strong>Giới hạn tối thiểu 50ms (Chấm / Xuống dòng):</strong> Khoảng đệm siêu ngắn (~1/20s, tai người không nhận biết được độ trễ) bắt buộc để giải phóng bộ đệm âm thanh của trình duyệt, chấm dứt hoàn toàn hiện tượng nuốt đoạn hay lột chữ khi chuyển câu/đoạn.</div>
+                <div>• <strong>Dấu phẩy (tối thiểu 0ms):</strong> Cho phép về 0ms nếu bạn muốn câu văn đọc lướt liền mạch không chèn thêm thời gian nghỉ.</div>
+                <div>• <strong>Phạm vi tác dụng:</strong> Khoảng nghỉ dấu câu (phẩy/chấm) hoạt động tại các điểm nối chia nhỏ văn bản trong Web Speech API, và áp dụng cho toàn bộ các câu/vế trong các Custom TTS API (FPT, Azure...).</div>
+              </div>
             </div>
           </div>
         </div>
@@ -2240,8 +3652,13 @@
           </svg>
           <input type="text" id="dict-replace" placeholder="Đọc thành..."
             style="flex: 1; min-width: 0; padding: 8px; font-size: 11px; background: var(--surface2); border: 1px solid var(--border); color: var(--accent2); border-radius: 6px; outline: none; box-sizing: border-box;">
-          <button class="btn-ctrl btn-sm" id="btn-add-dict"
-            style="height: 31px; width: 44px; flex-shrink: 0; font-size: 11px; background: rgba(76, 175, 134, 0.15); color: var(--success); border: 1px solid rgba(76, 175, 134, 0.3); border-radius: 6px; font-weight: 600;">Thêm</button>
+          <button class="btn-ctrl btn-sm" id="btn-add-dict" title="Thêm quy tắc phát âm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus">
+              <path d="M5 12h14" />
+              <path d="M12 5v14" />
+            </svg>
+            <span>Thêm</span>
+          </button>
         </div>
         <div id="dict-list"
           style="width: 100%; max-height: 110px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; margin-top: 8px; padding-right: 2px;">
@@ -2289,11 +3706,11 @@
             </div>
             <div style="display: flex; gap: 4px;">
               <button class="btn-ctrl btn-sm" id="btn-toggle-sign"
-                style="height: 25px; width: 25px; font-size: 14px; font-weight: bold; padding: 0; display: flex; align-items: center; justify-content: center; color: var(--accent); background: rgba(255,255,255,0.05); border-radius: 6px;">+</button>
+                style="height: 25px; width: 25px; font-size: 14px; font-weight: bold; padding: 0; display: flex; align-items: center; justify-content: center; color: var(--accent); background: var(--surface2); border-radius: 6px;">+</button>
               <button class="btn-ctrl btn-sm preset-time" data-min="15"
-                style="height: 25px; width: auto; font-size: 10px; padding: 0 6px; background: rgba(255,255,255,0.05); border-radius: 6px;">15p</button>
+                style="height: 25px; width: auto; font-size: 10px; padding: 0 6px; background: var(--surface2); border-radius: 6px;">15p</button>
               <button class="btn-ctrl btn-sm preset-time" data-min="30"
-                style="height: 25px; width: auto; font-size: 10px; padding: 0 6px; background: rgba(255,255,255,0.05); border-radius: 6px;">30p</button>
+                style="height: 25px; width: auto; font-size: 10px; padding: 0 6px; background: var(--surface2); border-radius: 6px;">30p</button>
               <button class="btn-ctrl btn-sm" id="btn-apply-stop-time"
                 style="height: 25px; width: 38px; font-size: 10px; background: rgba(232, 160, 69, 0.15); color: var(--accent); border-color: var(--accent); border-radius: 6px; font-weight: 600;">Lưu</button>
             </div>
@@ -2304,11 +3721,9 @@
 
             <div class="digital-clock-display" id="realtime-digital-display"
               style="margin-bottom: 2px; width: 100%; justify-content: center;">
-              <input class="digit-input-overlay" id="digit-input-hidden" type="number" min="0" max="59"
-                inputmode="numeric">
-              <span class="digital-digit" id="digit-hours" title="Nhấn để nhập giờ">00</span>
+              <span class="digital-digit digit-h" id="digit-hours" title="Nhấn để nhập giờ (hoặc cuộn chuột)">12</span>
               <span class="digital-separator">:</span>
-              <span class="digital-digit" id="digit-minutes" title="Nhấn để nhập phút">00</span>
+              <span class="digital-digit digit-m" id="digit-minutes" title="Nhấn để nhập phút (hoặc cuộn chuột)">00</span>
               <div class="custom-select-container ampm-select-wrap" id="ampm-container"
                 style="flex: none; width: 56px;">
                 <div class="custom-select-trigger"><span id="ampm-text">SA</span></div>
@@ -2319,12 +3734,11 @@
               </div>
             </div>
 
-            <div class="digital-clock-hint" style="margin-bottom: 0;">Nhấn vào số để gõ trực tiếp · Kéo vòng tròn để
-              chọn</div>
+            <div class="digital-clock-hint" style="margin-bottom: 0;">Nhấn vào số để gõ trực tiếp · Kéo vòng tròn để chọn</div>
 
             <div class="circular-picker-container"
               style="width: 240px; height: 240px; margin: 10px auto; position: relative;">
-              <svg width="240" height="240" viewBox="0 0 240 240">
+              <svg id="circular-clock-svg" class="circular-picker-svg" width="240" height="240" viewBox="0 0 240 240">
                 <defs>
                   <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
                     <stop offset="0%" stop-color="rgba(255,255,255,0.06)" />
@@ -2348,40 +3762,46 @@
                 <circle cx="120" cy="120" r="115" fill="url(#bgGrad)" />
                 <circle class="base-circle" cx="120" cy="120" r="114"></circle>
 
-                <g class="ring-group" id="hour-ring-group">
-                  <g id="hour-ticks"></g>
-                  <circle class="ring-path" cx="120" cy="120" r="94"></circle>
-                  <circle class="active-progress" cx="120" cy="120" r="94" id="hour-progress" filter="url(#glow-h)">
-                  </circle>
-                  <text class="picker-number" x="120" y="10">12</text>
-                  <text class="picker-number" x="230" y="120">3</text>
-                  <text class="picker-number" x="120" y="230">6</text>
-                  <text class="picker-number" x="10" y="120">9</text>
-                  <circle class="drag-handle" cx="120" cy="26" r="11" id="hour-handle" filter="url(#glow-h)"></circle>
-                  <text class="picker-ring-label" x="120" y="112"
-                    style="fill:var(--accent);opacity:1; font-size:12px; font-weight:800; text-anchor:middle; pointer-events:none; text-shadow: 0 0 8px rgba(255, 171, 64, 0.5);">GIỜ</text>
-                </g>
-
+                <!-- Vòng ngoài: PHÚT (Bán kính 92) -->
                 <g class="ring-group" id="minute-ring-group">
                   <g id="minute-ticks"></g>
-                  <circle class="ring-path" cx="120" cy="120" r="60"></circle>
-                  <circle class="active-progress minute-prog" cx="120" cy="120" r="60" id="minute-progress"
-                    filter="url(#glow-m)"></circle>
-                  <text class="picker-number sm" x="120" y="66">00</text>
-                  <text class="picker-number sm" x="174" y="120">15</text>
-                  <text class="picker-number sm" x="120" y="174">30</text>
-                  <text class="picker-number sm" x="66" y="120">45</text>
-                  <circle class="drag-handle minute-handle" cx="120" cy="60" r="9" id="minute-handle"
-                    filter="url(#glow-m)"></circle>
-                  <text class="picker-ring-label" x="120" y="128"
-                    style="fill:var(--accent2);opacity:1; font-size:12px; font-weight:800; text-anchor:middle; pointer-events:none; text-shadow: 0 0 8px rgba(233, 30, 99, 0.5);">PHÚT</text>
+                  <circle class="ring-path minute-track" cx="120" cy="120" r="92"></circle>
+                  <circle class="active-progress minute-prog" cx="120" cy="120" r="92" id="minute-progress" filter="url(#glow-m)"></circle>
+                  <text class="picker-number minute-num" x="120" y="13">00</text>
+                  <text class="picker-number minute-num" x="227" y="120">15</text>
+                  <text class="picker-number minute-num" x="120" y="227">30</text>
+                  <text class="picker-number minute-num" x="13" y="120">45</text>
+                  <circle class="drag-handle minute-handle" cx="120" cy="28" r="10.5" id="minute-handle" filter="url(#glow-m)"></circle>
                 </g>
-                <circle cx="120" cy="120" r="3" fill="var(--border)" opacity="0.6" style="pointer-events:none;" />
+
+                <!-- Vòng trong: GIỜ (Bán kính 58) -->
+                <g class="ring-group" id="hour-ring-group">
+                  <g id="hour-ticks"></g>
+                  <circle class="ring-path hour-track" cx="120" cy="120" r="58"></circle>
+                  <circle class="active-progress hour-prog" cx="120" cy="120" r="58" id="hour-progress" filter="url(#glow-h)"></circle>
+                  <text class="picker-number hour-num" x="120" y="80">12</text>
+                  <text class="picker-number hour-num" x="160" y="120">3</text>
+                  <text class="picker-number hour-num" x="120" y="160">6</text>
+                  <text class="picker-number hour-num" x="80" y="120">9</text>
+                  <circle class="drag-handle hour-handle" cx="120" cy="62" r="10.5" id="hour-handle" filter="url(#glow-h)"></circle>
+                </g>
+
+                <!-- Tâm đồng hồ -->
+                <circle class="center-hub" cx="120" cy="120" r="23"></circle>
+                <text class="center-hub-label hub-h" x="120" y="114">GIỜ</text>
+                <text class="center-hub-label hub-m" x="120" y="127">PHÚT</text>
               </svg>
             </div>
-            <button class="btn-ctrl btn-sm" id="btn-apply-stop-realtime"
-              style="height: 28px; font-size: 11px; padding: 0 16px; width: 100%; background: rgba(232, 160, 69, 0.15); color: var(--accent); border-color: var(--accent); border-radius: 6px; font-weight: 600;">Lưu
-              thời gian</button>
+
+            <button class="btn-ctrl" id="btn-apply-stop-realtime" title="Áp dụng thời gian tự động dừng">
+              <svg class="lucide lucide-alarm-clock-check" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="13" r="8"/>
+                <path d="M5 3 2 6"/>
+                <path d="m22 6-3-3"/>
+                <path d="m9 13 2 2 4-4"/>
+              </svg>
+              <span>Lưu thời gian</span>
+            </button>
           </div>
 
           <div id="group-stop-chapters" class="auto-stop-input-group"
@@ -2394,7 +3814,7 @@
           </div>
 
           <div id="group-stop-custom" class="auto-stop-input-group"
-            style="display: none; flex-direction: column; gap: 10px; width: 100%; background: var(--surface2); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); margin-top: 2px; box-sizing: border-box;">
+            style="display: none; flex-direction: column; gap: 10px; width: 100%; background: var(--surface2); padding: 12px; border-radius: 8px; border: 1px solid var(--border); margin-top: 2px; box-sizing: border-box;">
             <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
               <div style="display: flex; align-items: center; gap: 4px;">
                 <div class="custom-select-container custom-select-sm" style="width: 76px;">
@@ -2443,15 +3863,13 @@
         <div class="setting-row" style="padding: 12px 0; border-bottom: none;">
           <span class="setting-label" style="font-size: 11px; flex: 1;">Phím tắt</span>
           <div style="display: flex; align-items: center; gap: 8px;">
-            <button class="btn-ctrl btn-sm" id="btn-shortcuts-settings"
-              style="background: transparent; border: none; padding: 4px; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center;"
-              title="Cài đặt phím tắt">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="3"></circle>
-                <path
-                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-                </path>
+            <button id="btn-shortcuts-settings" title="Cài đặt phím tắt">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings">
+                <g class="gear-icon-group">
+                  <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </g>
               </svg>
             </button>
             <label class="toggle">
@@ -2463,94 +3881,94 @@
         <div id="shortcuts-dropdown"
           style="display: none; flex-direction: column; gap: 8px; padding: 10px 12px; background: var(--surface2); border-radius: 8px; font-size: 11px; margin-bottom: 12px;">
           <div
-            style="display: flex; justify-content: space-between; align-items: center; padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 8px;">
-            <span style="font-weight: 600; color: #fff;">Phát | Dừng</span>
+            style="display: flex; justify-content: space-between; align-items: center; padding: 2px 0; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+            <span style="font-weight: 600; color: var(--text);">Phát | Dừng</span>
             <div id="shortcut-play-pause" tabindex="0" class="shortcut-input"
-              style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
+              style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
               K</div>
           </div>
           <div
-            style="display: flex; justify-content: space-between; align-items: center; padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 8px;">
-            <span style="font-weight: 600; color: #fff;">Đọc lại từ đầu</span>
+            style="display: flex; justify-content: space-between; align-items: center; padding: 2px 0; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+            <span style="font-weight: 600; color: var(--text);">Đọc lại từ đầu</span>
             <div id="shortcut-replay" tabindex="0" class="shortcut-input"
-              style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
+              style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
               R</div>
           </div>
           <div
-            style="display: flex; justify-content: space-between; align-items: center; padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 8px;">
-            <span style="font-weight: 600; color: #fff;">Âm lượng</span>
+            style="display: flex; justify-content: space-between; align-items: center; padding: 2px 0; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+            <span style="font-weight: 600; color: var(--text);">Âm lượng</span>
             <div style="display: flex; gap: 12px;">
               <div style="display: flex; align-items: center; gap: 4px;">
                 <span
                   style="font-size: 9px; color: var(--text-muted); width: 32px; text-align: right; display: inline-block;">Giảm</span>
                 <div id="shortcut-vol-down" tabindex="0" class="shortcut-input"
-                  style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
+                  style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
                 </div>
               </div>
               <div style="display: flex; align-items: center; gap: 4px;">
                 <span
                   style="font-size: 9px; color: var(--text-muted); width: 32px; text-align: right; display: inline-block;">Tăng</span>
                 <div id="shortcut-vol-up" tabindex="0" class="shortcut-input"
-                  style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
+                  style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
                 </div>
               </div>
             </div>
           </div>
           <div
-            style="display: flex; justify-content: space-between; align-items: center; padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 8px;">
-            <span style="font-weight: 600; color: #fff;">Tốc độ</span>
+            style="display: flex; justify-content: space-between; align-items: center; padding: 2px 0; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+            <span style="font-weight: 600; color: var(--text);">Tốc độ</span>
             <div style="display: flex; gap: 12px;">
               <div style="display: flex; align-items: center; gap: 4px;">
                 <span
                   style="font-size: 9px; color: var(--text-muted); width: 32px; text-align: right; display: inline-block;">Giảm</span>
                 <div id="shortcut-speed-down" tabindex="0" class="shortcut-input"
-                  style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
+                  style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
                   [</div>
               </div>
               <div style="display: flex; align-items: center; gap: 4px;">
                 <span
                   style="font-size: 9px; color: var(--text-muted); width: 32px; text-align: right; display: inline-block;">Tăng</span>
                 <div id="shortcut-speed-up" tabindex="0" class="shortcut-input"
-                  style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
+                  style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
                   ]</div>
               </div>
             </div>
           </div>
           <div
-            style="display: flex; justify-content: space-between; align-items: center; padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 8px;">
-            <span style="font-weight: 600; color: #fff;">Chuyển đoạn</span>
+            style="display: flex; justify-content: space-between; align-items: center; padding: 2px 0; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+            <span style="font-weight: 600; color: var(--text);">Chuyển đoạn</span>
             <div style="display: flex; gap: 12px;">
               <div style="display: flex; align-items: center; gap: 4px;">
                 <span
                   style="font-size: 9px; color: var(--text-muted); width: 32px; text-align: right; display: inline-block;">Trước</span>
                 <div id="shortcut-prev-seg" tabindex="0" class="shortcut-input"
-                  style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
+                  style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
                   ,</div>
               </div>
               <div style="display: flex; align-items: center; gap: 4px;">
                 <span
                   style="font-size: 9px; color: var(--text-muted); width: 32px; text-align: right; display: inline-block;">Sau</span>
                 <div id="shortcut-next-seg" tabindex="0" class="shortcut-input"
-                  style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
+                  style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
                   .</div>
               </div>
             </div>
           </div>
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 2px 0;">
-            <span style="font-weight: 600; color: #fff;">Chuyển chương</span>
+            <span style="font-weight: 600; color: var(--text);">Chuyển chương</span>
             <div style="display: flex; gap: 12px;">
               <div style="display: flex; align-items: center; gap: 4px;">
                 <span
                   style="font-size: 9px; color: var(--text-muted); width: 32px; text-align: right; display: inline-block;">Trước</span>
                 <div id="shortcut-prev-chap" tabindex="0" class="shortcut-input"
-                  style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
+                  style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
                 </div>
               </div>
               <div style="display: flex; align-items: center; gap: 4px;">
                 <span
                   style="font-size: 9px; color: var(--text-muted); width: 32px; text-align: right; display: inline-block;">Sau</span>
                 <div id="shortcut-next-chap" tabindex="0" class="shortcut-input"
-                  style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);">
+                  style="width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--accent); font-weight: 700; font-size: 11px; cursor: pointer; outline: none; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
                 </div>
               </div>
             </div>
@@ -2583,13 +4001,21 @@
           <div style="font-size: 10px; color: var(--text-muted); margin-bottom: 2px;">Sao lưu API Key, Danh sách truyện
             và Cài đặt.</div>
           <div style="display: flex; gap: 8px; width: 100%; margin-top: 2px;">
-            <button class="btn-ctrl btn-sm" id="btn-export-data"
-              style="flex: 1; height: 30px; font-size: 11px; color: #40c0f0; border: 1px solid rgba(64, 192, 240, 0.3); background: rgba(64, 192, 240, 0.08); border-radius: 6px; font-weight: 500;">
-              Xuất (.json)
+            <button class="btn-ctrl" id="btn-export-data" title="Xuất dữ liệu dự phòng dạng JSON">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              <span>Xuất (.json)</span>
             </button>
-            <button class="btn-ctrl btn-sm" id="btn-import-data"
-              style="flex: 1; height: 30px; font-size: 11px; color: #f0c040; border: 1px solid rgba(240, 192, 64, 0.3); background: rgba(240, 192, 64, 0.08); border-radius: 6px; font-weight: 500;">
-              Nhập dữ liệu
+            <button class="btn-ctrl" id="btn-import-data" title="Nhập lại dữ liệu đã sao lưu">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <span>Nhập dữ liệu</span>
             </button>
             <input type="file" id="import-file-input" accept=".json" style="display: none;">
           </div>
@@ -2677,6 +4103,8 @@ https://microsoftedge.microsoft.com/addons/detail/mabgcghglcjheefkkicmkpmlhaooii
       </div>
     </div>
   </div>
+
+
   <script type="module" src="bangdieukhien/chinh.js"></script>
 </body>
 
