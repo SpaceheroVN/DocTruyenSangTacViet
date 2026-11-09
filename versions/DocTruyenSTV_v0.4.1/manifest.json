@@ -1,4 +1,4 @@
-{
+﻿{
   "manifest_version": 3,
   "name": "Đọc Truyện Cho STV",
   "version": "0.4.1",
@@ -37,7 +37,8 @@
     }
   },
   "background": {
-    "service_worker": "chay_ngam.js"
+    "service_worker": "chay_ngam.js",
+    "type": "module"
   },
   "content_scripts": [
     {

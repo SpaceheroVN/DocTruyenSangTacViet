@@ -1,10 +1,12 @@
-'use strict';
+﻿'use strict';
+
+import { chuyen_doi_du_lieu_khoi_chay } from './chuyen_doi.js';
 
 const cac_tien_trinh_dang_tai = new Map();
 
 self.addEventListener('activate', () => {
-    for (const [maYeuCau, duLieu] of cac_tien_trinh_dang_tai.entries()) {
-        if (duLieu.bo_dieu_khien) duLieu.bo_dieu_khien.abort();
+    for (const [ma_yeu_cau, du_lieu] of cac_tien_trinh_dang_tai.entries()) {
+        if (du_lieu.bo_dieu_khien) du_lieu.bo_dieu_khien.abort();
     }
     cac_tien_trinh_dang_tai.clear();
 });
@@ -30,31 +32,31 @@ function dung_keepalive() {
 }
 
 async function blob_sang_base64(blob) {
-    const arrayBuffer = await blob.arrayBuffer();
-    const uint8 = new Uint8Array(arrayBuffer);
+    const mang_buffer = await blob.arrayBuffer();
+    const mang_byte = new Uint8Array(mang_buffer);
     const CHUNK = 8192;
     let binary = '';
-    for (let i = 0; i < uint8.length; i += CHUNK) {
-        binary += String.fromCharCode.apply(null, uint8.subarray(i, i + CHUNK));
+    for (let i = 0; i < mang_byte.length; i += CHUNK) {
+        binary += String.fromCharCode.apply(null, mang_byte.subarray(i, i + CHUNK));
     }
     return btoa(binary);
 }
 
-const sleep = (ms, signal) => new Promise((resolve, reject) => {
-    const onAbort = () => {
-        clearTimeout(timeout);
-        reject(new DOMException('DaHuy', 'AbortError'));
+const ngu = (so_mili_giay, tin_hieu) => new Promise((dong_y, tu_choi) => {
+    const khi_huy = () => {
+        clearTimeout(dong_ho);
+        tu_choi(new DOMException('DaHuy', 'AbortError'));
     };
-    const timeout = setTimeout(() => {
-        if (signal) signal.removeEventListener('abort', onAbort);
-        resolve();
-    }, ms);
-    if (signal) {
-        if (signal.aborted) {
-            clearTimeout(timeout);
-            return reject(new DOMException('DaHuy', 'AbortError'));
+    const dong_ho = setTimeout(() => {
+        if (tin_hieu) tin_hieu.removeEventListener('abort', khi_huy);
+        dong_y();
+    }, so_mili_giay);
+    if (tin_hieu) {
+        if (tin_hieu.aborted) {
+            clearTimeout(dong_ho);
+            return tu_choi(new DOMException('DaHuy', 'AbortError'));
         }
-        signal.addEventListener('abort', onAbort);
+        tin_hieu.addEventListener('abort', khi_huy);
     }
 });
 
@@ -86,16 +88,16 @@ async function tai_tu_fpt(van_ban, cau_hinh, tin_hieu_huy, thay_nhanh_web) {
     const duong_dan_am_thanh = ket_qua.async;
     if (!duong_dan_am_thanh) throw new Error('FPT không trả về link âm thanh async');
 
-    const batDau = Date.now();
-    let thoiGianToiDa = Math.max(16000, van_ban.length * 60);
-    if (thay_nhanh_web === 'extreme') thoiGianToiDa = 1000;
-    else if (thay_nhanh_web === 'on' || thay_nhanh_web === true) thoiGianToiDa = Math.max(7000, van_ban.length * 35);
+    const bat_dau = Date.now();
+    let thoi_gian_toi_da = Math.max(16000, van_ban.length * 60);
+    if (thay_nhanh_web === 'extreme') thoi_gian_toi_da = 1000;
+    else if (thay_nhanh_web === 'on' || thay_nhanh_web === true) thoi_gian_toi_da = Math.max(7000, van_ban.length * 35);
 
-    let delay = 350;
+    let do_tre = 350;
 
-    while (Date.now() - batDau < thoiGianToiDa) {
+    while (Date.now() - bat_dau < thoi_gian_toi_da) {
         if (tin_hieu_huy.aborted) throw new DOMException('DaHuy', 'AbortError');
-        await sleep(delay, tin_hieu_huy);
+        await ngu(do_tre, tin_hieu_huy);
 
         const kiem_tra = await fetch(duong_dan_am_thanh, { signal: tin_hieu_huy });
         if (kiem_tra.ok) {
@@ -107,7 +109,7 @@ async function tai_tu_fpt(van_ban, cau_hinh, tin_hieu_huy, thay_nhanh_web) {
                 let json_body = {};
                 try { json_body = JSON.parse(text_body); } catch(e) {}
                 if (json_body.message && json_body.message.toLowerCase().includes('processing')) {
-                    delay = Math.min(delay * 1.4, 2000);
+                    do_tre = Math.min(do_tre * 1.4, 2000);
                     continue;
                 }
                 throw new Error('Lỗi FPT: ' + (json_body.message || 'Lỗi không xác định'));
@@ -117,7 +119,7 @@ async function tai_tu_fpt(van_ban, cau_hinh, tin_hieu_huy, thay_nhanh_web) {
             }
         } else if (kiem_tra.status === 404 || kiem_tra.status === 202 || kiem_tra.status === 503) {
             await kiem_tra.text();
-            delay = Math.min(delay * 1.4, 2000);
+            do_tre = Math.min(do_tre * 1.4, 2000);
             continue;
         } else {
             await kiem_tra.text();
@@ -149,19 +151,19 @@ async function tai_tu_gcp(van_ban, cau_hinh, tin_hieu_huy) {
     });
 
     if (!phan_hoi.ok) {
-        const errText = await phan_hoi.text().catch(() => '');
+        const van_ban_loi = await phan_hoi.text().catch(() => '');
         throw new Error(`Lỗi Google Cloud TTS: ${phan_hoi.status} ${errText}`);
     }
     const ket_qua = await phan_hoi.json();
     if (!ket_qua.audioContent) throw new Error('Không nhận được audio từ Google Cloud');
 
-    const binaryStr = atob(ket_qua.audioContent);
-    const len = binaryStr.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-        bytes[i] = binaryStr.charCodeAt(i);
+    const chuoi_nhi_phan = atob(ket_qua.audioContent);
+    const do_dai = chuoi_nhi_phan.length;
+    const cac_byte = new Uint8Array(do_dai);
+    for (let i = 0; i < do_dai; i++) {
+        cac_byte[i] = chuoi_nhi_phan.charCodeAt(i);
     }
-    return new Blob([bytes], { type: 'audio/mp3' });
+    return new Blob([cac_byte], { type: 'audio/mp3' });
 }
 
 async function tai_tu_azure(van_ban, cau_hinh, tin_hieu_huy) {
@@ -185,7 +187,7 @@ async function tai_tu_azure(van_ban, cau_hinh, tin_hieu_huy) {
     });
 
     if (!phan_hoi.ok) {
-        const errText = await phan_hoi.text().catch(() => '');
+        const van_ban_loi = await phan_hoi.text().catch(() => '');
         throw new Error(`Lỗi Azure TTS: ${phan_hoi.status} ${errText}`);
     }
     return await phan_hoi.blob();
@@ -196,53 +198,53 @@ async function tai_tu_khac(van_ban, cau_hinh, tin_hieu_huy, id_cong_cu) {
     if (!engine) throw new Error('Không tìm thấy cấu hình engine custom');
 
     const van_ban_an_toan = van_ban.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r');
-    let bodyStr = engine.bodyTemplate || '';
-    bodyStr = bodyStr.replace(/\{\{van_ban\}\}/g, van_ban_an_toan);
-    bodyStr = bodyStr.replace(/\{\{toc_do\}\}/g, cau_hinh.toc_do);
-    bodyStr = bodyStr.replace(/\{\{chi_so_giong\}\}/g, cau_hinh.chi_so_giong);
-    bodyStr = bodyStr.replace(/\{\{giong\}\}/g, cau_hinh.chi_so_giong);
+    let chuoi_than = engine.bodyTemplate || '';
+    chuoi_than = chuoi_than.replace(/\{\{van_ban\}\}/g, van_ban_an_toan);
+    chuoi_than = chuoi_than.replace(/\{\{toc_do\}\}/g, cau_hinh.toc_do);
+    chuoi_than = chuoi_than.replace(/\{\{chi_so_giong\}\}/g, cau_hinh.chi_so_giong);
+    chuoi_than = chuoi_than.replace(/\{\{giong\}\}/g, cau_hinh.chi_so_giong);
 
-    let headersObj = {};
+    let doi_tuong_headers = {};
     if (engine.headers) {
-        try { headersObj = JSON.parse(engine.headers); } catch (e) { }
+        try { doi_tuong_headers = JSON.parse(engine.headers); } catch (e) { }
     }
 
     const phuong_thuc = (engine.method || 'POST').toUpperCase();
-    const options = {
+    const cac_tuy_chon = {
         method: phuong_thuc,
-        headers: headersObj,
+        headers: doi_tuong_headers,
         signal: tin_hieu_huy
     };
     if (phuong_thuc !== 'GET' && phuong_thuc !== 'HEAD' && bodyStr) {
-        options.body = bodyStr;
+        cac_tuy_chon.body = chuoi_than;
     }
 
-    const res = await fetch(engine.endpoint, options);
-    if (!res.ok) {
+    const phan_hoi_res = await fetch(engine.endpoint, cac_tuy_chon);
+    if (!phan_hoi_res.ok) {
         const errText = await res.text().catch(() => '');
         throw new Error(`Lỗi Custom TTS: ${res.status} ${errText}`);
     }
 
     if (engine.responsePath) {
-        const data = await res.json();
-        const parts = engine.responsePath.split('.');
-        let val = data;
-        for (const p of parts) {
-            val = val ? val[p] : undefined;
+        const du_lieu_res = await phan_hoi_res.json();
+        const cac_phan = engine.responsePath.split('.');
+        let gia_tri_tim = du_lieu_res;
+        for (const phan_tu of cac_phan) {
+            gia_tri_tim = gia_tri_tim ? gia_tri_tim[phan_tu] : undefined;
         }
         if (!val) throw new Error(`Không tìm thấy dữ liệu theo responsePath: ${engine.responsePath}`);
 
-        if (val.startsWith('http://') || val.startsWith('https://')) {
-            const audioRes = await fetch(val, { signal: tin_hieu_huy });
-            return await audioRes.blob();
-        } else if (val.startsWith('data:audio') || val.length > 500) {
-            const dataUrl = val.startsWith('data:') ? val : `data:audio/mp3;base64,${val}`;
-            const fetchRes = await fetch(dataUrl);
-            return await fetchRes.blob();
+        if (gia_tri_tim.startsWith('http://') || gia_tri_tim.startsWith('https://')) {
+            const phan_hoi_am_thanh = await fetch(gia_tri_tim, { signal: tin_hieu_huy });
+            return await phan_hoi_am_thanh.blob();
+        } else if (gia_tri_tim.startsWith('data:audio') || gia_tri_tim.length > 500) {
+            const url_du_lieu = gia_tri_tim.startsWith('data:') ? gia_tri_tim : `data:audio/mp3;base64,${gia_tri_tim}`;
+            const phan_hoi_tai = await fetch(url_du_lieu);
+            return await phan_hoi_tai.blob();
         }
         throw new Error('Dữ liệu trả về không phải URL hoặc Base64 audio hợp lệ');
     } else {
-        return await res.blob();
+        return await phan_hoi_res.blob();
     }
 }
 
@@ -379,8 +381,8 @@ chrome.runtime.onMessage.addListener((tin_nhan, nguoi_gui, gui_phan_hoi) => {
 
 chrome.tabs.onRemoved.addListener((id_the) => {
     huy_tien_trinh_the(id_the);
-    chrome.storage.local.get(['stv_tab_dang_phat'], duLieu => {
-        if (duLieu.stv_tab_dang_phat && duLieu.stv_tab_dang_phat.tabId === id_the) {
+    chrome.storage.local.get(['stv_tab_dang_phat'], du_lieu => {
+        if (du_lieu.stv_tab_dang_phat && du_lieu.stv_tab_dang_phat.tabId === id_the) {
             chrome.storage.local.remove('stv_tab_dang_phat');
         }
     });
@@ -389,10 +391,21 @@ chrome.tabs.onRemoved.addListener((id_the) => {
 chrome.tabs.onUpdated.addListener((id_the, thong_tin) => {
     if (thong_tin.status === 'loading' || thong_tin.url) {
         huy_tien_trinh_the(id_the);
-        chrome.storage.local.get(['stv_tab_dang_phat'], duLieu => {
-            if (duLieu.stv_tab_dang_phat && duLieu.stv_tab_dang_phat.tabId === id_the) {
+        chrome.storage.local.get(['stv_tab_dang_phat'], du_lieu => {
+            if (du_lieu.stv_tab_dang_phat && du_lieu.stv_tab_dang_phat.tabId === id_the) {
                 chrome.storage.local.remove('stv_tab_dang_phat');
             }
         });
     }
 });
+
+// Quản lý chuyển đổi và tương thích ngược dữ liệu khi cài đặt hoặc nâng cấp
+chrome.runtime.onInstalled.addListener(() => {
+    chuyen_doi_du_lieu_khoi_chay();
+});
+
+chrome.runtime.onStartup.addListener(() => {
+    chuyen_doi_du_lieu_khoi_chay();
+});
+
+chuyen_doi_du_lieu_khoi_chay();

@@ -1,5 +1,5 @@
 // Quản lý lưu trữ cấu hình hệ thống
-export const CauHinh = {
+export const cau_hinh = {
     du_lieu_dong_bo: {},
     du_lieu_cuc_bo: {},
     _dong_ho_dong_bo: null,
@@ -36,13 +36,13 @@ export const CauHinh = {
             clearTimeout(this._dong_ho_dong_bo);
             if (ngay_lap_tuc || khoa === 'voiceIndex' || khoa === 'voiceName' || khoa === 'maydoc' || khoa === 'pauseComma' || khoa === 'pauseDot' || khoa === 'pausePara') {
                 const du_lieu_luu = {};
-                for (const k of this._khoa_cho_dong_bo) du_lieu_luu[k] = this.du_lieu_dong_bo[k];
+                for (const khoa_cho of this._khoa_cho_dong_bo) du_lieu_luu[khoa_cho] = this.du_lieu_dong_bo[khoa_cho];
                 this._khoa_cho_dong_bo.clear();
                 chrome.storage.sync.set(du_lieu_luu);
             } else {
                 this._dong_ho_dong_bo = setTimeout(() => {
                     const du_lieu_luu = {};
-                    for (const k of this._khoa_cho_dong_bo) du_lieu_luu[k] = this.du_lieu_dong_bo[k];
+                    for (const khoa_cho of this._khoa_cho_dong_bo) du_lieu_luu[khoa_cho] = this.du_lieu_dong_bo[khoa_cho];
                     this._khoa_cho_dong_bo.clear();
                     chrome.storage.sync.set(du_lieu_luu);
                 }, 300);
@@ -53,13 +53,13 @@ export const CauHinh = {
             clearTimeout(this._dong_ho_cuc_bo);
             if (ngay_lap_tuc) {
                 const du_lieu_luu = {};
-                for (const k of this._khoa_cho_cuc_bo) du_lieu_luu[k] = this.du_lieu_cuc_bo[k];
+                for (const khoa_cho of this._khoa_cho_cuc_bo) du_lieu_luu[khoa_cho] = this.du_lieu_cuc_bo[khoa_cho];
                 this._khoa_cho_cuc_bo.clear();
                 chrome.storage.local.set(du_lieu_luu);
             } else {
                 this._dong_ho_cuc_bo = setTimeout(() => {
                     const du_lieu_luu = {};
-                    for (const k of this._khoa_cho_cuc_bo) du_lieu_luu[k] = this.du_lieu_cuc_bo[k];
+                    for (const khoa_cho of this._khoa_cho_cuc_bo) du_lieu_luu[khoa_cho] = this.du_lieu_cuc_bo[khoa_cho];
                     this._khoa_cho_cuc_bo.clear();
                     chrome.storage.local.set(du_lieu_luu);
                 }, 300);
@@ -71,14 +71,14 @@ export const CauHinh = {
         if (this._khoa_cho_dong_bo.size > 0) {
             clearTimeout(this._dong_ho_dong_bo);
             const du_lieu_luu = {};
-            for (const k of this._khoa_cho_dong_bo) du_lieu_luu[k] = this.du_lieu_dong_bo[k];
+            for (const khoa_cho of this._khoa_cho_dong_bo) du_lieu_luu[khoa_cho] = this.du_lieu_dong_bo[khoa_cho];
             this._khoa_cho_dong_bo.clear();
             chrome.storage.sync.set(du_lieu_luu);
         }
         if (this._khoa_cho_cuc_bo.size > 0) {
             clearTimeout(this._dong_ho_cuc_bo);
             const du_lieu_luu = {};
-            for (const k of this._khoa_cho_cuc_bo) du_lieu_luu[k] = this.du_lieu_cuc_bo[k];
+            for (const khoa_cho of this._khoa_cho_cuc_bo) du_lieu_luu[khoa_cho] = this.du_lieu_cuc_bo[khoa_cho];
             this._khoa_cho_cuc_bo.clear();
             chrome.storage.local.set(du_lieu_luu);
         }

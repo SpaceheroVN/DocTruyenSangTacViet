@@ -1,7 +1,8 @@
-import { CauHinh } from './quan_ly_cau_hinh.js';
-import { GiaoDienCaiDat } from './giao_dien_cai_dat.js';
-import { DieuKhienTrinhPhat } from './dieu_khien_trinh_phat.js';
+﻿import { cau_hinh } from './quan_ly_cau_hinh.js';
+import { giao_dien_cai_dat } from './giao_dien_cai_dat.js';
+import { dieu_khien_trinh_phat } from './dieu_khien_trinh_phat.js';
 import { hien_thong_bao, hien_xac_nhan } from './tien_ich.js';
+import { chuyen_doi_du_lieu_nhap } from '../chuyen_doi.js';
 
 // Quản lý hiệu ứng cuộn chữ Ping-Pong đồng bộ giữa Tên truyện và Tên chương khi Hover
 class NhomMarqueeDongBo {
@@ -267,7 +268,7 @@ class NhomMarqueeDongBo {
     }
 }
 
-export const QuanLyThuVien = {
+export const quan_ly_thu_vien = {
     danh_sach_doc: [],
     che_do_sap_xep: 'recent',
     danh_sach_marquee: [],
@@ -494,9 +495,9 @@ export const QuanLyThuVien = {
             chrome.storage.local.set({ readingList: mang }, () => {
                 this.danh_sach_doc = mang;
                 this.tai_danh_sach_doc();
-                if (DieuKhienTrinhPhat.thong_tin_truyen_hien_tai &&
-                    (DieuKhienTrinhPhat.thong_tin_truyen_hien_tai.bookTitle || '').trim().toLowerCase() === (tieu_de || '').trim().toLowerCase()) {
-                    DieuKhienTrinhPhat.dat_trang_thai_luu(false);
+                if (dieu_khien_trinh_phat.thong_tin_truyen_hien_tai &&
+                    (dieu_khien_trinh_phat.thong_tin_truyen_hien_tai.bookTitle || '').trim().toLowerCase() === (tieu_de || '').trim().toLowerCase()) {
+                    dieu_khien_trinh_phat.dat_trang_thai_luu(false);
                 }
                 this.cap_nhat_dung_luong();
                 hien_thong_bao('Đã xóa khỏi thư viện', 'success');
@@ -545,7 +546,9 @@ export const QuanLyThuVien = {
                     });
                 }
                 const du_lieu_xuat = {
+                    phien_ban: chrome.runtime.getManifest().version,
                     phienBan: chrome.runtime.getManifest().version,
+                    ngay_xuat: new Date().toISOString(),
                     ngayXuat: new Date().toISOString(),
                     local: cuc_bo_copy,
                     sync: dl_dong_bo || {}
@@ -565,43 +568,25 @@ export const QuanLyThuVien = {
     nhap_du_lieu(e) {
         const file = e.target.files[0];
         if (!file) return;
-        
-        const KHOA_CUC_BO_HOP_LE = ['readingList', 'customDict', 'customEngines', 'fpt_key', 'azure_key', 'azure_region', 'gcp_key', 'miniPlayerMode', 'isMiniPlayerMinimized', 'customShortcuts', 'customStopConfig', 'stopAfterChapters', 'giao_dien_chu_de'];
-        const KHOA_DONG_BO_HOP_LE = ['speed', 'volume', 'pitch', 'voiceIndex', 'voiceName', 'maydoc', 'pauseComma', 'pauseDot', 'pausePara', 'autoNext', 'readingStyle', 'docTruoc', 'selectedLang'];
-        
+
         file.text().then(text => {
             try {
-                const dulieu = JSON.parse(text);
-                if (typeof dulieu !== 'object' || dulieu === null) throw new Error('File hỏng');
-                
-                const du_lieu_cuc_bo = dulieu.local ? dulieu.local : dulieu;
-                const du_lieu_dong_bo = dulieu.sync ? dulieu.sync : {};
-                
-                const cuc_bo_sach = {};
-                for (const khoa of KHOA_CUC_BO_HOP_LE) {
-                    if (du_lieu_cuc_bo[khoa] !== undefined) cuc_bo_sach[khoa] = du_lieu_cuc_bo[khoa];
-                }
-                if (cuc_bo_sach.readingList && !Array.isArray(cuc_bo_sach.readingList)) {
-                    delete cuc_bo_sach.readingList;
-                }
-                if (cuc_bo_sach.customDict && !Array.isArray(cuc_bo_sach.customDict)) {
-                    delete cuc_bo_sach.customDict;
-                }
-                if (cuc_bo_sach.customEngines && !Array.isArray(cuc_bo_sach.customEngines)) {
-                    delete cuc_bo_sach.customEngines;
+                const du_lieu = JSON.parse(text);
+                if (typeof du_lieu !== 'object' || du_lieu === null) {
+                    throw new Error('File không hợp lệ');
                 }
 
-                const dong_bo_sach = {};
-                for (const khoa of KHOA_DONG_BO_HOP_LE) {
-                    if (du_lieu_dong_bo[khoa] !== undefined) dong_bo_sach[khoa] = du_lieu_dong_bo[khoa];
-                }
-                
+                // Tự động chuyển đổi hoặc giữ nguyên qua chuyen_doi.js
+                const ket_qua_chuyen_doi = chuyen_doi_du_lieu_nhap(du_lieu);
+                const cuc_bo_sach = ket_qua_chuyen_doi.local || {};
+                const dong_bo_sach = ket_qua_chuyen_doi.sync || {};
+
                 if (Object.keys(cuc_bo_sach).length === 0 && Object.keys(dong_bo_sach).length === 0) {
                     hien_thong_bao('File không chứa dữ liệu hợp lệ', 'warning');
                     e.target.value = '';
                     return;
                 }
-                
+
                 const cong_viec = [];
                 if (Object.keys(cuc_bo_sach).length > 0) {
                     cong_viec.push(new Promise(res => chrome.storage.local.set(cuc_bo_sach, res)));
@@ -611,18 +596,21 @@ export const QuanLyThuVien = {
                 }
 
                 Promise.all(cong_viec).then(async () => {
-                    if (typeof CauHinh !== 'undefined' && CauHinh.khoi_tao) {
-                        await CauHinh.khoi_tao();
+                    if (typeof cau_hinh !== 'undefined' && cau_hinh.khoi_tao) {
+                        await cau_hinh.khoi_tao();
                     }
-                    if (typeof GiaoDienCaiDat !== 'undefined' && GiaoDienCaiDat.taoKhungChonEngine) {
-                        GiaoDienCaiDat.taoKhungChonEngine();
+                    if (typeof giao_dien_cai_dat !== 'undefined' && giao_dien_cai_dat.hien_thi_danh_sach_dong_co) {
+                        giao_dien_cai_dat.hien_thi_danh_sach_dong_co();
                     }
                     this.tai_danh_sach_doc();
                     this.cap_nhat_dung_luong();
-                    hien_thong_bao('Đã phục hồi dữ liệu thành công!', 'success');
+                    const thong_diep = ket_qua_chuyen_doi.da_chuyen_doi
+                        ? 'Đã chuyển đổi và phục hồi dữ liệu từ bản cũ thành công!'
+                        : 'Đã phục hồi dữ liệu thành công!';
+                    hien_thong_bao(thong_diep, 'success');
                 });
             } catch (err) {
-                hien_thong_bao('File không hợp lệ', 'error');
+                hien_thong_bao('File không hợp lệ hoặc bị lỗi cú pháp', 'error');
             }
             e.target.value = '';
         }).catch(() => {
@@ -695,14 +683,14 @@ export const QuanLyThuVien = {
                     ];
                     chrome.storage.local.remove(keys_to_remove, () => {
                         chrome.storage.sync.clear(async () => {
-                            if (typeof CauHinh !== 'undefined' && CauHinh.khoi_tao) {
-                                await CauHinh.khoi_tao();
+                            if (typeof cau_hinh !== 'undefined' && cau_hinh.khoi_tao) {
+                                await cau_hinh.khoi_tao();
                             }
                             if (window.DocTruyenSTV_Ext && window.DocTruyenSTV_Ext.khoi_tao_chu_de) {
                                 window.DocTruyenSTV_Ext.khoi_tao_chu_de(true);
                             }
-                            if (typeof GiaoDienCaiDat !== 'undefined' && GiaoDienCaiDat.taoKhungChonEngine) {
-                                GiaoDienCaiDat.taoKhungChonEngine();
+                            if (typeof giao_dien_cai_dat !== 'undefined' && giao_dien_cai_dat.hien_thi_danh_sach_dong_co) {
+                                giao_dien_cai_dat.hien_thi_danh_sach_dong_co();
                             }
                             this.tai_danh_sach_doc();
                             this.cap_nhat_dung_luong();

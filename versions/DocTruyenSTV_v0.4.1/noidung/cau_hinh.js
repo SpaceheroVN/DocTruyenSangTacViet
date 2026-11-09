@@ -210,10 +210,10 @@ DocTruyenSTV_Ext.LuuTruSTV = {
         const chunk_hien_tai = trang_thai.chiSoTuyetDoi || trang_thai.tienDoHienTai;
 
         const du_lieu_goc = {
-            isPlaying: trang_thai.dangPhat,
-            isPaused: trang_thai.dangTamDung,
-            engine: trang_thai.congCu,
-            progress: { current: chunk_hien_tai, total: trang_thai.tongSoDoan },
+            isPlaying: trang_thai.dang_phat !== undefined ? trang_thai.dang_phat : trang_thai.dangPhat,
+            isPaused: trang_thai.dang_tam_dung !== undefined ? trang_thai.dang_tam_dung : trang_thai.dangTamDung,
+            engine: trang_thai.cong_cu || trang_thai.congCu,
+            progress: { current: chunk_hien_tai, total: trang_thai.tong_so_doan || trang_thai.tongSoDoan },
             bookTitle: trang_thai.tenTruyen,
             chapTitle: trang_thai.tenChuong,
             pageUrl: trang_thai.duongDanTrang

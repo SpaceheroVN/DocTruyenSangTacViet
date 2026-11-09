@@ -87,7 +87,7 @@ export function hien_xac_nhan(tieu_de, noi_dung, hanh_dong_xac_nhan) {
     the_noi_dung.textContent = noi_dung;
 
     const bo_huy = new AbortController();
-    const { signal } = bo_huy;
+    const tin_hieu = bo_huy.signal;
     
     const dong_hop_thoai = () => {
         khung_hop_thoai.classList.remove('show');
@@ -97,13 +97,13 @@ export function hien_xac_nhan(tieu_de, noi_dung, hanh_dong_xac_nhan) {
     nut_xac_nhan.addEventListener('click', () => {
         dong_hop_thoai();
         if (typeof hanh_dong_xac_nhan === 'function') hanh_dong_xac_nhan();
-    }, { signal, once: true });
+    }, { signal: tin_hieu, once: true });
 
-    nut_huy_bo.addEventListener('click', dong_hop_thoai, { signal, once: true });
+    nut_huy_bo.addEventListener('click', dong_hop_thoai, { signal: tin_hieu, once: true });
     
     khung_hop_thoai.addEventListener('click', (su_kien) => {
         if (su_kien.target === khung_hop_thoai) dong_hop_thoai();
-    }, { signal, once: true });
+    }, { signal: tin_hieu, once: true });
     
     khung_hop_thoai.classList.add('show');
 }

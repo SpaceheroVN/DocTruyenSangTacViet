@@ -1,7 +1,8 @@
-import { CauHinh } from './quan_ly_cau_hinh.js';
-import { DieuKhienTrinhPhat } from './dieu_khien_trinh_phat.js';
-import { QuanLyThuVien } from './quan_ly_thu_vien.js';
-import { GiaoDienCaiDat } from './giao_dien_cai_dat.js';
+﻿import { cau_hinh } from './quan_ly_cau_hinh.js';
+import { dieu_khien_trinh_phat } from './dieu_khien_trinh_phat.js';
+import { quan_ly_thu_vien } from './quan_ly_thu_vien.js';
+import { giao_dien_cai_dat } from './giao_dien_cai_dat.js';
+import { chuyen_doi_du_lieu_khoi_chay } from '../chuyen_doi.js';
 
 // Khởi tạo chủ đề sáng tối theo hệ thống hoặc thiết lập đã lưu
 export function khoi_tao_chu_de(dat_lai_mac_dinh = false) {
@@ -17,17 +18,17 @@ export function khoi_tao_chu_de(dat_lai_mac_dinh = false) {
     let chu_de_hien_tai = null;
     if (dat_lai_mac_dinh) {
         chu_de_hien_tai = truy_van_mau.matches ? 'light' : 'dark';
-        if (CauHinh && CauHinh.dat) {
-            CauHinh.dat('giao_dien_chu_de', chu_de_hien_tai, false, true);
+        if (cau_hinh && cau_hinh.dat) {
+            cau_hinh.dat('giao_dien_chu_de', chu_de_hien_tai, false, true);
         }
     } else {
-        const chu_de_da_luu = CauHinh ? CauHinh.lay('giao_dien_chu_de', false) : null;
+        const chu_de_da_luu = cau_hinh ? cau_hinh.lay('giao_dien_chu_de', false) : null;
         if (chu_de_da_luu === 'light' || chu_de_da_luu === 'dark') {
             chu_de_hien_tai = chu_de_da_luu;
         } else {
             chu_de_hien_tai = truy_van_mau.matches ? 'light' : 'dark';
-            if (CauHinh && CauHinh.dat) {
-                CauHinh.dat('giao_dien_chu_de', chu_de_hien_tai, false, true);
+            if (cau_hinh && cau_hinh.dat) {
+                cau_hinh.dat('giao_dien_chu_de', chu_de_hien_tai, false, true);
             }
         }
     }
@@ -40,8 +41,8 @@ export function khoi_tao_chu_de(dat_lai_mac_dinh = false) {
             const la_dang_sang = document.documentElement.getAttribute('data-theme') === 'light';
             const chu_de_moi = la_dang_sang ? 'dark' : 'light';
             ap_dung_chu_de(chu_de_moi);
-            if (CauHinh && CauHinh.dat) {
-                CauHinh.dat('giao_dien_chu_de', chu_de_moi, false, true);
+            if (cau_hinh && cau_hinh.dat) {
+                cau_hinh.dat('giao_dien_chu_de', chu_de_moi, false, true);
             }
         });
 
@@ -61,15 +62,16 @@ window.DocTruyenSTV_Ext.khoi_tao_chu_de = khoi_tao_chu_de;
 
 // Khởi tạo toàn bộ giao diện popup khi sẵn sàng
 document.addEventListener('DOMContentLoaded', async () => {
-    await CauHinh.khoi_tao();
+    await chuyen_doi_du_lieu_khoi_chay();
+    await cau_hinh.khoi_tao();
     khoi_tao_chu_de();
-    QuanLyThuVien.khoi_tao();
-    GiaoDienCaiDat.khoi_tao();
-    DieuKhienTrinhPhat.khoi_tao();
+    quan_ly_thu_vien.khoi_tao();
+    giao_dien_cai_dat.khoi_tao();
+    dieu_khien_trinh_phat.khoi_tao();
 });
 
 // Lưu dữ liệu ngay lập tức khi đóng popup
 window.addEventListener('pagehide', () => {
-    CauHinh.luu_ngay_lap_tuc();
+    cau_hinh.luu_ngay_lap_tuc();
     chrome.runtime.sendMessage({ hanhDong: 'huyTaiAmThanh' }).catch(() => {});
 });
