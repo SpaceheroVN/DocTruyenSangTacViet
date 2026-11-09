@@ -24,12 +24,30 @@ export const dieu_khien_trinh_phat = {
             });
         }
 
-        if (tab && tab.url && tab.url.includes('sangtacviet.com')) {
+        if (tab && tab.url && (tab.url.includes('sangtacviet.') || tab.url.includes('truyenfull.') || tab.url.includes('chambersbar.'))) {
             this.id_tab_hien_tai = tab.id;
             this.yeu_cau_trang_thai_ban_dau();
         } else {
             const nut_mo_stv = document.getElementById('btn-open-stv');
-            if (nut_mo_stv) nut_mo_stv.addEventListener('click', () => chrome.tabs.create({ url: 'https://sangtacviet.com/' }));
+            if (nut_mo_stv) {
+                if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+                    chrome.storage.local.get('cai_dat_ten_mien', (du_lieu) => {
+                        const ten_mien = (du_lieu && du_lieu.cai_dat_ten_mien) ? du_lieu.cai_dat_ten_mien : 'sangtacviet.com';
+                        nut_mo_stv.textContent = `Mở trang ${ten_mien} ngay!`;
+                    });
+                }
+                nut_mo_stv.addEventListener('click', () => {
+                    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+                        chrome.storage.local.get('cai_dat_ten_mien', (du_lieu) => {
+                            const ten_mien = (du_lieu && du_lieu.cai_dat_ten_mien) ? du_lieu.cai_dat_ten_mien : 'sangtacviet.com';
+                            const url = ten_mien.startsWith('http') ? ten_mien : `https://${ten_mien}/`;
+                            chrome.tabs.create({ url });
+                        });
+                    } else {
+                        chrome.tabs.create({ url: 'https://sangtacviet.com/' });
+                    }
+                });
+            }
             
             const trang_thai_trong = document.getElementById('book-empty-state');
             if (trang_thai_trong) trang_thai_trong.style.display = 'block';
