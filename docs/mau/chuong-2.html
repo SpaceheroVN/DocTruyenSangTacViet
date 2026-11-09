@@ -92,19 +92,11 @@
 
 		.nip {
 			border: none;
+			width: 100%;
 			background-color: #eee;
 			outline: none;
-			padding: 4px;
-			border-radius: 6px;
-		}
-
-		.nip {
-			border: none;
-			width: 100%;
-			background: #eee;
 			padding: 6px;
 			border-radius: 6px;
-			outline: none;
 		}
 	</style>
 
@@ -118,253 +110,7 @@
 			user-select: text !important;
 		}
 	</style>
-	<style id="stv-mini-player-styles">
-		#stv-mini-player {
-			position: fixed;
-			bottom: 20px;
-			left: 14px;
-			width: 275px;
-			background: linear-gradient(140deg, #1a1929 0%, #12111e 100%);
-			border: 1px solid #2e2c45;
-			border-radius: 14px;
-			box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(232, 160, 69, 0.08);
-			z-index: 2147483646;
-			font-family: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
-			font-size: 12px;
-			color: #e8e6f0;
-			user-select: none;
-			transition: opacity 0.25s, transform 0.25s;
-			overflow: hidden;
-			-webkit-user-select: none;
-		}
-
-		#stv-mini-player,
-		#stv-mini-player *,
-		#stv-mini-bubble,
-		#stv-mini-bubble * {
-			user-select: none !important;
-			-webkit-user-select: none !important;
-		}
-
-		#stv-mini-player.stv-mp-hidden {
-			opacity: 0;
-			transform: translateY(14px);
-			pointer-events: none;
-		}
-
-		#stv-mini-player .stv-mp-drag {
-			padding: 8px 10px 4px 12px;
-			cursor: grab;
-			display: flex;
-			align-items: center;
-			gap: 6px;
-		}
-
-		#stv-mini-player .stv-mp-drag:active {
-			cursor: grabbing;
-		}
-
-		#stv-mini-player .stv-mp-lbl {
-			flex: 1;
-			font-size: 9px;
-			font-weight: 700;
-			color: #7a7896;
-			letter-spacing: 0.8px;
-			text-transform: uppercase;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			white-space: nowrap;
-		}
-
-		#stv-mini-player .stv-mp-status-dot {
-			width: 6px;
-			height: 6px;
-			border-radius: 50%;
-			background: #4caf86;
-			flex-shrink: 0;
-		}
-
-		#stv-mini-player .stv-mp-status-dot.paused {
-			background: #e8a045;
-		}
-
-		#stv-mini-player .stv-mp-status-dot.stopped {
-			background: #7a7896;
-		}
-
-		#stv-mini-player .stv-mp-min-btn {
-			background: none;
-			border: none;
-			color: #7a7896;
-			cursor: pointer;
-			padding: 2px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			border-radius: 4px;
-			transition: color 0.15s, background 0.15s;
-			flex-shrink: 0;
-		}
-
-		#stv-mini-player .stv-mp-min-btn:hover {
-			color: #e8a045;
-			background: rgba(232, 160, 69, 0.1);
-		}
-
-		#stv-mini-player .stv-mp-chap {
-			padding: 0 12px 6px;
-			font-size: 11px;
-			font-weight: 500;
-			color: #e8e6f0;
-			white-space: nowrap;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			line-height: 1.4;
-		}
-
-		#stv-mini-player .stv-mp-bar-wrap {
-			padding: 0 12px;
-			margin-bottom: 8px;
-		}
-
-		#stv-mini-player .stv-mp-bar-bg {
-			height: 3px;
-			background: #2e2c45;
-			border-radius: 99px;
-			overflow: hidden;
-		}
-
-		#stv-mini-player .stv-mp-bar-fill {
-			height: 100%;
-			background: linear-gradient(90deg, #e8a045, #c45c8a);
-			border-radius: 99px;
-			width: 0%;
-			transition: width 0.4s ease;
-		}
-
-		#stv-mini-player .stv-mp-controls {
-			display: flex;
-			align-items: center;
-			padding: 2px 10px 10px;
-			gap: 4px;
-		}
-
-		#stv-mini-player .stv-mp-btn {
-			background: rgba(255, 255, 255, 0.04);
-			border: 1px solid #2e2c45;
-			color: #e8e6f0;
-			border-radius: 8px;
-			cursor: pointer;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			transition: all 0.15s;
-			padding: 0;
-			flex-shrink: 0;
-		}
-
-		#stv-mini-player .stv-mp-btn:hover {
-			background: rgba(232, 160, 69, 0.12);
-			border-color: rgba(232, 160, 69, 0.5);
-			color: #e8a045;
-		}
-
-		#stv-mini-player .stv-mp-btn-sm {
-			width: 28px;
-			height: 28px;
-		}
-
-		#stv-mini-player .stv-mp-btn-play {
-			width: 36px;
-			height: 36px;
-			background: #e8a045;
-			border-color: #e8a045;
-			color: #0f0e17;
-			border-radius: 50%;
-			box-shadow: 0 0 14px rgba(232, 160, 69, 0.35);
-		}
-
-		#stv-mini-player .stv-mp-btn-play:hover {
-			background: #f0b855;
-			border-color: #f0b855;
-			color: #0f0e17;
-			transform: scale(1.07);
-		}
-
-		#stv-mini-player .stv-mp-right {
-			flex: 1;
-			display: flex;
-			align-items: center;
-			justify-content: flex-end;
-			gap: 5px;
-			overflow: hidden;
-		}
-
-		#stv-mini-player .stv-mp-progress-txt {
-			font-size: 10px;
-			color: #7a7896;
-			font-variant-numeric: tabular-nums;
-			white-space: nowrap;
-		}
-
-		#stv-mini-player .stv-mp-engine-badge {
-			font-size: 8px;
-			font-weight: 700;
-			background: rgba(255, 255, 255, 0.06);
-			border: 1px solid #2e2c45;
-			border-radius: 4px;
-			padding: 1px 5px;
-			color: #7a7896;
-			letter-spacing: 0.4px;
-			white-space: nowrap;
-		}
-
-		#stv-mini-bubble {
-			position: fixed;
-			bottom: 20px;
-			left: 14px;
-			width: 44px;
-			height: 44px;
-			background: linear-gradient(135deg, #e8a045, #c45c8a);
-			color: #ffffff;
-			border-radius: 50%;
-			box-shadow: 0 4px 18px rgba(232, 160, 69, 0.45);
-			z-index: 2147483646;
-			cursor: pointer;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			transition: opacity 0.25s, transform 0.25s;
-			border: 2px solid rgba(255, 255, 255, 0.12);
-		}
-
-		#stv-mini-bubble.stv-mp-hidden {
-			opacity: 0;
-			transform: scale(0.75);
-			pointer-events: none;
-		}
-
-		#stv-mini-bubble:hover {
-			transform: scale(1.1);
-			box-shadow: 0 6px 22px rgba(232, 160, 69, 0.6);
-		}
-
-		@keyframes stv-pulse-bubble {
-
-			0%,
-			100% {
-				box-shadow: 0 4px 18px rgba(232, 160, 69, 0.45);
-			}
-
-			50% {
-				box-shadow: 0 4px 26px rgba(232, 160, 69, 0.75);
-			}
-		}
-
-		#stv-mini-bubble.stv-playing {
-			animation: stv-pulse-bubble 2s ease-in-out infinite;
-		}
-	</style>
+	<link rel="stylesheet" href="./DocTruyenSTV/giao_dien_dung_chung.css" id="stv-mini-player-styles">
 	<style id="tts-styles">
 		.tts-reading {
 			background-color: rgba(232, 160, 69, 0.35) !important;
@@ -1009,7 +755,7 @@
 						<div
 							style="display: inline-block;margin-right: -165px;width: 158px;border-radius: 6px;color: white;height: 56px;background: whitesmoke">
 						</div>
-						<img alt="Logo sangtacviet" loading="lazy" src="./chuong_files/favicon.png"
+						<img alt="Logo sangtacviet" src="./chuong_files/favicon.png"
 							style="width: 160px;margin-top: -48px">
 					</a><br>
 					sangtacviet.com là trang web cung cấp dịch vụ dịch tự động dịch truyện chữ trung. <br>
@@ -1116,7 +862,7 @@
 				</button>
 				<div class="stv-mp-right">
 					<span class="stv-mp-progress-txt" id="stv-mp-progress-txt">1/178</span>
-					<span class="stv-mp-engine-badge" id="stv-mp-engine-badge">WEB</span>
+					<span class="stv-mp-engine-badge" id="stv-mp-engine-badge">FPT</span>
 				</div>
 			</div>
 		</div>
@@ -1128,6 +874,7 @@
 					d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z">
 				</path>
 			</svg></div>
+	<script src="./mini_player.js"></script>
 </body>
 
 </html>

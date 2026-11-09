@@ -84,6 +84,7 @@ export function hien_xac_nhan(tieu_de, noi_dung, hanh_dong_xac_nhan) {
     }
 
     the_tieu_de.textContent = tieu_de;
+    the_noi_dung.style.whiteSpace = 'pre-line';
     the_noi_dung.textContent = noi_dung;
 
     const bo_huy = new AbortController();

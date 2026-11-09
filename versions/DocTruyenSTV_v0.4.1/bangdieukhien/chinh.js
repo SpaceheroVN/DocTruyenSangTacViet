@@ -1,4 +1,4 @@
-﻿import { cau_hinh } from './quan_ly_cau_hinh.js';
+import { cau_hinh } from './quan_ly_cau_hinh.js';
 import { dieu_khien_trinh_phat } from './dieu_khien_trinh_phat.js';
 import { quan_ly_thu_vien } from './quan_ly_thu_vien.js';
 import { giao_dien_cai_dat } from './giao_dien_cai_dat.js';
@@ -43,6 +43,18 @@ export function khoi_tao_chu_de(dat_lai_mac_dinh = false) {
             ap_dung_chu_de(chu_de_moi);
             if (cau_hinh && cau_hinh.dat) {
                 cau_hinh.dat('giao_dien_chu_de', chu_de_moi, false, true);
+            }
+            if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.query) {
+                chrome.tabs.query({ active: true, currentWindow: true }, (cac_tab) => {
+                    if (cac_tab && cac_tab[0] && cac_tab[0].id) {
+                        chrome.tabs.sendMessage(cac_tab[0].id, {
+                            hanhDong: 'doiChuDe',
+                            hanh_dong: 'doi_chu_de',
+                            chuDe: chu_de_moi,
+                            chu_de: chu_de_moi
+                        }).catch(() => {});
+                    }
+                });
             }
         });
 

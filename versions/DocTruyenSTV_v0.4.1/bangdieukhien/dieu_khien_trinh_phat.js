@@ -31,34 +31,37 @@ export const dieu_khien_trinh_phat = {
             const nut_mo_stv = document.getElementById('btn-open-stv');
             if (nut_mo_stv) nut_mo_stv.addEventListener('click', () => chrome.tabs.create({ url: 'https://sangtacviet.com/' }));
             
-            const bookEmptyState = document.getElementById('book-empty-state');
-            if (bookEmptyState) bookEmptyState.style.display = 'block';
-            const bookMeta = document.getElementById('book-meta');
-            if (bookMeta) bookMeta.style.display = 'none';
-            const coverWrapper = document.getElementById('cover-wrapper');
-            if (coverWrapper) coverWrapper.style.display = 'none';
+            const trang_thai_trong = document.getElementById('book-empty-state');
+            if (trang_thai_trong) trang_thai_trong.style.display = 'block';
+            const thong_tin_sach = document.getElementById('book-meta');
+            if (thong_tin_sach) thong_tin_sach.style.display = 'none';
+            const khung_anh_bia = document.getElementById('cover-wrapper');
+            if (khung_anh_bia) khung_anh_bia.style.display = 'none';
             const the_anh_bia = document.getElementById('cover-img');
             if (the_anh_bia) the_anh_bia.style.display = 'none';
-            const controls = document.querySelector('.controls');
-            if (controls) controls.style.display = 'none';
-            const statusBar = document.querySelector('.status-bar');
-            if (statusBar) statusBar.style.display = 'none';
+            const khung_dieu_khien = document.querySelector('.controls');
+            if (khung_dieu_khien) khung_dieu_khien.style.display = 'none';
+            const thanh_trang_thai = document.querySelector('.status-bar');
+            if (thanh_trang_thai) thanh_trang_thai.style.display = 'none';
 
-            const engineHienTai = cau_hinh.lay('maydoc') || 'web';
-            this.cap_nhat_danh_sach_giong(engineHienTai);
-            this.cap_nhat_giao_dien_engine(engineHienTai);
+            const dong_co_hien_tai = cau_hinh.lay('maydoc') || 'web';
+            this.cap_nhat_danh_sach_giong(dong_co_hien_tai);
+            this.cap_nhat_giao_dien_engine(dong_co_hien_tai);
         }
 
         this.gan_su_kien();
         
-        chrome.runtime.onMessage.addListener((tinNhan) => {
-            if (tinNhan.hanhDong === 'thayDoiTrangThai' && tinNhan.trangThai) {
-                this.cap_nhat_trang_thai_phat(tinNhan.trangThai);
-            } else if (tinNhan.hanhDong === 'capNhatAnhBia' && tinNhan.imgUrl) {
+        chrome.runtime.onMessage.addListener((tin_nhan) => {
+            const hanh_dong = tin_nhan.hanhDong || tin_nhan.hanh_dong;
+            if (hanh_dong === 'thayDoiTrangThai' && (tin_nhan.trangThai || tin_nhan.trang_thai)) {
+                this.cap_nhat_trang_thai_phat(tin_nhan.trangThai || tin_nhan.trang_thai);
+            } else if (hanh_dong === 'capNhatAnhBia' && (tin_nhan.imgUrl || tin_nhan.duong_dan_anh)) {
+                const link_anh = tin_nhan.imgUrl || tin_nhan.duong_dan_anh;
                 const the_anh_bia = document.getElementById('cover-img');
-                if (the_anh_bia) the_anh_bia.src = tinNhan.imgUrl;
+                if (the_anh_bia) the_anh_bia.src = link_anh;
                 if (this.thong_tin_truyen_hien_tai) {
-                    this.thong_tin_truyen_hien_tai.imgUrl = tinNhan.imgUrl;
+                    this.thong_tin_truyen_hien_tai.imgUrl = link_anh;
+                    this.thong_tin_truyen_hien_tai.duong_dan_anh = link_anh;
                 }
             }
         });
@@ -67,44 +70,48 @@ export const dieu_khien_trinh_phat = {
             this.kiem_tra_khoa_tab_khac(du_lieu.stv_tab_dang_phat);
         });
 
-        chrome.storage.onChanged.addListener((thayDoi, vungChon) => {
-            if (vungChon === 'local' && thayDoi.stv_tab_dang_phat) {
-                this.kiem_tra_khoa_tab_khac(thayDoi.stv_tab_dang_phat.newValue);
+        chrome.storage.onChanged.addListener((thay_doi, vung_chon) => {
+            if (vung_chon === 'local' && thay_doi.stv_tab_dang_phat) {
+                this.kiem_tra_khoa_tab_khac(thay_doi.stv_tab_dang_phat.newValue);
             }
         });
 
         document.body.style.opacity = '1';
     },
 
-    kiem_tra_khoa_tab_khac(tabDangPhat) {
-        if (tabDangPhat && tabDangPhat.isPlaying && tabDangPhat.tabId && this.id_tab_hien_tai && tabDangPhat.tabId !== this.id_tab_hien_tai) {
-            this.thong_tin_tab_khac_dang_phat = tabDangPhat;
-            const btnPlay = document.getElementById('btn-play');
-            if (btnPlay) {
-                btnPlay.classList.add('tab-locked');
-                let chuoiTooltip = 'Đang có truyện khác đang phát...';
-                if (tabDangPhat.tenTruyen) {
-                    chuoiTooltip = tabDangPhat.tenChuong
-                        ? `${tabDangPhat.tenTruyen}: ${tabDangPhat.tenChuong} đang phát...`
-                        : `${tabDangPhat.tenTruyen} đang phát...`;
+    kiem_tra_khoa_tab_khac(tab_dang_phat) {
+        const id_tab_phat = tab_dang_phat ? (tab_dang_phat.tabId || tab_dang_phat.id_the) : null;
+        const dang_phat_that = tab_dang_phat ? (tab_dang_phat.isPlaying || tab_dang_phat.dang_phat) : false;
+        if (tab_dang_phat && dang_phat_that && id_tab_phat && this.id_tab_hien_tai && id_tab_phat !== this.id_tab_hien_tai) {
+            this.thong_tin_tab_khac_dang_phat = tab_dang_phat;
+            const nut_phat = document.getElementById('btn-play');
+            if (nut_phat) {
+                nut_phat.classList.add('tab-locked');
+                let chuoi_chu_thich = 'Đang có truyện khác đang phát...';
+                const ten_truyen = tab_dang_phat.tenTruyen || tab_dang_phat.ten_truyen;
+                const ten_chuong = tab_dang_phat.tenChuong || tab_dang_phat.ten_chuong;
+                if (ten_truyen) {
+                    chuoi_chu_thich = ten_chuong
+                        ? `${ten_truyen}: ${ten_chuong} đang phát...`
+                        : `${ten_truyen} đang phát...`;
                 }
-                btnPlay.title = chuoiTooltip;
+                nut_phat.title = chuoi_chu_thich;
             }
-            const statusText = document.getElementById('status-text');
-            if (statusText) {
-                statusText.textContent = 'Khóa (Tab khác đang phát)';
-                statusText.style.color = 'var(--text-muted)';
+            const the_chu_trang_thai = document.getElementById('status-text');
+            if (the_chu_trang_thai) {
+                the_chu_trang_thai.textContent = 'Khóa (Tab khác đang phát)';
+                the_chu_trang_thai.style.color = 'var(--text-muted)';
             }
-            const statusIcon = document.getElementById('status-icon');
-            if (statusIcon) {
-                statusIcon.className = 'status-dot paused';
+            const the_bieu_tuong_trang_thai = document.getElementById('status-icon');
+            if (the_bieu_tuong_trang_thai) {
+                the_bieu_tuong_trang_thai.className = 'status-dot paused';
             }
         } else {
             this.thong_tin_tab_khac_dang_phat = null;
-            const btnPlay = document.getElementById('btn-play');
-            if (btnPlay) {
-                btnPlay.classList.remove('tab-locked');
-                btnPlay.title = 'Phát / Tạm dừng [K] hoặc [Space]';
+            const nut_phat = document.getElementById('btn-play');
+            if (nut_phat) {
+                nut_phat.classList.remove('tab-locked');
+                nut_phat.title = 'Phát / Tạm dừng [K] hoặc [Space]';
             }
             if (this.trang_thai_phat_hien_tai) {
                 this.cap_nhat_trang_thai_phat(this.trang_thai_phat_hien_tai);
@@ -239,16 +246,16 @@ export const dieu_khien_trinh_phat = {
 
     yeu_cau_trang_thai_ban_dau() {
         if (!this.id_tab_hien_tai) return;
-        chrome.tabs.sendMessage(this.id_tab_hien_tai, { hanhDong: 'layThongTin' }, phanHoi => {
+        chrome.tabs.sendMessage(this.id_tab_hien_tai, { hanhDong: 'layThongTin' }, phan_hoi => {
             if (chrome.runtime.lastError) {
                 hien_thong_bao('Không thể kết nối đến trang', 'warning');
                 return;
             }
-            if (phanHoi) this.cap_nhat_thong_tin_truyen(phanHoi);
+            if (phan_hoi) this.cap_nhat_thong_tin_truyen(phan_hoi);
         });
         
-        const engineHienTai = cau_hinh.lay('maydoc') || 'web';
-        this.cap_nhat_danh_sach_giong(engineHienTai);
+        const dong_co_hien_tai = cau_hinh.lay('maydoc') || 'web';
+        this.cap_nhat_danh_sach_giong(dong_co_hien_tai);
     },
 
     gui_lenh(hanh_dong, tham_so_them = {}) {
@@ -258,73 +265,73 @@ export const dieu_khien_trinh_phat = {
         });
     },
 
-    cap_nhat_giao_dien_engine(engineId) {
-        if (!engineId) return;
+    cap_nhat_giao_dien_engine(id_dong_co) {
+        if (!id_dong_co) return;
 
-        if (cau_hinh && cau_hinh.lay('maydoc', true) !== engineId) {
-            cau_hinh.dat('maydoc', engineId, true);
+        if (cau_hinh && cau_hinh.lay('maydoc', true) !== id_dong_co) {
+            cau_hinh.dat('maydoc', id_dong_co, true);
         }
 
-        const badge = document.getElementById('tts-badge');
-        const footerEngine = document.getElementById('footer-engine');
-        const voiceTrigger = document.getElementById('custom-voice-trigger');
+        const the_huy_hieu = document.getElementById('tts-badge');
+        const the_dong_co_chan_trang = document.getElementById('footer-engine');
+        const nut_kich_hoat_giong = document.getElementById('custom-voice-trigger');
         
-        let engineName = 'Web Speech API';
-        let isWeb = true;
-        let hasVoiceList = true;
+        let ten_dong_co = 'Web Speech API';
+        let la_web = true;
+        let co_danh_sach_giong = true;
 
-        if (engineId === 'web') {
-            engineName = 'Web TTS';
-            if(footerEngine) footerEngine.textContent = 'Web Speech API';
+        if (id_dong_co === 'web') {
+            ten_dong_co = 'Web TTS';
+            if (the_dong_co_chan_trang) the_dong_co_chan_trang.textContent = 'Web Speech API';
         } else {
-            isWeb = false;
-            const customEngines = cau_hinh.lay('customEngines', false) || [];
-            const matched = customEngines.find(e => e.id === engineId);
-            if (matched) {
-                engineName = matched.name;
-            } else if (engineId.startsWith('fpt_') || engineId === 'fpt') {
-                engineName = 'FPT.AI TTS';
-            } else if (engineId.startsWith('azure_') || engineId === 'azure') {
-                engineName = 'Azure TTS';
-            } else if (engineId.startsWith('gcp_') || engineId === 'gcp') {
-                engineName = 'GCP TTS';
+            la_web = false;
+            const cac_dong_co_tuy_chinh = cau_hinh.lay('customEngines', false) || [];
+            const dong_co_khop = cac_dong_co_tuy_chinh.find(e => e.id === id_dong_co);
+            if (dong_co_khop) {
+                ten_dong_co = dong_co_khop.name;
+            } else if (id_dong_co.startsWith('fpt_') || id_dong_co === 'fpt') {
+                ten_dong_co = 'FPT.AI TTS';
+            } else if (id_dong_co.startsWith('azure_') || id_dong_co === 'azure') {
+                ten_dong_co = 'Azure TTS';
+            } else if (id_dong_co.startsWith('gcp_') || id_dong_co === 'gcp') {
+                ten_dong_co = 'GCP TTS';
             } else {
-                engineName = 'Custom TTS';
+                ten_dong_co = 'Custom TTS';
             }
-            if(footerEngine) footerEngine.textContent = engineName;
+            if (the_dong_co_chan_trang) the_dong_co_chan_trang.textContent = ten_dong_co;
 
-            if (!engineId.startsWith('fpt') && !engineId.startsWith('azure') && !engineId.startsWith('gcp') && engineId !== 'web') {
-                hasVoiceList = false;
-            }
-        }
-
-        if (badge) badge.textContent = engineName;
-
-        if (voiceTrigger && voiceTrigger.parentElement) {
-            voiceTrigger.parentElement.style.display = hasVoiceList ? 'block' : 'none';
-            const optionsRow = voiceTrigger.parentElement.parentElement;
-            if (optionsRow && optionsRow.classList.contains('options-row')) {
-                optionsRow.style.justifyContent = hasVoiceList ? 'flex-start' : 'flex-end';
+            if (!id_dong_co.startsWith('fpt') && !id_dong_co.startsWith('azure') && !id_dong_co.startsWith('gcp') && id_dong_co !== 'web') {
+                co_danh_sach_giong = false;
             }
         }
 
-        const engineSelect = document.getElementById('engine-select');
-        if (engineSelect && engineSelect.value !== engineId) {
-            engineSelect.value = engineId;
+        if (the_huy_hieu) the_huy_hieu.textContent = ten_dong_co;
+
+        if (nut_kich_hoat_giong && nut_kich_hoat_giong.parentElement) {
+            nut_kich_hoat_giong.parentElement.style.display = co_danh_sach_giong ? 'block' : 'none';
+            const hang_tuy_chon = nut_kich_hoat_giong.parentElement.parentElement;
+            if (hang_tuy_chon && hang_tuy_chon.classList.contains('options-row')) {
+                hang_tuy_chon.style.justifyContent = co_danh_sach_giong ? 'flex-start' : 'flex-end';
+            }
+        }
+
+        const the_chon_dong_co = document.getElementById('engine-select');
+        if (the_chon_dong_co && the_chon_dong_co.value !== id_dong_co) {
+            the_chon_dong_co.value = id_dong_co;
             if (giao_dien_cai_dat && typeof giao_dien_cai_dat.cap_nhat_giao_dien === 'function') {
                 giao_dien_cai_dat.cap_nhat_giao_dien('engine-select');
             }
         }
 
-        const volSlider = document.getElementById('vol-slider');
-        if (volSlider) {
-            const maxVol = (engineId === 'web' || engineId === 'auto') ? 1.0 : 2.0;
-            volSlider.max = maxVol;
-            if (parseFloat(volSlider.value) > maxVol) {
-                volSlider.value = maxVol;
-                const volVal = document.getElementById('vol-val');
-                if (volVal) volVal.textContent = Math.round(maxVol * 100) + '%';
-                if (cau_hinh) cau_hinh.dat('volume', maxVol, true);
+        const thanh_truot_am_luong = document.getElementById('vol-slider');
+        if (thanh_truot_am_luong) {
+            const am_luong_toi_da = (id_dong_co === 'web' || id_dong_co === 'auto') ? 1.0 : 2.0;
+            thanh_truot_am_luong.max = am_luong_toi_da;
+            if (parseFloat(thanh_truot_am_luong.value) > am_luong_toi_da) {
+                thanh_truot_am_luong.value = am_luong_toi_da;
+                const the_gia_tri = document.getElementById('vol-val');
+                if (the_gia_tri) the_gia_tri.textContent = Math.round(am_luong_toi_da * 100) + '%';
+                if (cau_hinh) cau_hinh.dat('volume', am_luong_toi_da, true);
                 this.gui_lenh('capNhatCaiDat');
             }
             if (giao_dien_cai_dat && typeof giao_dien_cai_dat.cap_nhat_giao_dien === 'function') {
@@ -332,215 +339,228 @@ export const dieu_khien_trinh_phat = {
             }
         }
 
-        this.cap_nhat_danh_sach_giong(engineId);
+        this.cap_nhat_danh_sach_giong(id_dong_co);
     },
 
-    cap_nhat_trang_thai_phat(trangThai) {
-        if (!trangThai) return;
-        this.trang_thai_phat_hien_tai = trangThai;
+    cap_nhat_trang_thai_phat(trang_thai) {
+        if (!trang_thai) return;
+        this.trang_thai_phat_hien_tai = trang_thai;
 
-        const dangPhat = trangThai.isPlaying;
-        const dangTamDung = trangThai.isPaused;
-        const isBuffering = trangThai.isBuffering;
-        const dangHoatDong = dangPhat && !dangTamDung;
+        const dang_phat = trang_thai.dang_phat !== undefined ? trang_thai.dang_phat : trang_thai.isPlaying;
+        const dang_tam_dung = trang_thai.dang_tam_dung !== undefined ? trang_thai.dang_tam_dung : trang_thai.isPaused;
+        const dang_dem = trang_thai.dang_dem !== undefined ? trang_thai.dang_dem : trang_thai.isBuffering;
+        const dang_hoat_dong = dang_phat && !dang_tam_dung;
 
-        const elapsed = trangThai.elapsed || 0;
-        const ptGio = Math.floor(elapsed / 3600);
-        const ptPhut = Math.floor((elapsed % 3600) / 60).toString().padStart(2, '0');
-        const ptGiay = (elapsed % 60).toString().padStart(2, '0');
-        const timerText = document.getElementById('timer-text');
-        if (timerText) {
-            timerText.textContent = ptGio > 0 ? `${ptGio}:${ptPhut}:${ptGiay}` : `${ptPhut}:${ptGiay}`;
+        const thoi_gian_troi_qua = trang_thai.thoi_gian_troi_qua || trang_thai.elapsed || 0;
+        const pt_gio = Math.floor(thoi_gian_troi_qua / 3600);
+        const pt_phut = Math.floor((thoi_gian_troi_qua % 3600) / 60).toString().padStart(2, '0');
+        const pt_giay = (thoi_gian_troi_qua % 60).toString().padStart(2, '0');
+        const the_chu_hen_gio = document.getElementById('timer-text');
+        if (the_chu_hen_gio) {
+            the_chu_hen_gio.textContent = pt_gio > 0 ? `${pt_gio}:${pt_phut}:${pt_giay}` : `${pt_phut}:${pt_giay}`;
         }
 
-        const bieuTuong = document.getElementById('btn-play-icon');
-        const vanBanNut = document.getElementById('btn-play-text');
+        const the_bieu_tuong = document.getElementById('btn-play-icon');
+        const the_van_ban_nut = document.getElementById('btn-play-text');
         
         const SVG_PHAT = '<polygon points="5 3 19 12 5 21 5 3"/>';
         const SVG_TAMDUNG = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
 
-        const chamTrangThai = document.getElementById('status-dot');
-        const chuTrangThai = document.getElementById('status-text');
+        const the_cham_trang_thai = document.getElementById('status-dot');
+        const the_chu_trang_thai = document.getElementById('status-text');
 
-        if (!bieuTuong || !vanBanNut || !chamTrangThai || !chuTrangThai) return;
+        if (!the_bieu_tuong || !the_van_ban_nut || !the_cham_trang_thai || !the_chu_trang_thai) return;
         
-        if (isBuffering) {
-            bieuTuong.innerHTML = SVG_TAMDUNG;
-            vanBanNut.textContent = 'Dừng';
-            chamTrangThai.className = 'status-dot paused';
-            chuTrangThai.textContent = 'Đang tải audio...';
-            chuTrangThai.style.color = 'var(--warning)';
-        } else if (dangHoatDong) {
-            bieuTuong.innerHTML = SVG_TAMDUNG;
-            vanBanNut.textContent = 'Dừng';
-            chamTrangThai.className = 'status-dot playing';
-            chuTrangThai.textContent = 'Đang đọc...';
-            chuTrangThai.style.color = 'var(--success)';
-        } else if (dangPhat && dangTamDung) {
-            bieuTuong.innerHTML = SVG_PHAT;
-            vanBanNut.textContent = 'Tiếp tục';
-            chamTrangThai.className = 'status-dot paused';
-            chuTrangThai.textContent = 'Đang tạm dừng';
-            chuTrangThai.style.color = 'var(--accent)';
+        if (dang_dem) {
+            the_bieu_tuong.innerHTML = SVG_TAMDUNG;
+            the_van_ban_nut.textContent = 'Dừng';
+            the_cham_trang_thai.className = 'status-dot paused';
+            the_chu_trang_thai.textContent = 'Đang tải audio...';
+            the_chu_trang_thai.style.color = 'var(--warning)';
+        } else if (dang_hoat_dong) {
+            the_bieu_tuong.innerHTML = SVG_TAMDUNG;
+            the_van_ban_nut.textContent = 'Dừng';
+            the_cham_trang_thai.className = 'status-dot playing';
+            the_chu_trang_thai.textContent = 'Đang đọc...';
+            the_chu_trang_thai.style.color = 'var(--success)';
+        } else if (dang_phat && dang_tam_dung) {
+            the_bieu_tuong.innerHTML = SVG_PHAT;
+            the_van_ban_nut.textContent = 'Tiếp tục';
+            the_cham_trang_thai.className = 'status-dot paused';
+            the_chu_trang_thai.textContent = 'Đang tạm dừng';
+            the_chu_trang_thai.style.color = 'var(--accent)';
         } else {
-            bieuTuong.innerHTML = SVG_PHAT;
-            vanBanNut.textContent = trangThai.coDocDo ? 'Tiếp tục' : 'Nghe';
-            chamTrangThai.className = 'status-dot';
-            chuTrangThai.textContent = trangThai.coDocDo ? 'Đã lưu vị trí' : 'Sẵn sàng';
-            chuTrangThai.style.color = 'var(--text-muted)';
+            the_bieu_tuong.innerHTML = SVG_PHAT;
+            const co_doc_do = trang_thai.co_doc_do !== undefined ? trang_thai.co_doc_do : trang_thai.coDocDo;
+            the_van_ban_nut.textContent = co_doc_do ? 'Tiếp tục' : 'Nghe';
+            the_cham_trang_thai.className = 'status-dot';
+            the_chu_trang_thai.textContent = co_doc_do ? 'Đã lưu vị trí' : 'Sẵn sàng';
+            the_chu_trang_thai.style.color = 'var(--text-muted)';
         }
 
         // Nếu có tab khác đang phát truyện, luôn áp dụng trạng thái khóa cho nút phát
         if (this.thong_tin_tab_khac_dang_phat) {
-            const btnPlay = document.getElementById('btn-play');
-            if (btnPlay) {
-                btnPlay.classList.add('tab-locked');
-                const tabKhac = this.thong_tin_tab_khac_dang_phat;
-                let chuoiTooltip = 'Đang có truyện khác đang phát...';
-                if (tabKhac.tenTruyen) {
-                    chuoiTooltip = tabKhac.tenChuong
-                        ? `${tabKhac.tenTruyen}: ${tabKhac.tenChuong} đang phát...`
-                        : `${tabKhac.tenTruyen} đang phát...`;
+            const nut_phat = document.getElementById('btn-play');
+            if (nut_phat) {
+                nut_phat.classList.add('tab-locked');
+                const the_khac = this.thong_tin_tab_khac_dang_phat;
+                let chuoi_chu_thich = 'Đang có truyện khác đang phát...';
+                const ten_truyen = the_khac.tenTruyen || the_khac.ten_truyen;
+                const ten_chuong = the_khac.tenChuong || the_khac.ten_chuong;
+                if (ten_truyen) {
+                    chuoi_chu_thich = ten_chuong
+                        ? `${ten_truyen}: ${ten_chuong} đang phát...`
+                        : `${ten_truyen} đang phát...`;
                 }
-                btnPlay.title = chuoiTooltip;
+                nut_phat.title = chuoi_chu_thich;
             }
-            chamTrangThai.className = 'status-dot paused';
-            chuTrangThai.textContent = 'Khóa (Tab khác đang phát)';
-            chuTrangThai.style.color = 'var(--text-muted)';
+            the_cham_trang_thai.className = 'status-dot paused';
+            the_chu_trang_thai.textContent = 'Khóa (Tab khác đang phát)';
+            the_chu_trang_thai.style.color = 'var(--text-muted)';
         }
 
-        if (trangThai.progress) {
-            const input = document.getElementById('progress-input');
-            const total = document.getElementById('progress-total');
-            const bar = document.getElementById('progress-bar-fill') || document.getElementById('progress-bar');
-            const percent = document.getElementById('progress-percent');
-            if(input && !input.dataset.dang_sua) input.value = trangThai.progress.current;
-            if(total) total.textContent = trangThai.progress.total;
-            if(bar && percent) {
-                const phanTram = Math.round((trangThai.progress.current / trangThai.progress.total) * 100);
-                bar.style.width = '100%';
-                bar.style.transformOrigin = 'left';
-                bar.style.transform = `scaleX(${trangThai.progress.current / trangThai.progress.total})`;
-                percent.textContent = phanTram + '%';
+        const tien_do = trang_thai.progress || trang_thai.tien_do;
+        if (tien_do) {
+            const the_nhap = document.getElementById('progress-input');
+            const the_tong_so = document.getElementById('progress-total');
+            const thanh_tien_trinh = document.getElementById('progress-bar-fill') || document.getElementById('progress-bar');
+            const the_phan_tram = document.getElementById('progress-percent');
+            const doan_hien_tai = tien_do.current !== undefined ? tien_do.current : tien_do.hien_tai;
+            const tong_doan = tien_do.total !== undefined ? tien_do.total : tien_do.tong_so;
+            if (the_nhap && !the_nhap.dataset.dang_sua) the_nhap.value = doan_hien_tai;
+            if (the_tong_so) the_tong_so.textContent = tong_doan;
+            if (thanh_tien_trinh && the_phan_tram && tong_doan > 0) {
+                const phan_tram = Math.round((doan_hien_tai / tong_doan) * 100);
+                thanh_tien_trinh.style.width = '100%';
+                thanh_tien_trinh.style.transformOrigin = 'left';
+                thanh_tien_trinh.style.transform = `scaleX(${doan_hien_tai / tong_doan})`;
+                the_phan_tram.textContent = phan_tram + '%';
             }
         }
 
-        if (trangThai.engine && trangThai.engine !== this._engineHienTaiUI) {
-            this._engineHienTaiUI = trangThai.engine;
-            this.cap_nhat_giao_dien_engine(trangThai.engine);
+        const cong_cu = trang_thai.engine || trang_thai.cong_cu;
+        if (cong_cu && cong_cu !== this._dong_co_hien_tai_giao_dien) {
+            this._dong_co_hien_tai_giao_dien = cong_cu;
+            this.cap_nhat_giao_dien_engine(cong_cu);
         }
     },
 
-    cap_nhat_thong_tin_truyen(thongTin) {
-        if (!thongTin) return;
-        this.thong_tin_truyen_hien_tai = thongTin;
+    cap_nhat_thong_tin_truyen(thong_tin) {
+        if (!thong_tin) return;
+        this.thong_tin_truyen_hien_tai = thong_tin;
         
-        const laTrangChu = thongTin.pageUrl && !thongTin.pageUrl.includes('/truyen/');
+        const duong_dan_trang = thong_tin.pageUrl || thong_tin.duong_dan_trang;
+        const ten_truyen = thong_tin.bookTitle || thong_tin.ten_truyen;
+        const ten_chuong = thong_tin.chapTitle || thong_tin.ten_chuong;
+        const link_anh = thong_tin.imgUrl || thong_tin.duong_dan_anh;
+
+        const la_trang_chu = duong_dan_trang && !duong_dan_trang.includes('/truyen/');
         
-        if (thongTin.bookTitle) {
-            document.getElementById('current-title').textContent = thongTin.bookTitle;
+        if (ten_truyen) {
+            document.getElementById('current-title').textContent = ten_truyen;
             document.getElementById('current-chap').style.display = 'block';
-            const coverWrapper = document.getElementById('cover-wrapper');
-            if (coverWrapper) coverWrapper.style.display = 'block';
+            const khung_anh_bia = document.getElementById('cover-wrapper');
+            if (khung_anh_bia) khung_anh_bia.style.display = 'block';
             document.getElementById('cover-img').style.display = 'block';
             document.getElementById('btn-save').style.display = 'flex';
             
-            const laDangDocChuong = Boolean(thongTin.chapTitle);
-            const controls = document.querySelector('.controls');
-            if (controls) controls.style.display = (laDangDocChuong || thongTin.progress) ? 'flex' : 'none';
-            const statusBar = document.querySelector('.status-bar');
-            if (statusBar) statusBar.style.display = (laDangDocChuong || thongTin.progress) ? 'flex' : 'none';
-        } else if (laTrangChu) {
+            const la_dang_doc_chuong = Boolean(ten_chuong);
+            const khung_dieu_khien = document.querySelector('.controls');
+            if (khung_dieu_khien) khung_dieu_khien.style.display = (la_dang_doc_chuong || thong_tin.progress || thong_tin.tien_do) ? 'flex' : 'none';
+            const thanh_trang_thai = document.querySelector('.status-bar');
+            if (thanh_trang_thai) thanh_trang_thai.style.display = (la_dang_doc_chuong || thong_tin.progress || thong_tin.tien_do) ? 'flex' : 'none';
+        } else if (la_trang_chu) {
             document.getElementById('current-title').textContent = 'Đang ở trang chủ / tìm kiếm';
             document.getElementById('current-chap').style.display = 'none';
-            const coverWrapper = document.getElementById('cover-wrapper');
-            if (coverWrapper) coverWrapper.style.display = 'none';
+            const khung_anh_bia = document.getElementById('cover-wrapper');
+            if (khung_anh_bia) khung_anh_bia.style.display = 'none';
             document.getElementById('cover-img').style.display = 'none';
             document.getElementById('btn-save').style.display = 'none';
             
-            const controls = document.querySelector('.controls');
-            if (controls) controls.style.display = 'none';
-            const statusBar = document.querySelector('.status-bar');
-            if (statusBar) statusBar.style.display = 'none';
+            const khung_dieu_khien = document.querySelector('.controls');
+            if (khung_dieu_khien) khung_dieu_khien.style.display = 'none';
+            const thanh_trang_thai = document.querySelector('.status-bar');
+            if (thanh_trang_thai) thanh_trang_thai.style.display = 'none';
         }
         
-        const chapEl = document.getElementById('current-chap');
-        if (thongTin.chapTitle) {
-            chapEl.textContent = thongTin.chapTitle;
-        } else if (thongTin.stats) {
-            const container = document.createElement('div');
-            container.style.cssText = 'display: flex; align-items: center; justify-content: flex-start; color: var(--text-muted); font-size: 11px;';
+        const the_chuong = document.getElementById('current-chap');
+        if (ten_chuong) {
+            the_chuong.textContent = ten_chuong;
+        } else if (thong_tin.stats) {
+            const khung_chua = document.createElement('div');
+            khung_chua.style.cssText = 'display: flex; align-items: center; justify-content: flex-start; color: var(--text-muted); font-size: 11px;';
             
-            if (thongTin.stats.view) {
-                const span = document.createElement('span');
-                span.style.cssText = 'margin-right: 12px; display: inline-flex; align-items: center;';
-                span.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
-                const text = document.createTextNode(thongTin.stats.view);
-                span.appendChild(text);
-                container.appendChild(span);
+            if (thong_tin.stats.view) {
+                const the_span = document.createElement('span');
+                the_span.style.cssText = 'margin-right: 12px; display: inline-flex; align-items: center;';
+                the_span.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+                const the_chu = document.createTextNode(thong_tin.stats.view);
+                the_span.appendChild(the_chu);
+                khung_chua.appendChild(the_span);
             }
-            if (thongTin.stats.like) {
-                const span = document.createElement('span');
-                span.style.cssText = 'margin-right: 12px; display: inline-flex; align-items: center;';
-                span.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>';
-                const text = document.createTextNode(thongTin.stats.like);
-                span.appendChild(text);
-                container.appendChild(span);
+            if (thong_tin.stats.like) {
+                const the_span = document.createElement('span');
+                the_span.style.cssText = 'margin-right: 12px; display: inline-flex; align-items: center;';
+                the_span.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>';
+                const the_chu = document.createTextNode(thong_tin.stats.like);
+                the_span.appendChild(the_chu);
+                khung_chua.appendChild(the_span);
             }
-            if (thongTin.stats.status) {
-                const span = document.createElement('span');
-                if (thongTin.stats.status === 'Còn tiếp') {
-                    span.style.cssText = 'display: inline-flex; align-items: center; color: var(--accent);';
-                    span.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
+            if (thong_tin.stats.status) {
+                const the_span = document.createElement('span');
+                if (thong_tin.stats.status === 'Còn tiếp') {
+                    the_span.style.cssText = 'display: inline-flex; align-items: center; color: var(--accent);';
+                    the_span.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>';
                 } else {
-                    span.style.cssText = 'display: inline-flex; align-items: center; color: #10b981;';
-                    span.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+                    the_span.style.cssText = 'display: inline-flex; align-items: center; color: #10b981;';
+                    the_span.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><polyline points="20 6 9 17 4 12"></polyline></svg>';
                 }
-                const text = document.createTextNode(thongTin.stats.status);
-                span.appendChild(text);
-                container.appendChild(span);
+                const the_chu = document.createTextNode(thong_tin.stats.status);
+                the_span.appendChild(the_chu);
+                khung_chua.appendChild(the_span);
             }
-            chapEl.innerHTML = '';
-            chapEl.appendChild(container);
+            the_chuong.innerHTML = '';
+            the_chuong.appendChild(khung_chua);
         } else {
-            chapEl.textContent = '—';
+            the_chuong.textContent = '—';
         }
         
-        if (thongTin.imgUrl) {
-            document.getElementById('cover-img').src = thongTin.imgUrl;
+        if (link_anh) {
+            document.getElementById('cover-img').src = link_anh;
         }
         
-        if (quan_ly_thu_vien.danh_sach_doc) {
+        if (quan_ly_thu_vien.danh_sach_doc && ten_truyen) {
             chrome.storage.local.get('readingList', du_lieu => {
                 try {
                     const danh_sach = du_lieu.readingList || [];
-                    const vt = danh_sach.findIndex(i => (i.title || '').trim().toLowerCase() === (thongTin.bookTitle || '').trim().toLowerCase());
+                    const vi_tri = danh_sach.findIndex(i => (i.title || '').trim().toLowerCase() === ten_truyen.trim().toLowerCase());
                     
-                    if (!thongTin.imgUrl && vt !== -1 && danh_sach[vt].imgUrl) {
-                        document.getElementById('cover-img').src = danh_sach[vt].imgUrl;
+                    if (!link_anh && vi_tri !== -1 && danh_sach[vi_tri].imgUrl) {
+                        document.getElementById('cover-img').src = danh_sach[vi_tri].imgUrl;
                     }
 
-                    if (vt !== -1) {
+                    if (vi_tri !== -1) {
                         this.dat_trang_thai_luu(true);
-                        let daCapNhat = false;
-                        const docHienTai = danh_sach[vt];
-                        if (thongTin.pageUrl && docHienTai.url !== thongTin.pageUrl) { docHienTai.url = thongTin.pageUrl; daCapNhat = true; }
-                        if (thongTin.chapTitle && docHienTai.chap !== thongTin.chapTitle) { docHienTai.chap = thongTin.chapTitle; daCapNhat = true; }
-                        if (thongTin.imgUrl && docHienTai.imgUrl !== thongTin.imgUrl) {
-                            let safeImg = thongTin.imgUrl;
-                            if (safeImg.startsWith('data:')) safeImg = '';
-                            if (safeImg.toLowerCase().startsWith('http://')) safeImg = 'https://' + safeImg.substring(7);
-                            docHienTai.imgUrl = safeImg;
-                            daCapNhat = true;
+                        let da_cap_nhat = false;
+                        const truyen_hien_tai = danh_sach[vi_tri];
+                        if (duong_dan_trang && truyen_hien_tai.url !== duong_dan_trang) { truyen_hien_tai.url = duong_dan_trang; da_cap_nhat = true; }
+                        if (ten_chuong && truyen_hien_tai.chap !== ten_chuong) { truyen_hien_tai.chap = ten_chuong; da_cap_nhat = true; }
+                        if (link_anh && truyen_hien_tai.imgUrl !== link_anh) {
+                            let anh_an_toan = link_anh;
+                            if (anh_an_toan.startsWith('data:')) anh_an_toan = '';
+                            if (anh_an_toan.toLowerCase().startsWith('http://')) anh_an_toan = 'https://' + anh_an_toan.substring(7);
+                            truyen_hien_tai.imgUrl = anh_an_toan;
+                            da_cap_nhat = true;
                         }
-                        const chunkMoi = (thongTin.absoluteProgress && thongTin.absoluteProgress.current)
-                            ? thongTin.absoluteProgress.current
-                            : (thongTin.progress && thongTin.progress.current ? thongTin.progress.current : null);
-                        if (chunkMoi !== null && docHienTai.chunkIndex !== chunkMoi) {
-                            docHienTai.chunkIndex = chunkMoi;
-                            daCapNhat = true;
+                        const tien_do_chuan = thong_tin.absoluteProgress || thong_tin.progress || thong_tin.tien_do;
+                        const chunk_moi = (tien_do_chuan && (tien_do_chuan.current !== undefined ? tien_do_chuan.current : tien_do_chuan.hien_tai)) !== undefined
+                            ? (tien_do_chuan.current !== undefined ? tien_do_chuan.current : tien_do_chuan.hien_tai)
+                            : null;
+                        if (chunk_moi !== null && truyen_hien_tai.chunkIndex !== chunk_moi) {
+                            truyen_hien_tai.chunkIndex = chunk_moi;
+                            da_cap_nhat = true;
                         }
-                        if (daCapNhat) {
+                        if (da_cap_nhat) {
                             chrome.storage.local.set({ readingList: danh_sach }, () => {
                                 quan_ly_thu_vien.danh_sach_doc = danh_sach;
                                 quan_ly_thu_vien.hien_thi_danh_sach(quan_ly_thu_vien.sap_xep_danh_sach(danh_sach));
@@ -556,20 +576,20 @@ export const dieu_khien_trinh_phat = {
         }
         
         this.cap_nhat_trang_thai_phat({
-            isPlaying: thongTin.isPlaying,
-            isPaused: thongTin.isPaused,
-            isBuffering: thongTin.isBuffering,
-            engine: thongTin.ttsEngine,
-            elapsed: thongTin.elapsed || 0,
-            progress: thongTin.progress
+            isPlaying: thong_tin.isPlaying !== undefined ? thong_tin.isPlaying : thong_tin.dang_phat,
+            isPaused: thong_tin.isPaused !== undefined ? thong_tin.isPaused : thong_tin.dang_tam_dung,
+            isBuffering: thong_tin.isBuffering !== undefined ? thong_tin.isBuffering : thong_tin.dang_dem,
+            engine: thong_tin.ttsEngine || thong_tin.engine || thong_tin.cong_cu,
+            elapsed: thong_tin.elapsed || thong_tin.thoi_gian_troi_qua || 0,
+            progress: thong_tin.progress || thong_tin.tien_do
         });
     },
 
-    dat_trang_thai_luu(daLuu) {
+    dat_trang_thai_luu(da_luu) {
         const nut = document.getElementById('btn-save');
         if (!nut) return;
-        nut.className = `btn-save${daLuu ? ' saved' : ''}`;
-        nut.innerHTML = daLuu ? 
+        nut.className = `btn-save${da_luu ? ' saved' : ''}`;
+        nut.innerHTML = da_luu ? 
             `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
                 <path d="m9 10 2 2 4-4"></path>
@@ -586,10 +606,10 @@ export const dieu_khien_trinh_phat = {
                 return;
             }
             this.gui_lenh('daoTrangThaiPhat');
-            const btnPlay = document.getElementById('btn-play');
-            if (btnPlay) {
-                btnPlay.classList.add('active');
-                setTimeout(() => btnPlay.classList.remove('active'), 200);
+            const nut_phat = document.getElementById('btn-play');
+            if (nut_phat) {
+                nut_phat.classList.add('active');
+                setTimeout(() => nut_phat.classList.remove('active'), 200);
             }
         });
         document.getElementById('btn-stop')?.addEventListener('click', () => this.gui_lenh('dungPhat'));
@@ -607,8 +627,8 @@ export const dieu_khien_trinh_phat = {
                     hien_thong_bao('Chưa có ảnh bìa để phóng to', 'warning');
                     return;
                 }
-                const ten_truyen = (this.thong_tin_truyen_hien_tai && this.thong_tin_truyen_hien_tai.bookTitle)
-                    ? this.thong_tin_truyen_hien_tai.bookTitle
+                const ten_truyen = (this.thong_tin_truyen_hien_tai && (this.thong_tin_truyen_hien_tai.ten_truyen || this.thong_tin_truyen_hien_tai.bookTitle))
+                    ? (this.thong_tin_truyen_hien_tai.ten_truyen || this.thong_tin_truyen_hien_tai.bookTitle)
                     : 'Ảnh bìa truyện';
 
                 // Gửi tin nhắn đến tab hiện tại để mở modal Lightbox giữa trang web
@@ -634,11 +654,12 @@ export const dieu_khien_trinh_phat = {
             });
         }
 
-        const btnSave = document.getElementById('btn-save');
-        if (btnSave) {
-            btnSave.addEventListener('click', () => {
-                const hienTai = this.thong_tin_truyen_hien_tai;
-                if (!hienTai || !hienTai.bookTitle) {
+        const nut_luu = document.getElementById('btn-save');
+        if (nut_luu) {
+            nut_luu.addEventListener('click', () => {
+                const hien_tai = this.thong_tin_truyen_hien_tai;
+                const ten_truyen = hien_tai ? (hien_tai.ten_truyen || hien_tai.bookTitle) : null;
+                if (!hien_tai || !ten_truyen) {
                     hien_thong_bao('Không có truyện nào đang mở', 'warning');
                     return;
                 }
@@ -646,7 +667,7 @@ export const dieu_khien_trinh_phat = {
                 chrome.storage.local.get('readingList', du_lieu => {
                     try {
                         const danh_sach = du_lieu.readingList || [];
-                        const vi_tri = danh_sach.findIndex(i => (i.title || '').trim().toLowerCase() === hienTai.bookTitle.trim().toLowerCase());
+                        const vi_tri = danh_sach.findIndex(i => (i.title || '').trim().toLowerCase() === ten_truyen.trim().toLowerCase());
                         
                         if (vi_tri !== -1) {
                             danh_sach.splice(vi_tri, 1);
@@ -655,30 +676,34 @@ export const dieu_khien_trinh_phat = {
                                 quan_ly_thu_vien.hien_thi_danh_sach(quan_ly_thu_vien.sap_xep_danh_sach(danh_sach));
                                 quan_ly_thu_vien.cap_nhat_dung_luong();
                                 this.dat_trang_thai_luu(false);
-                                const infoCount = document.getElementById('info-count');
-                                if (infoCount) infoCount.textContent = `${danh_sach.length} truyện`;
+                                const the_dem_thong_tin = document.getElementById('info-count');
+                                if (the_dem_thong_tin) the_dem_thong_tin.textContent = `${danh_sach.length} truyện`;
                                 hien_thong_bao('Đã bỏ lưu truyện', 'info');
                             });
                         } else {
-                            let safeImg = hienTai.imgUrl || '';
-                            if (safeImg.startsWith('data:')) safeImg = '';
-                            if (safeImg.toLowerCase().startsWith('http://')) safeImg = 'https://' + safeImg.substring(7);
+                            let anh_an_toan = (hien_tai.duong_dan_anh || hien_tai.imgUrl) || '';
+                            if (anh_an_toan.startsWith('data:')) anh_an_toan = '';
+                            if (anh_an_toan.toLowerCase().startsWith('http://')) anh_an_toan = 'https://' + anh_an_toan.substring(7);
+                            const tien_do_chuan = hien_tai.absoluteProgress || hien_tai.progress || hien_tai.tien_do;
+                            const chunk_so = (tien_do_chuan && (tien_do_chuan.current !== undefined ? tien_do_chuan.current : tien_do_chuan.hien_tai)) !== undefined
+                                ? (tien_do_chuan.current !== undefined ? tien_do_chuan.current : tien_do_chuan.hien_tai)
+                                : 0;
                             danh_sach.push({
-                                title: hienTai.bookTitle,
-                                url: hienTai.pageUrl || hienTai.bookUrl,
-                                imgUrl: safeImg,
+                                title: ten_truyen,
+                                url: hien_tai.duong_dan_trang || hien_tai.pageUrl || hien_tai.bookUrl || '',
+                                imgUrl: anh_an_toan,
                                 timestamp: Date.now(),
                                 savedAt: new Date().toLocaleDateString('vi-VN'),
-                                chap: hienTai.chapTitle || 'Chưa đọc chương nào',
-                                chunkIndex: (hienTai.absoluteProgress && hienTai.absoluteProgress.current) ? hienTai.absoluteProgress.current : ((hienTai.progress && hienTai.progress.current) ? hienTai.progress.current : 0)
+                                chap: hien_tai.ten_chuong || hien_tai.chapTitle || 'Chưa đọc chương nào',
+                                chunkIndex: chunk_so
                             });
                             chrome.storage.local.set({ readingList: danh_sach }, () => {
                                 quan_ly_thu_vien.danh_sach_doc = danh_sach;
                                 quan_ly_thu_vien.hien_thi_danh_sach(quan_ly_thu_vien.sap_xep_danh_sach(danh_sach));
                                 quan_ly_thu_vien.cap_nhat_dung_luong();
                                 this.dat_trang_thai_luu(true);
-                                const infoCount = document.getElementById('info-count');
-                                if (infoCount) infoCount.textContent = `${danh_sach.length} truyện`;
+                                const the_dem_thong_tin = document.getElementById('info-count');
+                                if (the_dem_thong_tin) the_dem_thong_tin.textContent = `${danh_sach.length} truyện`;
                                 hien_thong_bao('Đã lưu truyện thành công!', 'success');
                             });
                         }
@@ -691,11 +716,11 @@ export const dieu_khien_trinh_phat = {
 
         document.querySelectorAll('.tab').forEach(nut => {
             nut.addEventListener('click', (e) => {
-                const engineSelect = document.getElementById('engine-select');
-                if (engineSelect && ['fpt', 'azure'].includes(engineSelect.value)) {
-                    if (engineSelect.value !== cau_hinh.lay('maydoc', true)) {
-                        engineSelect.value = cau_hinh.lay('maydoc', true) || 'web';
-                        engineSelect.dispatchEvent(new Event('change'));
+                const the_chon_dong_co = document.getElementById('engine-select');
+                if (the_chon_dong_co && ['fpt', 'azure'].includes(the_chon_dong_co.value)) {
+                    if (the_chon_dong_co.value !== cau_hinh.lay('maydoc', true)) {
+                        the_chon_dong_co.value = cau_hinh.lay('maydoc', true) || 'web';
+                        the_chon_dong_co.dispatchEvent(new Event('change'));
                     }
                 }
                 
@@ -729,9 +754,9 @@ export const dieu_khien_trinh_phat = {
             });
         });
 
-        const modal = document.getElementById('confirm-modal');
-        if (modal) {
-            modal.addEventListener('click', e => { if(e.target === modal) modal.classList.remove('show'); });
+        const khung_modal = document.getElementById('confirm-modal');
+        if (khung_modal) {
+            khung_modal.addEventListener('click', e => { if(e.target === khung_modal) khung_modal.classList.remove('show'); });
         }
 
         document.addEventListener('contextmenu', e => { if (e.target.tagName !== 'INPUT') e.preventDefault(); });
@@ -740,15 +765,15 @@ export const dieu_khien_trinh_phat = {
         const nut_chuyen_doan_sau = document.getElementById('btn-next-chunk');
         if (nut_chuyen_doan_sau) {
             nut_chuyen_doan_sau.addEventListener('click', () => {
-                const input = document.getElementById('progress-input');
+                const the_nhap = document.getElementById('progress-input');
                 const the_tong_so = document.getElementById('progress-total');
-                if (input && the_tong_so) {
-                    const cur = parseInt(input.value, 10) || 0;
-                    const tot = parseInt(the_tong_so.textContent, 10) || 0;
-                    if (cur < tot) {
-                        input.value = cur + 1;
-                        const fill = document.getElementById('progress-bar-fill');
-                        if (fill && tot > 0) fill.style.width = Math.round(((cur + 1) / tot) * 100) + '%';
+                if (the_nhap && the_tong_so) {
+                    const hien_tai = parseInt(the_nhap.value, 10) || 0;
+                    const tong_so = parseInt(the_tong_so.textContent, 10) || 0;
+                    if (hien_tai < tong_so) {
+                        the_nhap.value = hien_tai + 1;
+                        const thanh_dien = document.getElementById('progress-bar-fill');
+                        if (thanh_dien && tong_so > 0) thanh_dien.style.width = Math.round(((hien_tai + 1) / tong_so) * 100) + '%';
                     }
                 }
                 this.gui_lenh('doanTiep');
@@ -758,15 +783,15 @@ export const dieu_khien_trinh_phat = {
         const nut_chuyen_doan_truoc = document.getElementById('btn-prev-chunk');
         if (nut_chuyen_doan_truoc) {
             nut_chuyen_doan_truoc.addEventListener('click', () => {
-                const input = document.getElementById('progress-input');
+                const the_nhap = document.getElementById('progress-input');
                 const the_tong_so = document.getElementById('progress-total');
-                if (input && the_tong_so) {
-                    const cur = parseInt(input.value, 10) || 0;
-                    const tot = parseInt(the_tong_so.textContent, 10) || 0;
-                    if (cur > 1) {
-                        input.value = cur - 1;
-                        const fill = document.getElementById('progress-bar-fill');
-                        if (fill && tot > 0) fill.style.width = Math.round(((cur - 1) / tot) * 100) + '%';
+                if (the_nhap && the_tong_so) {
+                    const hien_tai = parseInt(the_nhap.value, 10) || 0;
+                    const tong_so = parseInt(the_tong_so.textContent, 10) || 0;
+                    if (hien_tai > 1) {
+                        the_nhap.value = hien_tai - 1;
+                        const thanh_dien = document.getElementById('progress-bar-fill');
+                        if (thanh_dien && tong_so > 0) thanh_dien.style.width = Math.round(((hien_tai - 1) / tong_so) * 100) + '%';
                     }
                 }
                 this.gui_lenh('doanTruoc');
@@ -779,10 +804,10 @@ export const dieu_khien_trinh_phat = {
             thanh_tien_trinh.addEventListener('blur', () => { thanh_tien_trinh.dataset.dang_sua = ''; });
             thanh_tien_trinh.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
-                    const val = parseInt(thanh_tien_trinh.value);
-                    const total = parseInt(document.getElementById('progress-total')?.textContent || '0');
-                    if (val >= 1 && val <= total) {
-                        this.gui_lenh('nhayDenDoan', { chi_so: val - 1 });
+                    const gia_tri = parseInt(thanh_tien_trinh.value, 10);
+                    const tong_so = parseInt(document.getElementById('progress-total')?.textContent || '0', 10);
+                    if (gia_tri >= 1 && gia_tri <= tong_so) {
+                        this.gui_lenh('nhayDenDoan', { chi_so: gia_tri - 1 });
                     }
                     thanh_tien_trinh.blur();
                 }

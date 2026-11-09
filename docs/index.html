@@ -1342,7 +1342,7 @@
 
     .custom-select-container {
       position: relative;
-      width: 100px;
+      width: 110px;
       user-select: none;
     }
 
@@ -1387,6 +1387,27 @@
       visibility: hidden;
       transform: translateY(10px);
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      max-height: 128px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--surface3) transparent;
+    }
+
+    .custom-select-dropdown::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .custom-select-dropdown::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .custom-select-dropdown::-webkit-scrollbar-thumb {
+      background: var(--surface3);
+      border-radius: 4px;
+    }
+
+    .custom-select-dropdown::-webkit-scrollbar-thumb:hover {
+      background: var(--accent);
     }
 
     .custom-select-dropdown.show {
@@ -1396,6 +1417,9 @@
     }
 
     .custom-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       padding: 6px 10px;
       font-size: 11px;
       font-weight: 600;
@@ -1405,7 +1429,7 @@
       transition: all 0.15s;
     }
 
-    .custom-option:hover {
+    .custom-option:hover:not(.disabled) {
       background: rgba(255, 255, 255, 0.05);
       color: var(--text);
     }
@@ -1413,6 +1437,21 @@
     .custom-option.selected {
       background: var(--accent);
       color: #000;
+    }
+
+    .custom-option.disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      pointer-events: none;
+      color: var(--text-muted);
+    }
+
+    .custom-option .opt-badge-x {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--danger, #f31260);
+      margin-left: 6px;
+      line-height: 1;
     }
 
     .modal-close {
@@ -1756,7 +1795,8 @@
             </svg>
           </div>
           <div class="ext-icon active" title="Đọc Truyện Cho Sáng Tác Việt — đang hoạt động">
-            <img src="icons/icon128.png" alt="Đọc Truyện Cho Sáng Tác Việt" style="width: 17px; height: 17px; border-radius: 3px;">
+            <img src="icons/icon128.png" alt="Đọc Truyện Cho Sáng Tác Việt"
+              style="width: 17px; height: 17px; border-radius: 3px;">
           </div>
           <div class="ext-icon">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1771,15 +1811,17 @@
       <div class="browser-content">
 
         <div class="mock-page">
-          <iframe class="mock-page-iframe" id="mock-page-iframe" title="Trang truyện mẫu" loading="lazy"></iframe>
+          <iframe class="mock-page-iframe" id="mock-page-iframe" title="Trang truyện mẫu"
+            src="mau/chuong-1.html"></iframe>
         </div>
 
         <div class="popup-anchor">
           <div class="popup-panel-label">
-            <div class="popup-panel-label-dot"></div>
-            Extension đang hoạt động
+            <div class="popup-panel-label-dot" id="popup-panel-dot"></div>
+            <span id="popup-panel-status-text">Extension đang hoạt động</span>
           </div>
-          <iframe class="popup-frame" id="popup-frame" title="Preview extension popup" loading="lazy"></iframe>
+          <iframe class="popup-frame" id="popup-frame" title="Preview extension popup"
+            src="mau/DocTruyenSTV_v0.4.1/popup.html"></iframe>
         </div>
       </div>
     </div>
@@ -2001,50 +2043,52 @@
     const khungPreview = document.getElementById('popup-frame');
     const khungTrangMau = document.getElementById('mock-page-iframe');
     let phienBanDaTai = null;
-    let maEdgeGia = null;
     let trangMauDaTai = false;
 
-    let noiDungHtmlHienTai = '';
+    const cac_mau_co_san = [
+      'v0.4.1', 'v0.4.0', 'v0.3.4', 'v0.3.3', 'v0.3.2', 'v0.3.1', 'v0.3.0', 'v0.2.0', 'v0.1.0'
+    ];
+    let bo_nho_dem_danh_sach_mau = null;
 
-    async function layMaEdgeGia() {
-      if (maEdgeGia) return maEdgeGia;
+    async function lay_danh_sach_mau() {
+      if (bo_nho_dem_danh_sach_mau) return bo_nho_dem_danh_sach_mau;
       try {
-        const ketQua = await fetch('mau.js');
-        if (!ketQua.ok) throw new Error('Not found');
-        maEdgeGia = await ketQua.text();
-      } catch (_) { maEdgeGia = ''; }
-      return maEdgeGia;
+        const phan_hoi = await fetch('mau/danh_sach.json?t=' + Date.now());
+        if (phan_hoi.ok) {
+          const danh_sach = await phan_hoi.json();
+          bo_nho_dem_danh_sach_mau = danh_sach.map(muc => muc.phien_ban || muc.version);
+          return bo_nho_dem_danh_sach_mau;
+        }
+      } catch (_) { }
+      bo_nho_dem_danh_sach_mau = cac_mau_co_san;
+      return bo_nho_dem_danh_sach_mau;
     }
 
-    async function taiTrangMauTheoSo(num) {
-      const isLive = window.location.hostname.includes('github.io');
-      const baseUrl = isLive
-        ? `https://cdn.jsdelivr.net/gh/${REPO}@main/docs/mau/`
-        : 'mau/';
-      const mauUrl = baseUrl + `chuong-${num}.html`;
-      if (isLive) {
-        try {
-          const res = await fetch(mauUrl);
-          let html = await res.text();
-          const scriptChan = `<script>
-  document.addEventListener('click', function(e) {
-    var a = e.target.closest('a[href]');
-    if (!a) return;
-    var m = a.getAttribute('href').match(/chuong-(\\d+)\\.html/);
-    if (m && window.parent && typeof window.parent.setDemoChapter === 'function') {
-      e.preventDefault();
-      window.parent.setDemoChapter(parseInt(m[1]));
-    }
-  }, true);
-<\/script>`;
-          html = html.replace('<head>', `<head><base href="${baseUrl}">${scriptChan}`);
-          khungTrangMau.srcdoc = html;
-        } catch (_) {
-          khungTrangMau.src = mauUrl;
+    function cap_nhat_hien_thi_trinh_phat_nho(phien_ban) {
+      const danh_sach_an = ['v0.1.0', 'v0.2.0', 'v0.1', 'v0.2'];
+      const can_an = danh_sach_an.includes(phien_ban);
+      try {
+        if (khungTrangMau && khungTrangMau.contentWindow && khungTrangMau.contentWindow.document) {
+          const tai_lieu = khungTrangMau.contentWindow.document;
+          const ma_dinh_danh_kieu = 'hide-mini-player-style';
+          let the_kieu = tai_lieu.getElementById(ma_dinh_danh_kieu);
+          if (can_an) {
+            if (!the_kieu) {
+              the_kieu = tai_lieu.createElement('style');
+              the_kieu.id = ma_dinh_danh_kieu;
+              the_kieu.textContent = '#stv-mini-player, #stv-mini-bubble { display: none !important; }';
+              tai_lieu.head.appendChild(the_kieu);
+            }
+          } else if (the_kieu) {
+            the_kieu.remove();
+          }
         }
-      } else {
-        khungTrangMau.src = mauUrl;
-      }
+      } catch (_) { }
+    }
+
+    async function taiTrangMauTheoSo(so_chuong) {
+      const duong_dan_mau = `mau/chuong-${so_chuong}.html`;
+      khungTrangMau.src = duong_dan_mau;
     }
 
     async function taiTrangMau() {
@@ -2053,79 +2097,137 @@
       await taiTrangMauTheoSo(1);
     }
 
-    async function taiXemTruoc(phienBan) {
-      if (phienBanDaTai === phienBan) return;
+    khungTrangMau.addEventListener('load', () => {
+      if (phienBanDaTai) {
+        cap_nhat_hien_thi_trinh_phat_nho(phienBanDaTai);
+      }
+      const trang_thai_hien_tai = window.__trang_thai_stv_dung_chung || window.__stvSharedState;
+      if (trang_thai_hien_tai && khungTrangMau.contentWindow) {
+        khungTrangMau.contentWindow.postMessage({
+          type: 'STV_PLAY_STATE_CHANGE',
+          state: trang_thai_hien_tai
+        }, '*');
+      }
+      if (window.__chu_de_hien_tai && khungTrangMau.contentWindow) {
+        khungTrangMau.contentWindow.postMessage({
+          type: 'STV_THEME_CHANGE',
+          theme: window.__chu_de_hien_tai
+        }, '*');
+      }
+    });
+
+    async function taiXemTruoc(phien_ban, bat_buoc = false) {
+      if (!bat_buoc && phienBanDaTai === phien_ban && khungPreview.getAttribute('src') && !khungPreview.hasAttribute('srcdoc')) return;
+
+      const the_cham_trang_thai = document.getElementById('popup-panel-dot');
+      const the_chu_trang_thai = document.getElementById('popup-panel-status-text');
 
       try {
-        const isLive = window.location.hostname.includes('github.io');
-        const baseUrl = isLive
-          ? `https://cdn.jsdelivr.net/gh/${REPO}@main/versions/DocTruyenSTV_${phienBan}/`
-          : `../versions/DocTruyenSTV_${phienBan}/`;
+        const danh_sach_mau = await lay_danh_sach_mau();
+        const tap_hop_mau = new Set(danh_sach_mau);
+        if (!tap_hop_mau.has(phien_ban)) {
+          throw new Error('Không tìm thấy mẫu');
+        }
 
-        const [ketQuaPopup, maGia] = await Promise.all([
-          fetch(baseUrl + `popup_${phienBan}.html`),
-          layMaEdgeGia()
-        ]);
-        if (!ketQuaPopup.ok) throw new Error('Not found');
+        const duong_dan_popup = `mau/DocTruyenSTV_${phien_ban}/popup.html`;
 
-        let noiDungHtml = await ketQuaPopup.text();
-        const theScriptGia = '<scr' + 'ipt>' + maGia + '</scr' + 'ipt>'
-          + '<style>body{overflow-x:hidden;}#breadcum{overflow:hidden;word-break:break-word;text-align:center;}#booknameholder{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;display:block;}</style>';
-        noiDungHtml = noiDungHtml.replace('<head>', '<head><base href="' + baseUrl + '">' + theScriptGia);
+        window.__phien_ban_xem_truoc = phien_ban;
+        window.__previewVersion = phien_ban;
+        phienBanDaTai = phien_ban;
+        khungPreview.removeAttribute('srcdoc');
+        khungPreview.src = duong_dan_popup;
 
-        phienBanDaTai = phienBan;
-        noiDungHtmlHienTai = noiDungHtml;
-        window.__previewVersion = phienBan;
-        khungPreview.srcdoc = noiDungHtml;
+        if (the_cham_trang_thai) {
+          the_cham_trang_thai.style.display = 'block';
+          the_cham_trang_thai.style.background = 'var(--accent)';
+          the_cham_trang_thai.style.boxShadow = '0 0 8px var(--accent)';
+        }
+        if (the_chu_trang_thai) {
+          the_chu_trang_thai.textContent = 'Extension đang hoạt động';
+        }
 
-        window.setDemoChapter = (num) => {
-          const prevChapter = window.demoCurrentChapter;
-          const isCh2 = num === 2;
-          const addrPath = document.getElementById('browser-address-path');
-          if (addrPath) {
-            addrPath.textContent = isCh2
+        window.dat_chuong_mau = (so_chuong) => {
+          const chuong_truoc_do = window.chuong_hien_tai_mau || window.demoCurrentChapter;
+          const la_chuong_2 = so_chuong === 2;
+          const the_duong_dan_dia_chi = document.getElementById('browser-address-path');
+          if (the_duong_dan_dia_chi) {
+            the_duong_dan_dia_chi.textContent = la_chuong_2
               ? '/truyen/fanqie/1/7578918840482942014/7578919302108037694/'
               : '/truyen/fanqie/1/7578918840482942014/7578918873747964478/';
           }
-          window.demoCurrentChapter = num;
+          window.chuong_hien_tai_mau = so_chuong;
+          window.demoCurrentChapter = so_chuong;
 
-          if (prevChapter !== undefined && prevChapter !== num) {
-            khungPreview.srcdoc = '';
-            requestAnimationFrame(() => { khungPreview.srcdoc = noiDungHtmlHienTai; });
-            taiTrangMauTheoSo(num);
+          if (chuong_truoc_do !== undefined && chuong_truoc_do !== so_chuong) {
+            taiTrangMauTheoSo(so_chuong);
+            if (khungPreview && khungPreview.contentWindow) {
+              khungPreview.contentWindow.postMessage({
+                type: 'STV_MOCK_ACTION',
+                action: la_chuong_2 ? 'chuongTiep' : 'chuongTruoc'
+              }, '*');
+            }
           }
         };
+        window.setDemoChapter = window.dat_chuong_mau;
 
-        setDemoChapter(window.demoCurrentChapter || 1);
+        window.dat_chuong_mau(window.chuong_hien_tai_mau || window.demoCurrentChapter || 1);
+        cap_nhat_hien_thi_trinh_phat_nho(phien_ban);
 
-        if (khungTrangMau && khungTrangMau.contentWindow) {
-          const skipVersions = ['v0.1', 'v0.2'];
-          const shouldHide = skipVersions.includes(phienBan);
-          const styleId = 'hide-mini-player-style';
-          let styleEl = khungTrangMau.contentWindow.document.getElementById(styleId);
-
-          if (shouldHide) {
-            if (!styleEl) {
-              styleEl = khungTrangMau.contentWindow.document.createElement('style');
-              styleEl.id = styleId;
-              styleEl.textContent = '#stv-mini-player { display: none !important; }';
-              khungTrangMau.contentWindow.document.head.appendChild(styleEl);
-            }
-          } else if (styleEl) {
-            styleEl.remove();
-          }
-        }
       } catch (loi) {
-        console.error(loi);
+        console.error('Lỗi khi tải mẫu phiên bản:', loi);
+        phienBanDaTai = null;
+        khungPreview.removeAttribute('src');
         khungPreview.srcdoc = '<div style="color:#A1A1AA;text-align:center;padding:40px;font-family:sans-serif;font-size:14px;">Không tìm thấy phiên bản này.</div>';
+        if (the_cham_trang_thai) {
+          the_cham_trang_thai.style.background = 'var(--danger)';
+          the_cham_trang_thai.style.boxShadow = '0 0 8px var(--danger)';
+        }
+        if (the_chu_trang_thai) {
+          the_chu_trang_thai.textContent = 'Không tìm thấy mẫu';
+        }
       }
     }
 
-    function moModal() {
+    // Đồng bộ lệnh giữa trang truyện mẫu và tiện ích
+    window.addEventListener('message', (su_kien_nhan) => {
+      if (!su_kien_nhan.data) return;
+      if (su_kien_nhan.data.type === 'STV_MOCK_ACTION') {
+        if (khungPreview && khungPreview.contentWindow) {
+          khungPreview.contentWindow.postMessage(su_kien_nhan.data, '*');
+        }
+        const ham_dat_chuong = window.dat_chuong_mau || window.setDemoChapter;
+        if (su_kien_nhan.data.action === 'chuongTiep' && typeof ham_dat_chuong === 'function') {
+          ham_dat_chuong(2);
+        } else if (su_kien_nhan.data.action === 'chuongTruoc' && typeof ham_dat_chuong === 'function') {
+          ham_dat_chuong(1);
+        }
+      }
+      if (su_kien_nhan.data.type === 'STV_PLAY_STATE_CHANGE') {
+        window.__trang_thai_stv_dung_chung = su_kien_nhan.data.state;
+        window.__stvSharedState = su_kien_nhan.data.state;
+        if (khungTrangMau && khungTrangMau.contentWindow) {
+          khungTrangMau.contentWindow.postMessage(su_kien_nhan.data, '*');
+        }
+      }
+      if (su_kien_nhan.data.type === 'STV_THEME_CHANGE') {
+        window.__chu_de_hien_tai = su_kien_nhan.data.theme;
+        if (khungTrangMau && khungTrangMau.contentWindow) {
+          khungTrangMau.contentWindow.postMessage(su_kien_nhan.data, '*');
+        }
+      }
+      if (su_kien_nhan.data.type === 'STV_MOCK_MODAL_IMAGE') {
+        if (khungTrangMau && khungTrangMau.contentWindow) {
+          khungTrangMau.contentWindow.postMessage(su_kien_nhan.data, '*');
+        }
+      }
+    });
+
+    async function moModal() {
       taiTrangMau();
-      taiDanhSachPhienBan();
-      const selectedOpt = document.querySelector('.custom-option.selected');
-      taiXemTruoc(selectedOpt ? selectedOpt.dataset.version : phienBanMoiNhatPreview || 'v0.3.4');
+      await tai_danh_sach_phien_ban();
+      const tuy_chon_dang_chon = document.querySelector('.custom-option.selected');
+      const phien_ban_can_tai = tuy_chon_dang_chon ? tuy_chon_dang_chon.dataset.version : (phien_ban_moi_nhat_xem_truoc || 'v0.4.1');
+      taiXemTruoc(phien_ban_can_tai, true);
       nenModal.classList.add('open');
       document.body.style.overflow = 'hidden';
     }
@@ -2135,77 +2237,102 @@
       document.body.style.overflow = '';
     }
 
-    const trigger = document.getElementById('version-select-trigger');
-    const dropdown = document.getElementById('version-select-dropdown');
-    let phienBanMoiNhatPreview = null;
-    let daTaiDanhSachPhienBan = false;
+    const nut_kich_hoat_chon = document.getElementById('version-select-trigger');
+    const danh_sach_tha = document.getElementById('version-select-dropdown');
+    let phien_ban_moi_nhat_xem_truoc = null;
+    let da_tai_danh_sach_phien_ban = false;
 
-    function ganSuKienOption() {
-      document.querySelectorAll('.custom-option').forEach(opt => {
-        opt.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const phienBan = opt.dataset.version;
-          trigger.textContent = phienBan;
+    function tao_danh_sach_tuy_chon_html(danh_sach_phien_ban, tap_hop_mau, phien_ban_chon) {
+      return danh_sach_phien_ban.map(v => {
+        const co_mau = !tap_hop_mau || tap_hop_mau.has(v);
+        const duoc_chon = v === phien_ban_chon;
+        if (co_mau) {
+          return `<div class="custom-option${duoc_chon ? ' selected' : ''}" data-version="${thoatHtml(v)}">
+            <span>${thoatHtml(v)}</span>
+          </div>`;
+        }
+        return `<div class="custom-option disabled" data-version="${thoatHtml(v)}" title="Không tìm thấy mẫu phiên bản này">
+          <span>${thoatHtml(v)}</span>
+          <span class="opt-badge-x" title="Không tìm thấy mẫu">✕</span>
+        </div>`;
+      }).join('');
+    }
+
+    function gan_su_kien_tuy_chon() {
+      document.querySelectorAll('.custom-option').forEach(tuy_chon => {
+        tuy_chon.addEventListener('click', (su_kien) => {
+          su_kien.stopPropagation();
+          if (tuy_chon.classList.contains('disabled')) return;
+          const phien_ban = tuy_chon.dataset.version;
+          nut_kich_hoat_chon.textContent = phien_ban;
           document.querySelectorAll('.custom-option').forEach(o => o.classList.remove('selected'));
-          opt.classList.add('selected');
-          dropdown.classList.remove('show');
-          taiXemTruoc(phienBan);
+          tuy_chon.classList.add('selected');
+          danh_sach_tha.classList.remove('show');
+          taiXemTruoc(phien_ban, true);
         });
       });
     }
 
-    async function taiDanhSachPhienBan() {
-      if (daTaiDanhSachPhienBan) return;
+    async function tai_danh_sach_phien_ban() {
+      if (da_tai_danh_sach_phien_ban) return;
       try {
-        const ketQua = await fetch(`https://api.github.com/repos/${REPO}/contents/versions`, {
-          headers: { 'Accept': 'application/vnd.github+json' }
+        const danh_sach_mau = await lay_danh_sach_mau();
+        const tap_hop_mau = new Set(danh_sach_mau);
+
+        let danh_sach_phien_ban = [...danh_sach_mau];
+        try {
+          const phan_hoi = await fetch(URLPHATHANH, { headers: { 'Accept': 'application/vnd.github+json' } });
+          if (phan_hoi.ok) {
+            const phat_hanh = await phan_hoi.json();
+            phat_hanh.forEach(r => {
+              const the_tag = (r.tag_name || '').replace(/^DTSTV_|^DocTruyenSTV_/, '');
+              if (the_tag && !danh_sach_phien_ban.includes(the_tag)) {
+                danh_sach_phien_ban.push(the_tag);
+              }
+            });
+          }
+        } catch (_) { }
+
+        danh_sach_phien_ban.sort((a, b) => {
+          const phan_a = a.replace(/^v/, '').split('.').map(Number);
+          const phan_b = b.replace(/^v/, '').split('.').map(Number);
+          for (let i = 0; i < Math.max(phan_a.length, phan_b.length); i++) {
+            const chenh_lech = (phan_b[i] || 0) - (phan_a[i] || 0);
+            if (chenh_lech !== 0) return chenh_lech;
+          }
+          return 0;
         });
-        if (!ketQua.ok) throw new Error('Không tải được');
-        const danhSach = await ketQua.json();
-        const cacPhienBan = danhSach
-          .filter(item => item.type === 'dir' && item.name.startsWith('DocTruyenSTV_v'))
-          .map(item => item.name.replace('DocTruyenSTV_', ''))
-          .sort((a, b) => {
-            const partsA = a.replace('v', '').split('.').map(Number);
-            const partsB = b.replace('v', '').split('.').map(Number);
-            for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
-              const diff = (partsB[i] || 0) - (partsA[i] || 0);
-              if (diff !== 0) return diff;
-            }
-            return 0;
-          });
 
-        if (cacPhienBan.length === 0) throw new Error('Không có phiên bản');
+        const phien_ban_hop_le_dau_tien = danh_sach_phien_ban.find(v => tap_hop_mau.has(v)) || danh_sach_phien_ban[0];
+        phien_ban_moi_nhat_xem_truoc = phien_ban_hop_le_dau_tien;
 
-        phienBanMoiNhatPreview = cacPhienBan[0];
-        dropdown.innerHTML = cacPhienBan.map((v, i) =>
-          `<div class="custom-option${i === 0 ? ' selected' : ''}" data-version="${thoatHtml(v)}">${thoatHtml(v)}</div>`
-        ).join('');
-        trigger.textContent = phienBanMoiNhatPreview;
-        ganSuKienOption();
-        daTaiDanhSachPhienBan = true;
+        danh_sach_tha.innerHTML = tao_danh_sach_tuy_chon_html(danh_sach_phien_ban, tap_hop_mau, phien_ban_moi_nhat_xem_truoc);
+        nut_kich_hoat_chon.textContent = phien_ban_moi_nhat_xem_truoc;
+        gan_su_kien_tuy_chon();
+        da_tai_danh_sach_phien_ban = true;
 
-        const selectedOpt = document.querySelector('.custom-option.selected');
-        if (selectedOpt && !phienBanDaTai) {
-          taiXemTruoc(selectedOpt.dataset.version);
+        if (!phienBanDaTai) {
+          taiXemTruoc(phien_ban_moi_nhat_xem_truoc);
         }
-      } catch (e) {
-        console.error('Lỗi tải danh sách phiên bản:', e);
-        if (!daTaiDanhSachPhienBan) {
-          dropdown.innerHTML = '<div class="custom-option selected" data-version="v0.3.4">v0.3.4</div>';
-          trigger.textContent = 'v0.3.4';
-          phienBanMoiNhatPreview = 'v0.3.4';
-          ganSuKienOption();
+      } catch (loi) {
+        console.error('Lỗi tải danh sách phiên bản:', loi);
+        if (!da_tai_danh_sach_phien_ban) {
+          phien_ban_moi_nhat_xem_truoc = cac_mau_co_san[0];
+          danh_sach_tha.innerHTML = tao_danh_sach_tuy_chon_html(cac_mau_co_san, null, phien_ban_moi_nhat_xem_truoc);
+          nut_kich_hoat_chon.textContent = phien_ban_moi_nhat_xem_truoc;
+          gan_su_kien_tuy_chon();
+          da_tai_danh_sach_phien_ban = true;
+          taiXemTruoc(phien_ban_moi_nhat_xem_truoc);
         }
       }
     }
 
-    trigger.addEventListener('click', (e) => {
+    nut_kich_hoat_chon.addEventListener('click', (e) => {
       e.stopPropagation();
-      dropdown.classList.toggle('show');
+      danh_sach_tha.classList.toggle('show');
     });
 
-    document.addEventListener('click', () => dropdown.classList.remove('show'));
+    document.addEventListener('click', () => danh_sach_tha.classList.remove('show'));
 
     document.getElementById('btn-preview-hero').addEventListener('click', moModal);
     document.getElementById('btn-preview-header').addEventListener('click', moModal);
@@ -2217,7 +2344,8 @@
       if (!daTaiPhatHanh) {
         taiPhatHanh();
       }
-    }, 500);
+      tai_danh_sach_phien_ban();
+    }, 300);
 
     (function () {
       const canvas = document.getElementById('eq-canvas');

@@ -159,13 +159,13 @@ export const giao_dien_cai_dat = {
                 dieu_khien_trinh_phat.cap_nhat_giao_dien_engine(congcu);
 
                 const the_thanh_truot_am_luong = document.getElementById('vol-slider');
-                if (thanh_truot_am_luong) {
+                if (the_thanh_truot_am_luong) {
                     const am_luong_toi_da = (congcu === 'web' || congcu === 'auto') ? 1.0 : 2.0;
-                    thanh_truot_am_luong.max = am_luong_toi_da;
-                    if (parseFloat(thanh_truot_am_luong.value) > am_luong_toi_da) {
-                        thanh_truot_am_luong.value = am_luong_toi_da;
+                    the_thanh_truot_am_luong.max = am_luong_toi_da;
+                    if (parseFloat(the_thanh_truot_am_luong.value) > am_luong_toi_da) {
+                        the_thanh_truot_am_luong.value = am_luong_toi_da;
                         const the_gia_tri_am_luong = document.getElementById('vol-val');
-                        if (gia_tri_am_luong) gia_tri_am_luong.textContent = Math.round(am_luong_toi_da * 100) + '%';
+                        if (the_gia_tri_am_luong) the_gia_tri_am_luong.textContent = Math.round(am_luong_toi_da * 100) + '%';
                         cau_hinh.dat('volume', am_luong_toi_da, true);
                         dieu_khien_trinh_phat.gui_lenh('capNhatCaiDat');
                     }
@@ -223,7 +223,46 @@ export const giao_dien_cai_dat = {
 
         const nut_khoi_phuc_ngat_nghi = document.getElementById('btn-reset-pause-defaults');
         if (nut_khoi_phuc_ngat_nghi) {
+            let dang_khoi_phuc = false;
+            let chuot_tren_nut = false;
+
+            const dat_lai_goc_xoay_im_lang = () => {
+                nut_khoi_phuc_ngat_nghi.classList.add('khong-chuyen-dong');
+                nut_khoi_phuc_ngat_nghi.classList.remove('da-khoi-phuc');
+                void nut_khoi_phuc_ngat_nghi.offsetWidth;
+                nut_khoi_phuc_ngat_nghi.classList.remove('khong-chuyen-dong');
+                dang_khoi_phuc = false;
+            };
+
+            nut_khoi_phuc_ngat_nghi.addEventListener('mouseenter', () => {
+                chuot_tren_nut = true;
+            });
+
+            nut_khoi_phuc_ngat_nghi.addEventListener('mouseleave', () => {
+                chuot_tren_nut = false;
+                if (dang_khoi_phuc) {
+                    dat_lai_goc_xoay_im_lang();
+                }
+            });
+
             nut_khoi_phuc_ngat_nghi.addEventListener('click', () => {
+                if (dang_khoi_phuc) {
+                    dat_lai_goc_xoay_im_lang();
+                }
+
+                // Xoay nốt 50% còn lại (hoàn tất đủ 360 độ)
+                requestAnimationFrame(() => {
+                    nut_khoi_phuc_ngat_nghi.classList.add('da-khoi-phuc');
+                    dang_khoi_phuc = true;
+
+                    setTimeout(() => {
+                        // Nếu chuột đã rời nút thì reset góc xoay về 0 độ sẵn sàng cho lần hover tiếp
+                        if (!chuot_tren_nut && dang_khoi_phuc) {
+                            dat_lai_goc_xoay_im_lang();
+                        }
+                    }, 700);
+                });
+
                 const mac_dinh = {
                     'pause-comma': 300,
                     'pause-dot': 800,
@@ -284,9 +323,9 @@ export const giao_dien_cai_dat = {
         danh_sach_tu_dien.querySelectorAll('.btn-del-dict').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const idx = parseInt(e.currentTarget.getAttribute('data-idx'));
-                let currentDict = cau_hinh.lay('customDict', false) || [];
-                currentDict.splice(idx, 1);
-                cau_hinh.luu_tu_dien(currentDict);
+                let tu_dien_hien_tai = cau_hinh.lay('customDict', false) || [];
+                tu_dien_hien_tai.splice(idx, 1);
+                cau_hinh.luu_tu_dien(tu_dien_hien_tai);
                 this.hien_thi_tu_dien();
                 hien_thong_bao('Đã xóa quy tắc!', 'success');
             });
@@ -307,12 +346,12 @@ export const giao_dien_cai_dat = {
                     hien_thong_bao('Vui lòng nhập từ lỗi cần sửa!', 'warning');
                     return;
                 }
-                let dict = cau_hinh.lay('customDict', false) || [];
-                const idx = dict.findIndex(item => item[0].toLowerCase() === origin.toLowerCase());
-                if (idx !== -1) dict[idx][1] = replace;
-                else dict.push([origin, replace]);
+                let tu_dien = cau_hinh.lay('customDict', false) || [];
+                const idx = tu_dien.findIndex(item => item[0].toLowerCase() === origin.toLowerCase());
+                if (idx !== -1) tu_dien[idx][1] = replace;
+                else tu_dien.push([origin, replace]);
 
-                cau_hinh.luu_tu_dien(dict);
+                cau_hinh.luu_tu_dien(tu_dien);
                 o_tu_goc.value = '';
                 o_tu_thay_the.value = '';
                 this.hien_thi_tu_dien();
@@ -374,9 +413,9 @@ export const giao_dien_cai_dat = {
             setTimeout(cap_nhat_phan_doan, 50);
         }
         
-        const btnDeleteEngine = document.getElementById('btn-delete-engine');
-        if (btnDeleteEngine) {
-            btnDeleteEngine.addEventListener('click', () => this.xoa_dong_co_hien_tai());
+        const nut_xoa_dong_co = document.getElementById('btn-delete-engine');
+        if (nut_xoa_dong_co) {
+            nut_xoa_dong_co.addEventListener('click', () => this.xoa_dong_co_hien_tai());
         }
     },
 
@@ -401,7 +440,7 @@ export const giao_dien_cai_dat = {
 
         if (!o_chon_goc || !khung_chon || !van_ban_hien_thi) return;
 
-        const capNhat = () => {
+        const cap_nhat = () => {
             khung_chon.innerHTML = '';
             const lua_chon_da_chon = o_chon_goc.options[o_chon_goc.selectedIndex];
             if (lua_chon_da_chon) van_ban_hien_thi.textContent = lua_chon_da_chon.textContent;
@@ -421,9 +460,9 @@ export const giao_dien_cai_dat = {
             });
         };
 
-        o_chon_goc.addEventListener('change', capNhat);
-        o_chon_goc._cap_nhat_giao_dien = capNhat;
-        capNhat();
+        o_chon_goc.addEventListener('change', cap_nhat);
+        o_chon_goc._cap_nhat_giao_dien = cap_nhat;
+        cap_nhat();
     },
 
     tao_muc(opt, co_thut_le, o_chon_goc, khung_chon) {
@@ -473,8 +512,8 @@ export const giao_dien_cai_dat = {
 
         khung_chon.innerHTML = '';
         
-        const customEngines = cau_hinh.lay('customEngines', false) || [];
-        customEngines.forEach(engine => {
+        const cac_dong_co_tuy_chinh = cau_hinh.lay('customEngines', false) || [];
+        cac_dong_co_tuy_chinh.forEach(engine => {
             if (!Array.from(the_chon_dong_co.options).find(o => o.value === engine.id)) {
                 const opt = document.createElement('option');
                 opt.value = engine.id;
@@ -486,9 +525,9 @@ export const giao_dien_cai_dat = {
         const lua_chon_da_chon = the_chon_dong_co.options[the_chon_dong_co.selectedIndex];
         if (lua_chon_da_chon && van_ban_hien_thi) van_ban_hien_thi.textContent = lua_chon_da_chon.textContent;
 
-        const btnDelete = document.getElementById('btn-delete-engine');
-        if (btnDelete) {
-            btnDelete.style.display = (the_chon_dong_co.value && the_chon_dong_co.value !== 'web') ? 'flex' : 'none';
+        const nut_xoa = document.getElementById('btn-delete-engine');
+        if (nut_xoa) {
+            nut_xoa.style.display = (the_chon_dong_co.value && the_chon_dong_co.value !== 'web') ? 'flex' : 'none';
         }
 
         Array.from(the_chon_dong_co.children).forEach(con => {
@@ -505,38 +544,38 @@ export const giao_dien_cai_dat = {
             }
         });
 
-        const trueCustomEngines = customEngines.filter(e => e.id.startsWith('khac_'));
-        if (trueCustomEngines.length > 0) {
-            const nhomCustom = document.createElement('div');
-            nhomCustom.className = 'custom-optgroup';
-            nhomCustom.textContent = 'Nguồn đọc khác';
-            khung_chon.appendChild(nhomCustom);
+        const dong_co_tuy_chinh_thuc = cac_dong_co_tuy_chinh.filter(e => e.id.startsWith('khac_'));
+        if (dong_co_tuy_chinh_thuc.length > 0) {
+            const nhom_tuy_chinh = document.createElement('div');
+            nhom_tuy_chinh.className = 'custom-optgroup';
+            nhom_tuy_chinh.textContent = 'Nguồn đọc khác';
+            khung_chon.appendChild(nhom_tuy_chinh);
 
-            trueCustomEngines.forEach(engine => {
+            dong_co_tuy_chinh_thuc.forEach(engine => {
                 const opt = Array.from(the_chon_dong_co.options).find(o => o.value === engine.id);
                 if (opt) khung_chon.appendChild(this.tao_muc(opt, true, the_chon_dong_co, khung_chon));
             });
         }
 
-        const btnAdd = document.createElement('div');
-        btnAdd.className = 'custom-option';
-        btnAdd.style.color = 'var(--accent)';
-        btnAdd.style.fontWeight = 'bold';
-        btnAdd.style.textAlign = 'center';
-        btnAdd.style.marginTop = '6px';
-        btnAdd.style.paddingTop = '10px';
-        btnAdd.style.borderTop = '1px solid rgba(232, 160, 69, 0.2)';
-        btnAdd.style.display = 'flex';
-        btnAdd.style.alignItems = 'center';
-        btnAdd.style.justifyContent = 'center';
-        btnAdd.style.gap = '6px';
-        btnAdd.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Thêm Nguồn Đọc Mới';
-        btnAdd.addEventListener('click', (e) => {
+        const nut_them = document.createElement('div');
+        nut_them.className = 'custom-option';
+        nut_them.style.color = 'var(--accent)';
+        nut_them.style.fontWeight = 'bold';
+        nut_them.style.textAlign = 'center';
+        nut_them.style.marginTop = '6px';
+        nut_them.style.paddingTop = '10px';
+        nut_them.style.borderTop = '1px solid rgba(232, 160, 69, 0.2)';
+        nut_them.style.display = 'flex';
+        nut_them.style.alignItems = 'center';
+        nut_them.style.justifyContent = 'center';
+        nut_them.style.gap = '6px';
+        nut_them.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Thêm Nguồn Đọc Mới';
+        nut_them.addEventListener('click', (e) => {
             e.stopPropagation();
             khung_chon.classList.remove('show');
             this.hien_bang_them_dong_co();
         });
-        khung_chon.appendChild(btnAdd);
+        khung_chon.appendChild(nut_them);
     },
 
     hien_bang_them_dong_co() {
@@ -553,7 +592,7 @@ export const giao_dien_cai_dat = {
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                         </a>
                     </div>
-                    <div class="modal-body" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px;">
+                    <div class="modal-body" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; white-space: normal;">
                         <div id="ce-type-container" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 4px; scroll-behavior: smooth;">
                             <style>
                                 #ce-type-container::-webkit-scrollbar { height: 4px; }
@@ -579,14 +618,13 @@ export const giao_dien_cai_dat = {
                         <!-- Dành cho Custom -->
                         <div id="ce-custom-fields" style="display: flex; flex-direction: column; gap: 8px;">
                             <input type="text" id="ce-url" class="ce-input" placeholder="API URL" title="API URL">
-                            <div class="custom-select-container" style="width: 100%;">
+                            <div class="custom-select-container" style="width: 100%; flex: none;">
                                 <select id="ce-method" style="display: none;">
                                     <option value="POST">POST</option>
                                     <option value="GET">GET</option>
                                 </select>
-                                <div class="custom-select-trigger ce-input" style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; margin: 0;">
+                                <div class="custom-select-trigger" style="border-radius: 8px; background-color: var(--surface2);">
                                     <span id="ce-method-text">POST</span>
-                                    <div class="arrow"></div>
                                 </div>
                                 <div class="custom-select-dropdown" id="ce-method-dropdown" style="width: 100%;"></div>
                             </div>
@@ -614,16 +652,16 @@ export const giao_dien_cai_dat = {
             `;
             document.body.appendChild(panel);
             
-            const toggleKey = document.getElementById('ce-toggle-key-visibility');
-            const keyInputEl = document.getElementById('ce-api-key');
-            if (toggleKey && keyInputEl) {
-                toggleKey.addEventListener('click', () => {
-                    const t = keyInputEl.getAttribute('type') === 'password' ? 'text' : 'password';
-                    keyInputEl.setAttribute('type', t);
+            const nut_chuyen_hien_khoa = document.getElementById('ce-toggle-key-visibility');
+            const the_nhap_khoa = document.getElementById('ce-api-key');
+            if (nut_chuyen_hien_khoa && the_nhap_khoa) {
+                nut_chuyen_hien_khoa.addEventListener('click', () => {
+                    const t = the_nhap_khoa.getAttribute('type') === 'password' ? 'text' : 'password';
+                    the_nhap_khoa.setAttribute('type', t);
                     if (t === 'text') {
-                        toggleKey.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+                        nut_chuyen_hien_khoa.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
                     } else {
-                        toggleKey.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+                        nut_chuyen_hien_khoa.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
                     }
                 });
             }
@@ -670,9 +708,9 @@ export const giao_dien_cai_dat = {
                             const change = vi_tri_cuon - start;
                             const duration = 250;
                             let thoi_gian_bat_dau = null;
-                            const cuon_chuyen_dong = (currentTime) => {
-                                if (!thoi_gian_bat_dau) thoi_gian_bat_dau = currentTime;
-                                const thoi_gian_da_qua = currentTime - thoi_gian_bat_dau;
+                            const cuon_chuyen_dong = (thoi_gian_hien_tai) => {
+                                if (!thoi_gian_bat_dau) thoi_gian_bat_dau = thoi_gian_hien_tai;
+                                const thoi_gian_da_qua = thoi_gian_hien_tai - thoi_gian_bat_dau;
                                 const progress = Math.min(thoi_gian_da_qua / duration, 1);
                                 const ease = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
                                 container.scrollLeft = start + change * ease;
@@ -734,7 +772,7 @@ export const giao_dien_cai_dat = {
     async xac_nhan_them_dong_co() {
         const type = document.getElementById('ce-type').value;
         const name = document.getElementById('ce-name').value.trim();
-        const customEngines = cau_hinh.lay('customEngines', false) || [];
+        const cac_dong_co_tuy_chinh = cau_hinh.lay('customEngines', false) || [];
         const nut_luu = document.getElementById('ce-btn-save');
         
         let id_dong_co = '';
@@ -744,7 +782,7 @@ export const giao_dien_cai_dat = {
             return;
         }
 
-        if (customEngines.find(e => e.name.toLowerCase() === name.toLowerCase() && e.id !== type)) {
+        if (cac_dong_co_tuy_chinh.find(e => e.name.toLowerCase() === name.toLowerCase() && e.id !== type)) {
             hien_thong_bao('Tên nguồn đọc đã tồn tại', 'warning');
             return;
         }
@@ -773,7 +811,7 @@ export const giao_dien_cai_dat = {
                 id: id_dong_co,
                 name, url, method, headers, mau_noi_dung, duong_dan_am_thanh, type: 'custom'
             };
-            customEngines.push(engine);
+            cac_dong_co_tuy_chinh.push(engine);
         } else {
             const key = document.getElementById('ce-api-key').value.trim();
             if (!key) {
@@ -793,8 +831,8 @@ export const giao_dien_cai_dat = {
                         headers: { 'api-key': key, 'voice': 'banmai', 'speed': '0' },
                         body: 'kiểm tra'
                     });
-                    const duLieu = await res.json().catch(() => null);
-                    if (res.ok && duLieu && !duLieu.error) hop_le = true;
+                    const du_lieu = await res.json().catch(() => null);
+                    if (res.ok && du_lieu && !du_lieu.error) hop_le = true;
                 } else if (type === 'azure') {
                     const res = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
                         method: 'POST',
@@ -834,10 +872,10 @@ export const giao_dien_cai_dat = {
                 engine.region = region;
             }
             
-            customEngines.push(engine);
+            cac_dong_co_tuy_chinh.push(engine);
         }
 
-        cau_hinh.dat('customEngines', customEngines, false);
+        cau_hinh.dat('customEngines', cac_dong_co_tuy_chinh, false);
 
         document.getElementById('modal-add-engine').classList.remove('show');
         
@@ -852,20 +890,20 @@ export const giao_dien_cai_dat = {
 
     xoa_dong_co_hien_tai() {
         const the_chon_dong_co = document.getElementById('engine-select');
-        const idXoa = the_chon_dong_co.value;
-        if (!idXoa || idXoa === 'web') return;
+        const id_xoa = the_chon_dong_co.value;
+        if (!id_xoa || id_xoa === 'web') return;
 
         hien_xac_nhan('Xác nhận xóa', 'Bạn có chắc chắn muốn xóa nguồn đọc này không?', () => {
-            let customEngines = cau_hinh.lay('customEngines', false) || [];
-            customEngines = customEngines.filter(e => e.id !== idXoa);
-            cau_hinh.dat('customEngines', customEngines, false);
+            let cac_dong_co_tuy_chinh = cau_hinh.lay('customEngines', false) || [];
+            cac_dong_co_tuy_chinh = cac_dong_co_tuy_chinh.filter(e => e.id !== id_xoa);
+            cau_hinh.dat('customEngines', cac_dong_co_tuy_chinh, false);
 
-            if (idXoa.startsWith('fpt_')) cau_hinh.dat('fpt_key', '', false);
-            else if (idXoa.startsWith('azure_')) { cau_hinh.dat('azure_key', '', false); cau_hinh.dat('azure_region', '', false); }
-            else if (idXoa.startsWith('gcp_')) cau_hinh.dat('gcp_key', '', false);
+            if (id_xoa.startsWith('fpt_')) cau_hinh.dat('fpt_key', '', false);
+            else if (id_xoa.startsWith('azure_')) { cau_hinh.dat('azure_key', '', false); cau_hinh.dat('azure_region', '', false); }
+            else if (id_xoa.startsWith('gcp_')) cau_hinh.dat('gcp_key', '', false);
 
-            const optNode = Array.from(the_chon_dong_co.options).find(o => o.value === idXoa);
-            if (optNode) optNode.remove();
+            const nut_tuy_chon = Array.from(the_chon_dong_co.options).find(o => o.value === id_xoa);
+            if (nut_tuy_chon) nut_tuy_chon.remove();
 
             the_chon_dong_co.value = 'web';
             the_chon_dong_co.dispatchEvent(new Event('change'));
@@ -884,13 +922,13 @@ export const giao_dien_cai_dat = {
         this.gan_su_kien_cac_nut_ap_dung();
         this.gan_su_kien_phim_nhanh();
 
-        const nutDauHieu = document.getElementById('btn-toggle-sign');
-        if (nutDauHieu) {
-            nutDauHieu.addEventListener('click', () => {
+        const nut_dau_hieu = document.getElementById('btn-toggle-sign');
+        if (nut_dau_hieu) {
+            nut_dau_hieu.addEventListener('click', () => {
                 this.la_dau_cong = !this.la_dau_cong;
-                nutDauHieu.textContent = this.la_dau_cong ? '+' : '-';
-                nutDauHieu.style.color = this.la_dau_cong ? 'var(--accent)' : 'var(--danger)';
-                nutDauHieu.style.borderColor = this.la_dau_cong ? 'var(--accent)' : 'var(--danger)';
+                nut_dau_hieu.textContent = this.la_dau_cong ? '+' : '-';
+                nut_dau_hieu.style.color = this.la_dau_cong ? 'var(--accent)' : 'var(--danger)';
+                nut_dau_hieu.style.borderColor = this.la_dau_cong ? 'var(--accent)' : 'var(--danger)';
             });
         }
 
@@ -906,29 +944,29 @@ export const giao_dien_cai_dat = {
             the_chon_dong_co.value = cau_hinh.lay('maydoc', true) || 'web';
             the_chon_dong_co.dispatchEvent(new Event('change'));
 
-            const customText = document.getElementById('custom-engine-text');
-            if (customText) {
+            const chu_tuy_chinh = document.getElementById('custom-engine-text');
+            if (chu_tuy_chinh) {
                 const opt = the_chon_dong_co.options[the_chon_dong_co.selectedIndex];
-                if (opt) customText.textContent = opt.text;
+                if (opt) chu_tuy_chinh.textContent = opt.text;
             }
         }
     },
 
     tai_lai_du_lieu_tu_dong_dung() {
-        chrome.storage.local.get(['stopTime', 'stopRealtimeTarget', 'stopAfterChapters', 'customStopConfig'], data => {
-            const selectAutoStop = document.getElementById('select-auto-stop');
-            if (!selectAutoStop) return;
+        chrome.storage.local.get(['stopTime', 'stopRealtimeTarget', 'stopAfterChapters', 'customStopConfig'], du_lieu => {
+            const the_chon_tu_dong_dung = document.getElementById('select-auto-stop');
+            if (!the_chon_tu_dong_dung) return;
 
-            if (data.stopRealtimeTarget) selectAutoStop.value = 'realtime';
-            else if (data.stopAfterChapters) selectAutoStop.value = 'chapters';
-            else if (data.customStopConfig) selectAutoStop.value = 'custom';
-            else if (data.stopTime) selectAutoStop.value = 'time';
-            else selectAutoStop.value = 'off';
+            if (du_lieu.stopRealtimeTarget) the_chon_tu_dong_dung.value = 'realtime';
+            else if (du_lieu.stopAfterChapters) the_chon_tu_dong_dung.value = 'chapters';
+            else if (du_lieu.customStopConfig) the_chon_tu_dong_dung.value = 'custom';
+            else if (du_lieu.stopTime) the_chon_tu_dong_dung.value = 'time';
+            else the_chon_tu_dong_dung.value = 'off';
 
             this.cap_nhat_giao_dien('select-auto-stop');
 
             this.bo_qua_thong_bao = true;
-            selectAutoStop.dispatchEvent(new Event('change'));
+            the_chon_tu_dong_dung.dispatchEvent(new Event('change'));
             this.bo_qua_thong_bao = false;
         });
     },
@@ -1034,14 +1072,14 @@ export const giao_dien_cai_dat = {
         const so_gio = document.getElementById('digit-hours');
         const so_phut = document.getElementById('digit-minutes');
         if (so_gio && so_phut) {
-            const bat_dau_nhap = (digitEl, type) => {
-                digitEl.classList.add('editing');
+            const bat_dau_nhap = (the_chu_so, type) => {
+                the_chu_so.classList.add('editing');
                 let dem = '';
                 const xu_ly_phim = (e) => {
                     const key = e.key;
                     if (key >= '0' && key <= '9') {
                         dem += key;
-                        digitEl.textContent = dem.length === 1 ? '0' + key : dem.slice(-2);
+                        the_chu_so.textContent = dem.length === 1 ? '0' + key : dem.slice(-2);
                         if (dem.length >= 2) {
                             let num = parseInt(dem.slice(-2));
                             if (type === 'hour') {
@@ -1052,14 +1090,14 @@ export const giao_dien_cai_dat = {
                                 this.cap_nhat_gia_tri_vt('minute', num);
                             }
                             dem = '';
-                            digitEl.classList.remove('editing');
+                            the_chu_so.classList.remove('editing');
                             if (type === 'hour') setTimeout(() => bat_dau_nhap(so_phut, 'minute'), 60);
                             document.removeEventListener('keydown', xu_ly_phim);
                             document.removeEventListener('mousedown', nhan_ra_ngoai);
                         }
                     } else if (key === 'Backspace') {
                         dem = dem.slice(0, -1);
-                        if (!dem) digitEl.textContent = type === 'hour'
+                        if (!dem) the_chu_so.textContent = type === 'hour'
                             ? String(lay_12_gio(this.gio_val_vt)).padStart(2, '0')
                             : String(this.phut_val_vt).padStart(2, '0');
                     } else if (['Enter', 'Tab', 'Escape'].includes(key)) {
@@ -1067,18 +1105,18 @@ export const giao_dien_cai_dat = {
                         if (type === 'hour') this.cap_nhat_gia_tri_vt('hour', doi_24_gio(Math.max(1, Math.min(12, num)), lay_ampm_hien_tai()));
                         else this.cap_nhat_gia_tri_vt('minute', Math.min(59, num));
                         dem = '';
-                        digitEl.classList.remove('editing');
+                        the_chu_so.classList.remove('editing');
                         document.removeEventListener('keydown', xu_ly_phim);
                         document.removeEventListener('mousedown', nhan_ra_ngoai);
                     }
                 };
                 const nhan_ra_ngoai = (e) => {
-                    if (e.target !== digitEl) {
+                    if (e.target !== the_chu_so) {
                         const num = dem ? parseInt(dem) : (type === 'hour' ? lay_12_gio(this.gio_val_vt) : this.phut_val_vt);
                         if (type === 'hour') this.cap_nhat_gia_tri_vt('hour', doi_24_gio(Math.max(1, Math.min(12, num)), lay_ampm_hien_tai()));
                         else this.cap_nhat_gia_tri_vt('minute', Math.min(59, num));
                         dem = '';
-                        digitEl.classList.remove('editing');
+                        the_chu_so.classList.remove('editing');
                         document.removeEventListener('keydown', xu_ly_phim);
                         document.removeEventListener('mousedown', nhan_ra_ngoai);
                     }
@@ -1100,12 +1138,12 @@ export const giao_dien_cai_dat = {
             }, { passive: false });
         }
 
-        const svgEl = document.getElementById('circular-clock-svg') || nut_gio.ownerSVGElement;
+        const the_svg = document.getElementById('circular-clock-svg') || nut_gio.ownerSVGElement;
         const tien_trinh_gio = document.getElementById('hour-progress');
         const tien_trinh_phut = document.getElementById('minute-progress');
 
         const cap_nhat_theo_toa_do = (clientX, clientY, kieu) => {
-            const r = svgEl.getBoundingClientRect();
+            const r = the_svg.getBoundingClientRect();
             const sx = 240 / r.width, sy = 240 / r.height;
             const mx = (clientX - r.left) * sx, my = (clientY - r.top) * sy;
             const deg = (Math.atan2(my - CENTER, mx - CENTER) * (180 / Math.PI) + 90 + 360) % 360;
@@ -1121,7 +1159,7 @@ export const giao_dien_cai_dat = {
         };
 
         const bat_dau_keo = (clientX, clientY, kieu_uu_tien) => {
-            const r = svgEl.getBoundingClientRect();
+            const r = the_svg.getBoundingClientRect();
             const sx = 240 / r.width, sy = 240 / r.height;
             const mx = (clientX - r.left) * sx, my = (clientY - r.top) * sy;
             const dist = Math.hypot(mx - CENTER, my - CENTER);
@@ -1167,12 +1205,12 @@ export const giao_dien_cai_dat = {
         nut_phut.addEventListener('mousedown', (e) => { e.preventDefault(); bat_dau_keo(e.clientX, e.clientY, 'minute'); });
         nut_phut.addEventListener('touchstart', (e) => { e.preventDefault(); bat_dau_keo(e.touches[0].clientX, e.touches[0].clientY, 'minute'); }, { passive: false });
 
-        svgEl.addEventListener('mousedown', (e) => {
+        the_svg.addEventListener('mousedown', (e) => {
             if (e.target === nut_gio || e.target === nut_phut) return;
             e.preventDefault();
             bat_dau_keo(e.clientX, e.clientY, null);
         });
-        svgEl.addEventListener('touchstart', (e) => {
+        the_svg.addEventListener('touchstart', (e) => {
             if (e.target === nut_gio || e.target === nut_phut) return;
             e.preventDefault();
             bat_dau_keo(e.touches[0].clientX, e.touches[0].clientY, null);
@@ -1188,9 +1226,9 @@ export const giao_dien_cai_dat = {
             khung_chua_ampm.addEventListener('click', (e) => {
                 const opt = e.target.closest('.custom-option');
                 if (opt) {
-                    const isPM = opt.dataset.val === 'CH';
-                    if (isPM && this.gio_val_vt < 12) this.gio_val_vt += 12;
-                    else if (!isPM && this.gio_val_vt >= 12) this.gio_val_vt -= 12;
+                    const la_chieu_toi = opt.dataset.val === 'CH';
+                    if (la_chieu_toi && this.gio_val_vt < 12) this.gio_val_vt += 12;
+                    else if (!la_chieu_toi && this.gio_val_vt >= 12) this.gio_val_vt -= 12;
                     this.cap_nhat_gia_tri_vt('hour', this.gio_val_vt);
                     const dropdown = document.getElementById('ampm-dropdown');
                     if (dropdown) dropdown.classList.remove('show');
@@ -1200,20 +1238,20 @@ export const giao_dien_cai_dat = {
     },
 
     an_tat_nhom_tu_dong_dung() {
-        const cacNhom = [
+        const cac_nhom = [
             document.getElementById('group-stop-time'),
             document.getElementById('group-stop-realtime'),
             document.getElementById('group-stop-chapters'),
             document.getElementById('group-stop-custom')
         ];
-        cacNhom.forEach(nhom => { if (nhom) nhom.style.display = 'none'; });
+        cac_nhom.forEach(nhom => { if (nhom) nhom.style.display = 'none'; });
     },
 
     gan_su_kien_menu_auto_stop() {
-        const selectAutoStop = document.getElementById('select-auto-stop');
-        if (!selectAutoStop) return;
+        const the_chon_tu_dong_dung = document.getElementById('select-auto-stop');
+        if (!the_chon_tu_dong_dung) return;
 
-        selectAutoStop.addEventListener('change', (e) => {
+        the_chon_tu_dong_dung.addEventListener('change', (e) => {
             const v = e.target.value;
             this.an_tat_nhom_tu_dong_dung();
 
@@ -1227,10 +1265,10 @@ export const giao_dien_cai_dat = {
                             h = Math.floor(d.stopTime / 60);
                             m = d.stopTime % 60;
                         }
-                        const hInput = document.getElementById('input-stop-hours');
-                        const mInput = document.getElementById('input-stop-minutes');
-                        if (hInput) hInput.value = h;
-                        if (mInput) mInput.value = m;
+                        const nhap_gio = document.getElementById('input-stop-hours');
+                        const nhap_phut = document.getElementById('input-stop-minutes');
+                        if (nhap_gio) nhap_gio.value = h;
+                        if (nhap_phut) nhap_phut.value = m;
                     });
                 }
             } else if (v === 'chapters') {
@@ -1238,8 +1276,8 @@ export const giao_dien_cai_dat = {
                 if (n) {
                     n.style.display = 'flex';
                     chrome.storage.local.get('stopAfterChapters', d => {
-                        const cInput = document.getElementById('input-stop-chapters');
-                        if (cInput) cInput.value = d.stopAfterChapters || 1;
+                        const nhap_chuong = document.getElementById('input-stop-chapters');
+                        if (nhap_chuong) nhap_chuong.value = d.stopAfterChapters || 1;
                     });
                 }
             } else if (v === 'realtime') {
@@ -1247,18 +1285,18 @@ export const giao_dien_cai_dat = {
                 if (n) {
                     n.style.display = 'flex';
                     chrome.storage.local.get('stopRealtimeTarget', d => {
-                        let mucTieuGio = 12, mucTieuPhut = 0;
+                        let muc_tieu_gio = 12, muc_tieu_phut = 0;
                         if (d.stopRealtimeTarget) {
-                            const [hStr, mStr] = d.stopRealtimeTarget.split(':');
-                            mucTieuGio = parseInt(hStr) || 12;
-                            mucTieuPhut = parseInt(mStr) || 0;
+                            const [chuoi_gio, chuoi_phut] = d.stopRealtimeTarget.split(':');
+                            muc_tieu_gio = parseInt(chuoi_gio) || 12;
+                            muc_tieu_phut = parseInt(chuoi_phut) || 0;
                         } else {
-                            const bayGio = new Date();
-                            mucTieuGio = bayGio.getHours();
-                            mucTieuPhut = bayGio.getMinutes();
+                            const bay_gio = new Date();
+                            muc_tieu_gio = bay_gio.getHours();
+                            muc_tieu_phut = bay_gio.getMinutes();
                         }
-                        this.cap_nhat_gia_tri_vt('hour', mucTieuGio);
-                        this.cap_nhat_gia_tri_vt('minute', mucTieuPhut);
+                        this.cap_nhat_gia_tri_vt('hour', muc_tieu_gio);
+                        this.cap_nhat_gia_tri_vt('minute', muc_tieu_phut);
 
                     });
                 }
@@ -1269,7 +1307,10 @@ export const giao_dien_cai_dat = {
                     chrome.storage.local.get('customStopConfig', d => {
                         if (d.customStopConfig) {
                             const op = document.getElementById('custom-operator');
-                            if (op) op.value = d.customStopConfig.operator || 'AND';
+                            if (op) {
+                                op.value = (d.customStopConfig.operator || 'or').toLowerCase();
+                                this.cap_nhat_giao_dien('custom-operator');
+                            }
                             const lt = document.getElementById('custom-left-type');
                             if (lt) { lt.value = d.customStopConfig.left?.type || 'time'; lt.dispatchEvent(new Event('change')); }
                             const rt = document.getElementById('custom-right-type');
@@ -1307,48 +1348,48 @@ export const giao_dien_cai_dat = {
             }
         });
 
-        const customLeftType = document.getElementById('custom-left-type');
-        const customRightType = document.getElementById('custom-right-type');
+        const loai_trai_tuy_chinh = document.getElementById('custom-left-type');
+        const loai_phai_tuy_chinh = document.getElementById('custom-right-type');
 
         const cap_nhat_khoa_tuy_chinh = () => {
-            if (!customLeftType || !customRightType) return;
-            const leftVal = customLeftType.value;
-            const rightVal = customRightType.value;
+            if (!loai_trai_tuy_chinh || !loai_phai_tuy_chinh) return;
+            const gia_tri_trai = loai_trai_tuy_chinh.value;
+            const gia_tri_phai = loai_phai_tuy_chinh.value;
 
-            Array.from(customLeftType.options).forEach(opt => {
-                if (opt.value && opt.value !== '' && opt.value === rightVal) opt.disabled = true;
+            Array.from(loai_trai_tuy_chinh.options).forEach(opt => {
+                if (opt.value && opt.value !== '' && opt.value === gia_tri_phai) opt.disabled = true;
                 else opt.disabled = false;
             });
-            Array.from(customRightType.options).forEach(opt => {
-                if (opt.value && opt.value !== '' && opt.value === leftVal) opt.disabled = true;
+            Array.from(loai_phai_tuy_chinh.options).forEach(opt => {
+                if (opt.value && opt.value !== '' && opt.value === gia_tri_trai) opt.disabled = true;
                 else opt.disabled = false;
             });
 
-            if (customLeftType._cap_nhat_giao_dien) customLeftType._cap_nhat_giao_dien();
-            if (customRightType._cap_nhat_giao_dien) customRightType._cap_nhat_giao_dien();
+            if (loai_trai_tuy_chinh._cap_nhat_giao_dien) loai_trai_tuy_chinh._cap_nhat_giao_dien();
+            if (loai_phai_tuy_chinh._cap_nhat_giao_dien) loai_phai_tuy_chinh._cap_nhat_giao_dien();
         };
 
-        if (customLeftType) customLeftType.addEventListener('change', e => {
+        if (loai_trai_tuy_chinh) loai_trai_tuy_chinh.addEventListener('change', e => {
             this.tao_input_dieu_kien('custom-left-input', e.target.value);
             cap_nhat_khoa_tuy_chinh();
         });
-        if (customRightType) customRightType.addEventListener('change', e => {
+        if (loai_phai_tuy_chinh) loai_phai_tuy_chinh.addEventListener('change', e => {
             this.tao_input_dieu_kien('custom-right-input', e.target.value);
             cap_nhat_khoa_tuy_chinh();
         });
     },
 
     gan_su_kien_phim_tat() {
-        const btnSettings = document.getElementById('btn-shortcuts-settings');
+        const nut_cai_dat = document.getElementById('btn-shortcuts-settings');
         const dropdown = document.getElementById('shortcuts-dropdown');
-        if (btnSettings && dropdown) {
-            btnSettings.addEventListener('click', () => {
+        if (nut_cai_dat && dropdown) {
+            nut_cai_dat.addEventListener('click', () => {
                 const mo_ra = dropdown.style.display === 'none';
                 dropdown.style.display = mo_ra ? 'flex' : 'none';
-                btnSettings.classList.toggle('active', mo_ra);
+                nut_cai_dat.classList.toggle('active', mo_ra);
             });
 
-            const defaultShortcuts = {
+            const phim_tat_mac_dinh = {
                 playPause: 'K',
                 replay: 'R',
                 prevChap: 'ArrowLeft',
@@ -1379,38 +1420,38 @@ export const giao_dien_cai_dat = {
                 
                 const parts = key.split('+');
                 return parts.map((part, index) => {
-                    let kHtml = '';
-                    if (part === 'ArrowUp') kHtml = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 19V5M5 12l7-7 7 7"/></svg>`;
-                    else if (part === 'ArrowDown') kHtml = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>`;
-                    else if (part === 'ArrowLeft') kHtml = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>`;
-                    else if (part === 'ArrowRight') kHtml = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
+                    let html_phim = '';
+                    if (part === 'ArrowUp') html_phim = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 19V5M5 12l7-7 7 7"/></svg>`;
+                    else if (part === 'ArrowDown') html_phim = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>`;
+                    else if (part === 'ArrowLeft') html_phim = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>`;
+                    else if (part === 'ArrowRight') html_phim = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
                     else {
-                        kHtml = part;
+                        html_phim = part;
                         if (part === ',' || part === '.') {
-                            return `<span style="font-size: 15px; font-weight: 900; line-height: 1; padding-bottom: 4px; display: inline-block;">${kHtml}</span>`;
+                            return `<span style="font-size: 15px; font-weight: 900; line-height: 1; padding-bottom: 4px; display: inline-block;">${html_phim}</span>`;
                         }
                     }
-                    if (index < parts.length - 1) return `<span>${kHtml}</span> <span style="font-size:11px; opacity:0.6">+</span> `;
-                    return `<span>${kHtml}</span>`;
+                    if (index < parts.length - 1) return `<span>${html_phim}</span> <span style="font-size:11px; opacity:0.6">+</span> `;
+                    return `<span>${html_phim}</span>`;
                 }).join('');
             };
 
             chrome.storage.local.get('customShortcuts', data => {
-                const shortcuts = data.customShortcuts || defaultShortcuts;
-                if (inputs.playPause) { inputs.playPause.dataset.key = shortcuts.playPause || defaultShortcuts.playPause; inputs.playPause.innerHTML = hien_thi_phim(inputs.playPause.dataset.key); }
-                if (inputs.replay) { inputs.replay.dataset.key = shortcuts.replay || defaultShortcuts.replay; inputs.replay.innerHTML = hien_thi_phim(inputs.replay.dataset.key); }
-                if (inputs.prevChap) { inputs.prevChap.dataset.key = shortcuts.prevChap || defaultShortcuts.prevChap; inputs.prevChap.innerHTML = hien_thi_phim(inputs.prevChap.dataset.key); }
-                if (inputs.nextChap) { inputs.nextChap.dataset.key = shortcuts.nextChap || defaultShortcuts.nextChap; inputs.nextChap.innerHTML = hien_thi_phim(inputs.nextChap.dataset.key); }
-                if (inputs.volUp) { inputs.volUp.dataset.key = shortcuts.volUp || defaultShortcuts.volUp; inputs.volUp.innerHTML = hien_thi_phim(inputs.volUp.dataset.key); }
-                if (inputs.volDown) { inputs.volDown.dataset.key = shortcuts.volDown || defaultShortcuts.volDown; inputs.volDown.innerHTML = hien_thi_phim(inputs.volDown.dataset.key); }
-                if (inputs.speedUp) { inputs.speedUp.dataset.key = shortcuts.speedUp || defaultShortcuts.speedUp; inputs.speedUp.innerHTML = hien_thi_phim(inputs.speedUp.dataset.key); }
-                if (inputs.speedDown) { inputs.speedDown.dataset.key = shortcuts.speedDown || defaultShortcuts.speedDown; inputs.speedDown.innerHTML = hien_thi_phim(inputs.speedDown.dataset.key); }
-                if (inputs.nextSeg) { inputs.nextSeg.dataset.key = shortcuts.nextSeg || defaultShortcuts.nextSeg; inputs.nextSeg.innerHTML = hien_thi_phim(inputs.nextSeg.dataset.key); }
-                if (inputs.prevSeg) { inputs.prevSeg.dataset.key = shortcuts.prevSeg || defaultShortcuts.prevSeg; inputs.prevSeg.innerHTML = hien_thi_phim(inputs.prevSeg.dataset.key); }
+                const shortcuts = data.customShortcuts || phim_tat_mac_dinh;
+                if (inputs.playPause) { inputs.playPause.dataset.key = shortcuts.playPause || phim_tat_mac_dinh.playPause; inputs.playPause.innerHTML = hien_thi_phim(inputs.playPause.dataset.key); }
+                if (inputs.replay) { inputs.replay.dataset.key = shortcuts.replay || phim_tat_mac_dinh.replay; inputs.replay.innerHTML = hien_thi_phim(inputs.replay.dataset.key); }
+                if (inputs.prevChap) { inputs.prevChap.dataset.key = shortcuts.prevChap || phim_tat_mac_dinh.prevChap; inputs.prevChap.innerHTML = hien_thi_phim(inputs.prevChap.dataset.key); }
+                if (inputs.nextChap) { inputs.nextChap.dataset.key = shortcuts.nextChap || phim_tat_mac_dinh.nextChap; inputs.nextChap.innerHTML = hien_thi_phim(inputs.nextChap.dataset.key); }
+                if (inputs.volUp) { inputs.volUp.dataset.key = shortcuts.volUp || phim_tat_mac_dinh.volUp; inputs.volUp.innerHTML = hien_thi_phim(inputs.volUp.dataset.key); }
+                if (inputs.volDown) { inputs.volDown.dataset.key = shortcuts.volDown || phim_tat_mac_dinh.volDown; inputs.volDown.innerHTML = hien_thi_phim(inputs.volDown.dataset.key); }
+                if (inputs.speedUp) { inputs.speedUp.dataset.key = shortcuts.speedUp || phim_tat_mac_dinh.speedUp; inputs.speedUp.innerHTML = hien_thi_phim(inputs.speedUp.dataset.key); }
+                if (inputs.speedDown) { inputs.speedDown.dataset.key = shortcuts.speedDown || phim_tat_mac_dinh.speedDown; inputs.speedDown.innerHTML = hien_thi_phim(inputs.speedDown.dataset.key); }
+                if (inputs.nextSeg) { inputs.nextSeg.dataset.key = shortcuts.nextSeg || phim_tat_mac_dinh.nextSeg; inputs.nextSeg.innerHTML = hien_thi_phim(inputs.nextSeg.dataset.key); }
+                if (inputs.prevSeg) { inputs.prevSeg.dataset.key = shortcuts.prevSeg || phim_tat_mac_dinh.prevSeg; inputs.prevSeg.innerHTML = hien_thi_phim(inputs.prevSeg.dataset.key); }
             });
 
-            const thiet_lap_o_nhap = (keyName) => {
-                const el = inputs[keyName];
+            const thiet_lap_o_nhap = (ten_phim) => {
+                const el = inputs[ten_phim];
                 if (!el) return;
 
                 el.addEventListener('focus', () => {
@@ -1432,18 +1473,18 @@ export const giao_dien_cai_dat = {
                     if (key.length === 1) key = key.toUpperCase();
                     if (['Control', 'Alt', 'Shift', 'Meta', 'Tab'].includes(key)) return;
                     
-                    let keyStr = key;
-                    if (e.ctrlKey) keyStr = 'Ctrl+' + keyStr;
-                    if (e.altKey) keyStr = 'Alt+' + keyStr;
-                    if (e.shiftKey && keyStr.length > 1 && !keyStr.includes('+')) keyStr = 'Shift+' + keyStr;
+                    let chuoi_phim = key;
+                    if (e.ctrlKey) chuoi_phim = 'Ctrl+' + chuoi_phim;
+                    if (e.altKey) chuoi_phim = 'Alt+' + chuoi_phim;
+                    if (e.shiftKey && chuoi_phim.length > 1 && !chuoi_phim.includes('+')) chuoi_phim = 'Shift+' + chuoi_phim;
 
-                    el.dataset.key = keyStr;
-                    el.innerHTML = hien_thi_phim(keyStr);
+                    el.dataset.key = chuoi_phim;
+                    el.innerHTML = hien_thi_phim(chuoi_phim);
                     el.blur();
 
                     chrome.storage.local.get('customShortcuts', data => {
-                        const shortcuts = data.customShortcuts || defaultShortcuts;
-                        shortcuts[keyName] = keyStr;
+                        const shortcuts = data.customShortcuts || phim_tat_mac_dinh;
+                        shortcuts[ten_phim] = chuoi_phim;
                         chrome.storage.local.set({ customShortcuts: shortcuts }, () => {
                             hien_thong_bao('Đã lưu phím tắt', 'success');
                         });
@@ -1474,16 +1515,16 @@ export const giao_dien_cai_dat = {
     },
 
     doc_gia_tri_dieu_kien(prefix) {
-        const kieuElem = document.getElementById(`custom-${prefix}-type`);
-        const kieu = kieuElem ? kieuElem.value : null;
+        const the_kieu = document.getElementById(`custom-${prefix}-type`);
+        const kieu = the_kieu ? the_kieu.value : null;
         const container = document.getElementById(`custom-${prefix}-input`);
 
         if (!kieu || !container) return null;
         if (kieu === 'time') {
             const gio = parseInt(container.querySelector('.cc-hours')?.value) || 0;
             const phut = parseInt(container.querySelector('.cc-minutes')?.value) || 0;
-            const total = gio * 60 + phut;
-            return total > 0 ? { type: 'time', minutes: total } : null;
+            const tong = gio * 60 + phut;
+            return tong > 0 ? { type: 'time', minutes: tong } : null;
         } else if (kieu === 'realtime') {
             const val = container.querySelector('.cc-time')?.value;
             if (!val) return null;
@@ -1491,8 +1532,8 @@ export const giao_dien_cai_dat = {
             const target = new Date();
             target.setHours(h, m, 0, 0);
             if (target <= new Date()) target.setDate(target.getDate() + 1);
-            const totalMins = Math.ceil((target - new Date()) / 60000);
-            return { type: 'realtime', displayTime: val, minutes: totalMins };
+            const tong_phut = Math.ceil((target - new Date()) / 60000);
+            return { type: 'realtime', displayTime: val, minutes: tong_phut };
         } else if (kieu === 'chapters') {
             const c = parseInt(container.querySelector('.cc-chapters')?.value);
             return c > 0 ? { type: 'chapters', count: c } : null;
@@ -1503,73 +1544,73 @@ export const giao_dien_cai_dat = {
     gan_su_kien_phim_nhanh() {
         document.querySelectorAll('.preset-time').forEach(btn => {
             btn.addEventListener('click', () => {
-                const luongThoiGian = parseInt(btn.dataset.min) || 0;
+                const luong_thoi_gian = parseInt(btn.dataset.min) || 0;
                 let gio = parseInt(document.getElementById('input-stop-hours').value) || 0;
                 let phut = parseInt(document.getElementById('input-stop-minutes').value) || 0;
-                let tongPhut = gio * 60 + phut;
+                let tong_phut = gio * 60 + phut;
 
-                if (this.la_dau_cong) tongPhut += luongThoiGian;
-                else { tongPhut -= luongThoiGian; if (tongPhut < 0) tongPhut = 0; }
+                if (this.la_dau_cong) tong_phut += luong_thoi_gian;
+                else { tong_phut -= luong_thoi_gian; if (tong_phut < 0) tong_phut = 0; }
 
-                document.getElementById('input-stop-hours').value = Math.floor(tongPhut / 60);
-                document.getElementById('input-stop-minutes').value = tongPhut % 60;
+                document.getElementById('input-stop-hours').value = Math.floor(tong_phut / 60);
+                document.getElementById('input-stop-minutes').value = tong_phut % 60;
             });
         });
     },
 
     gan_su_kien_cac_nut_ap_dung() {
-        const btnTime = document.getElementById('btn-apply-stop-time');
-        if (btnTime) btnTime.addEventListener('click', () => {
+        const nut_thoi_gian = document.getElementById('btn-apply-stop-time');
+        if (nut_thoi_gian) nut_thoi_gian.addEventListener('click', () => {
             const gio = parseInt(document.getElementById('input-stop-hours').value) || 0;
             const phut = parseInt(document.getElementById('input-stop-minutes').value) || 0;
-            const tongPhut = gio * 60 + phut;
-            if (tongPhut <= 0) { hien_thong_bao('Vui lòng nhập thời gian lớn hơn 0', 'warning'); return; }
+            const tong_phut = gio * 60 + phut;
+            if (tong_phut <= 0) { hien_thong_bao('Vui lòng nhập thời gian lớn hơn 0', 'warning'); return; }
             chrome.storage.local.remove(['stopRealtimeTarget', 'stopAfterChapters', 'customStopConfig'], () => {
-                dieu_khien_trinh_phat.gui_lenh('henGioNgu', { minutes: tongPhut });
+                dieu_khien_trinh_phat.gui_lenh('henGioNgu', { minutes: tong_phut });
                 dieu_khien_trinh_phat.gui_lenh('dungSauChuong', { count: 0 });
-                chrome.storage.local.set({ stopTime: tongPhut });
-                const moTa = gio > 0 ? `${gio}g${phut > 0 ? ` ${phut}p` : ''}` : `${phut} phút`;
-                hien_thong_bao(`Sẽ dừng sau ${moTa}`, 'success');
+                chrome.storage.local.set({ stopTime: tong_phut });
+                const mo_ta = gio > 0 ? `${gio}g${phut > 0 ? ` ${phut}p` : ''}` : `${phut} phút`;
+                hien_thong_bao(`Sẽ dừng sau ${mo_ta}`, 'success');
             });
         });
 
-        const btnRealtime = document.getElementById('btn-apply-stop-realtime');
-        if (btnRealtime) btnRealtime.addEventListener('click', () => {
+        const nut_thoi_gian_thuc = document.getElementById('btn-apply-stop-realtime');
+        if (nut_thoi_gian_thuc) nut_thoi_gian.addEventListener('click', () => {
             let h24 = this.gio_val_vt;
             let m = this.phut_val_vt;
-            const gioTruc = `${String(h24).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-            const bayGio = new Date();
-            const mucTieu = new Date();
-            mucTieu.setHours(h24, m, 0, 0);
-            if (mucTieu <= bayGio) mucTieu.setDate(mucTieu.getDate() + 1);
+            const gio_truc = `${String(h24).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+            const bay_gio = new Date();
+            const muc_tieu = new Date();
+            muc_tieu.setHours(h24, m, 0, 0);
+            if (muc_tieu <= bay_gio) muc_tieu.setDate(muc_tieu.getDate() + 1);
 
-            const tongPhut = Math.ceil((mucTieu - bayGio) / 60000);
+            const tong_phut = Math.ceil((muc_tieu - bay_gio) / 60000);
             chrome.storage.local.remove(['stopTime', 'stopAfterChapters', 'customStopConfig'], () => {
-                dieu_khien_trinh_phat.gui_lenh('henGioNgu', { minutes: tongPhut });
+                dieu_khien_trinh_phat.gui_lenh('henGioNgu', { minutes: tong_phut });
                 dieu_khien_trinh_phat.gui_lenh('dungSauChuong', { count: 0 });
-                chrome.storage.local.set({ stopRealtimeTarget: gioTruc, stopTime: tongPhut });
-                hien_thong_bao(`Sẽ dừng lúc ${gioTruc}`, 'success');
+                chrome.storage.local.set({ stopRealtimeTarget: gio_truc, stopTime: tong_phut });
+                hien_thong_bao(`Sẽ dừng lúc ${gio_truc}`, 'success');
             });
         });
 
-        const btnChapters = document.getElementById('btn-apply-stop-chapters');
-        if (btnChapters) btnChapters.addEventListener('click', () => {
-            const soChuong = parseInt(document.getElementById('input-stop-chapters').value);
-            if (isNaN(soChuong) || soChuong <= 0) return;
+        const nut_chuong = document.getElementById('btn-apply-stop-chapters');
+        if (nut_chuong) nut_chuong.addEventListener('click', () => {
+            const so_chuong = parseInt(document.getElementById('input-stop-chapters').value);
+            if (isNaN(so_chuong) || so_chuong <= 0) return;
             chrome.storage.local.remove(['stopTime', 'stopRealtimeTarget', 'customStopConfig'], () => {
                 dieu_khien_trinh_phat.gui_lenh('henGioNgu', { minutes: 0 });
-                dieu_khien_trinh_phat.gui_lenh('dungSauChuong', { count: soChuong });
-                chrome.storage.local.set({ stopAfterChapters: soChuong });
-                hien_thong_bao(`Sẽ dừng sau ${soChuong} chương nữa`, 'success');
+                dieu_khien_trinh_phat.gui_lenh('dungSauChuong', { count: so_chuong });
+                chrome.storage.local.set({ stopAfterChapters: so_chuong });
+                hien_thong_bao(`Sẽ dừng sau ${so_chuong} chương nữa`, 'success');
             });
         });
 
-        const btnCustom = document.getElementById('btn-apply-stop-custom');
-        if (btnCustom) btnCustom.addEventListener('click', () => {
+        const nut_tuy_chinh = document.getElementById('btn-apply-stop-custom');
+        if (nut_tuy_chinh) nut_tuy_chinh.addEventListener('click', () => {
             const trai = this.doc_gia_tri_dieu_kien('left');
             const phai = this.doc_gia_tri_dieu_kien('right');
-            const opElem = document.getElementById('custom-operator');
-            const op = opElem ? opElem.value.toLowerCase() : 'or';
+            const the_toan_tu = document.getElementById('custom-operator');
+            const op = the_toan_tu ? the_toan_tu.value.toLowerCase() : 'or';
 
             if (!trai && !phai) { hien_thong_bao('Vui lòng chọn ít nhất một điều kiện hợp lệ', 'warning'); return; }
             if (trai && phai && trai.type === phai.type) { hien_thong_bao('Vui lòng chọn 2 điều kiện khác loại nhau', 'warning'); return; }
@@ -1577,14 +1618,14 @@ export const giao_dien_cai_dat = {
             const config = { operator: op, left: trai, right: phai };
             chrome.storage.local.remove(['stopTime', 'stopRealtimeTarget', 'stopAfterChapters'], () => {
                 dieu_khien_trinh_phat.gui_lenh('dungTuyChinh', { config });
-                const cacDk = [trai, phai].filter(Boolean);
-                const dkTime = cacDk.find(c => c.type === 'time' || c.type === 'realtime');
-                const dkChuong = cacDk.find(c => c.type === 'chapters');
+                const cac_dieu_kien = [trai, phai].filter(Boolean);
+                const dk_thoi_gian = cac_dieu_kien.find(c => c.type === 'time' || c.type === 'realtime');
+                const dk_chuong = cac_dieu_kien.find(c => c.type === 'chapters');
 
-                dieu_khien_trinh_phat.gui_lenh('henGioNgu', { minutes: dkTime ? dkTime.minutes : 0 });
-                dieu_khien_trinh_phat.gui_lenh('dungSauChuong', { count: dkChuong ? dkChuong.count : 0 });
+                dieu_khien_trinh_phat.gui_lenh('henGioNgu', { minutes: dk_thoi_gian ? dk_thoi_gian.minutes : 0 });
+                dieu_khien_trinh_phat.gui_lenh('dungSauChuong', { count: dk_chuong ? dk_chuong.count : 0 });
 
-                const moTa = cacDk.map(c => {
+                const mo_ta = cac_dieu_kien.map(c => {
                     if (c.type === 'time') {
                         const g = Math.floor(c.minutes / 60);
                         const p = c.minutes % 60;
@@ -1595,7 +1636,7 @@ export const giao_dien_cai_dat = {
                     return '';
                 }).join(op === 'and' ? ' VÀ ' : ' HOẶC ');
 
-                hien_thong_bao(`Sẽ dừng: ${moTa}`, 'success');
+                hien_thong_bao(`Sẽ dừng: ${mo_ta}`, 'success');
                 chrome.storage.local.set({ customStopConfig: config });
             });
         });

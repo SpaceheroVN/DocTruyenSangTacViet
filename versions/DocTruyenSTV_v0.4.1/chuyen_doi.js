@@ -194,7 +194,14 @@ export function chuyen_doi_cuc_bo_040_sang_041(du_lieu_cuc_bo_tho) {
 
     // Giữ lại từ điển tùy chỉnh hợp lệ
     if (Array.isArray(nguon.customDict)) {
-        ket_qua.customDict = nguon.customDict.filter(item => item && item.tuGoc && item.tuThayThe !== undefined);
+        ket_qua.customDict = nguon.customDict.filter(muc => {
+            if (Array.isArray(muc) && muc.length >= 2 && typeof muc[0] === 'string') return true;
+            if (muc && typeof muc === 'object' && (muc.tu_goc || muc.tuGoc) && (muc.tu_thay_the !== undefined || muc.tuThayThe !== undefined)) return true;
+            return false;
+        }).map(muc => {
+            if (Array.isArray(muc)) return [muc[0], muc[1]];
+            return [muc.tu_goc || muc.tuGoc, muc.tu_thay_the !== undefined ? muc.tu_thay_the : muc.tuThayThe];
+        });
     } else {
         ket_qua.customDict = [];
     }

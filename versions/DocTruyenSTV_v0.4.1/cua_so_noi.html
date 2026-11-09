@@ -1002,27 +1002,41 @@
       box-shadow: 0 0 8px rgba(232, 160, 69, 0.25);
     }
 
-    .pause-reset-btn:hover .pause-reset-icon {
-      transform: rotate(-180deg);
-    }
-
     .pause-reset-btn:active {
       transform: scale(0.94);
-    }
-
-    .pause-reset-btn:active .pause-reset-icon {
-      transform: rotate(-360deg);
     }
 
     .pause-reset-icon {
       display: block;
       flex-shrink: 0;
-      width: 10px;
-      height: 10px;
+      width: 11px;
+      height: 11px;
       pointer-events: none;
-      transform-origin: 50% 50%;
-      transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+      transform: none !important;
+    }
+
+    .pause-reset-icon-group {
+      transform-origin: 12px 12px;
+      transform-box: view-box;
+      transition: transform 0.75s cubic-bezier(0.25, 1, 0.5, 1);
       will-change: transform;
+    }
+
+    /* Rê chuột (hover): xoay đúng 50% vòng (-180 độ) chậm rãi, mượt mà */
+    .pause-reset-btn:hover:not(.da-khoi-phuc) .pause-reset-icon-group {
+      transform: rotate(-180deg);
+    }
+
+    /* Nhấn chuột (click): xoay nốt 50% còn lại (-360 độ = đủ 1 vòng tròn) */
+    .pause-reset-btn.da-khoi-phuc .pause-reset-icon-group {
+      transform: rotate(-360deg);
+      transition: transform 0.65s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    /* Khôi phục góc 0 độ tức thì khi chuột rời nút để không xoay ngược */
+    .pause-reset-btn.khong-chuyen-dong .pause-reset-icon-group {
+      transition: none !important;
+      transform: rotate(0deg) !important;
     }
 
     .pause-card {
@@ -2009,6 +2023,12 @@
       color: var(--text-muted);
       line-height: 1.5;
       margin-bottom: 20px;
+      word-break: break-word;
+    }
+
+    #confirm-modal .modal-body,
+    #modal-body {
+      white-space: pre-line;
     }
 
     .modal-footer {
@@ -2024,6 +2044,7 @@
       flex: 1;
       min-width: 0;
       user-select: none;
+      white-space: normal;
     }
 
     .custom-select-trigger {
@@ -3136,6 +3157,11 @@
       flex-shrink: 0;
     }
 
+    .github-btn svg {
+      display: block;
+      flex-shrink: 0;
+    }
+
     .github-btn:hover {
       background: var(--hover-bg);
       color: var(--accent);
@@ -3557,7 +3583,7 @@
             <div style="display: flex; align-items: center; gap: 8px;">
               <button id="btn-reset-pause-defaults" type="button" class="pause-reset-btn"
                 title="Khôi phục khoảng nghỉ mặc định (Phẩy: 300ms, Chấm: 800ms, Xuống dòng: 1200ms)">
-                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="pause-reset-icon"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="pause-reset-icon"><g class="pause-reset-icon-group"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></g></svg>
                 Mặc định
               </button>
               <span style="font-size: 9px; color: var(--text-muted); font-variant-numeric: tabular-nums;">ms</span>
@@ -3624,9 +3650,9 @@
                 Lưu ý quan trọng:
               </div>
               <div style="color: var(--text); display: flex; flex-direction: column; gap: 5px;">
-                <div>• <strong>Giới hạn tối thiểu 50ms (Chấm / Xuống dòng):</strong> Khoảng đệm siêu ngắn (~1/20s, tai người không nhận biết được độ trễ) bắt buộc để giải phóng bộ đệm âm thanh của trình duyệt, chấm dứt hoàn toàn hiện tượng nuốt đoạn hay lột chữ khi chuyển câu/đoạn.</div>
-                <div>• <strong>Dấu phẩy (tối thiểu 0ms):</strong> Cho phép về 0ms nếu bạn muốn câu văn đọc lướt liền mạch không chèn thêm thời gian nghỉ.</div>
-                <div>• <strong>Phạm vi tác dụng:</strong> Khoảng nghỉ dấu câu (phẩy/chấm) hoạt động tại các điểm nối chia nhỏ văn bản trong Web Speech API, và áp dụng cho toàn bộ các câu/vế trong các Custom TTS API (FPT, Azure...).</div>
+                <div>• <strong>Dấu chấm & Xuống dòng (tối thiểu 50ms):</strong> Nghỉ một chút xíu khi hết câu/đoạn để giọng đọc chuyển tiếp mượt mà, không bị dính chữ hay nghẽn tiếng.</div>
+                <div>• <strong>Dấu phẩy (từ 0ms):</strong> Bạn có thể để 0ms nếu muốn nghe đọc lướt nhanh, không ngắt quãng giữa câu.</div>
+                <div>• <strong>Mẹo nhỏ:</strong> 1000ms tương đương 1 giây. Bạn có thể tăng giảm các mốc trên sao cho vừa tai nghe nhất nhé!</div>
               </div>
             </div>
           </div>
@@ -4082,11 +4108,10 @@ https://microsoftedge.microsoft.com/addons/detail/mabgcghglcjheefkkicmkpmlhaooii
   <div class="footer">
     <a class="github-btn" href="https://github.com/SpaceheroVN/DocTruyenSangTacViet" target="_blank"
       title="Mã nguồn GitHub">
-      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"
+        aria-hidden="true" class="octicon octicon-mark-github">
         <path
-          d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
-        <path d="M9 18c-4.51 2-5-2-7-2" />
+          d="M10.226 17.284c-2.965-.36-5.054-2.493-5.054-5.256 0-1.123.404-2.336 1.078-3.144-.292-.741-.247-2.314.09-2.965.898-.112 2.111.36 2.83 1.01.853-.269 1.752-.404 2.853-.404 1.1 0 1.999.135 2.807.382.696-.629 1.932-1.1 2.83-.988.315.606.36 2.179.067 2.942.72.854 1.101 2 1.101 3.167 0 2.763-2.089 4.852-5.098 5.234.763.494 1.28 1.572 1.28 2.807v2.336c0 .674.561 1.056 1.235.786 4.066-1.55 7.255-5.615 7.255-10.646C23.5 6.188 18.334 1 11.978 1 5.62 1 .5 6.188.5 12.545c0 4.986 3.167 9.12 7.435 10.669.606.225 1.19-.18 1.19-.786V20.63a2.9 2.9 0 0 1-1.078.224c-1.483 0-2.359-.808-2.987-2.313-.247-.607-.517-.966-1.034-1.033-.27-.023-.359-.135-.359-.27 0-.27.45-.471.898-.471.652 0 1.213.404 1.797 1.235.45.651.921.943 1.483.943.561 0 .92-.202 1.437-.719.382-.381.674-.718.944-.943" />
       </svg>
     </a>
     <div>Đọc Truyện Cho STV · Sử dụng <span id="footer-engine" style="font-weight: 600;">Web Speech API</span></div>

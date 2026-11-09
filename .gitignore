@@ -1,3 +1,5 @@
-xoa_chu_thich.py
-.vscode
-__pycache__
+/logs
+logs/
+.vscode/
+__pycache__/
+*.log
