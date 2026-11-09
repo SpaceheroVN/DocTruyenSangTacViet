@@ -8,8 +8,11 @@
 [![Edge Add-on](https://img.shields.io/badge/Microsoft%20Edge-Add--on-0078d4?logo=microsoftedge)](https://microsoftedge.microsoft.com/addons/detail/mabgcghglcjheefkkicmkpmlhaooiiae)
 
 ---
-# Lưu ý: Cần cài đặt gói ngôn ngữ trong window trước để có được giọng nói free.
-## Tính năng
+### Lưu ý, cần đáp ứng 1 trong 2 điều sau để có giọng nói free: 
+- **1.** Cần cài đặt gói ngôn ngữ trong window.
+- **2.** Cài đặt đặt gói ngôn ngữ trong edge.
+
+### Tính năng
 
 **Engine giọng đọc**
 - **Web Speech API** - Dùng ngay, không cần cấu hình.
@@ -38,7 +41,7 @@
 
 ---
 
-## Cài đặt
+### Cài đặt
 
 **Từ cửa hàng (Edge)**
 
@@ -53,7 +56,7 @@ Tải trực tiếp tại [Microsoft Edge Add-ons](https://microsoftedge.microso
 
 ---
 
-## Cấu hình API
+### Cấu hình API
 
 Để sử dụng FPT.AI, Azure, Google Cloud hoặc nguồn tự tạo, hãy mở tiện ích (popup) → Chọn hộp thả xuống của **Nguồn giọng đọc** → Tiến hành **Thêm nguồn đọc API** hoặc nhập API Key cho nguồn có sẵn → Bấm **Lưu**.
 
@@ -63,7 +66,7 @@ Hướng dẫn lấy key chi tiết có trong tab **Hướng dẫn cài đặt A
 
 ---
 
-## Cấu trúc dự án
+### Cấu trúc dự án
 
 ```
 ├── manifest.json
@@ -90,7 +93,7 @@ Hướng dẫn lấy key chi tiết có trong tab **Hướng dẫn cài đặt A
 
 ---
 
-## Đóng góp & Liên hệ
+### Đóng góp & Liên hệ
 
 - 🐛 **Báo lỗi / Góp ý:** [Google Form](https://forms.gle/rcrew33xXDU144j79)
 - ⭐ **Đánh giá:** [Edge Add-ons Store](https://microsoftedge.microsoft.com/addons/detail/mabgcghglcjheefkkicmkpmlhaooiiae)
@@ -98,6 +101,6 @@ Hướng dẫn lấy key chi tiết có trong tab **Hướng dẫn cài đặt A
 
 ---
 
-## Giấy phép
+### Giấy phép
 
 [MIT License](LICENSE) © SpaceheroVN
