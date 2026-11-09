@@ -600,14 +600,16 @@ export const giao_dien_cai_dat = {
                                 #ce-type-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
                                 #ce-type-container::-webkit-scrollbar-thumb:hover { background: var(--accent); }
                                 .ce-type-btn { flex: 0 0 auto; padding: 6px 14px; font-size: 11px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); cursor: pointer; white-space: nowrap; transition: all 0.2s; }
-                                .ce-type-btn:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
+                                .ce-type-btn:hover:not(.active) { border-color: var(--accent) !important; color: var(--accent) !important; background: rgba(232, 160, 69, 0.08) !important; }
+                                .ce-type-btn.active { border-color: var(--accent) !important; background: rgba(232, 160, 69, 0.15) !important; color: var(--accent) !important; font-weight: 600; }
+                                #ce-toggle-key-visibility:hover { color: var(--accent); }
                                 #ce-btn-save:hover { background: var(--accent) !important; color: #ffffff !important; }
                                 .ce-input { width: 100%; padding: 8px 12px; font-size: 11px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); outline: none; transition: all 0.2s; box-sizing: border-box; }
                                 input.ce-input { text-overflow: ellipsis; }
                                 .ce-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(232, 160, 69, 0.2); text-overflow: clip; }
                                 input[type="password"]::-ms-reveal, input[type="password"]::-ms-clear { display: none !important; }
                             </style>
-                            <div class="ce-type-btn active" data-type="fpt" style="border-color: var(--accent); background: rgba(232, 160, 69, 0.1); color: var(--accent);">FPT.AI TTS</div>
+                            <div class="ce-type-btn active" data-type="fpt">FPT.AI TTS</div>
                             <div class="ce-type-btn" data-type="azure">Microsoft Azure</div>
                             <div class="ce-type-btn" data-type="gcp">Google Cloud</div>
                             <div class="ce-type-btn" data-type="custom">Khác</div>
@@ -695,11 +697,11 @@ export const giao_dien_cai_dat = {
                 loai_an.value = type;
                 
                 cac_nut_loai.forEach(btn => {
+                    btn.style.borderColor = '';
+                    btn.style.background = '';
+                    btn.style.color = '';
                     if (btn.dataset.type === type) {
                         btn.classList.add('active');
-                        btn.style.borderColor = 'var(--accent)';
-                        btn.style.background = 'rgba(232, 160, 69, 0.1)';
-                        btn.style.color = 'var(--accent)';
                         try {
                             const container = document.getElementById('ce-type-container');
                             const vi_tri_trai_tuong_doi = btn.getBoundingClientRect().left - container.getBoundingClientRect().left + container.scrollLeft;
@@ -720,9 +722,6 @@ export const giao_dien_cai_dat = {
                         } catch(e) {}
                     } else {
                         btn.classList.remove('active');
-                        btn.style.borderColor = 'var(--border)';
-                        btn.style.background = 'var(--surface2)';
-                        btn.style.color = 'var(--text)';
                     }
                 });
 
