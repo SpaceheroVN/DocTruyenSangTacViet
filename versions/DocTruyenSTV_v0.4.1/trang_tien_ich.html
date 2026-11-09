@@ -66,12 +66,12 @@
     html:not([data-theme="light"]) #theme-icon-sun { display: none !important; }
     html:not([data-theme="light"]) #theme-icon-moon { display: block !important; }
 
-    /* Huy hiệu chữ R xanh lục khuyên dùng (Recommended) riêng cho theme Tối */
+    /* Huy hiệu khuyên dùng (R) */
     .theme-recommend-badge {
       position: absolute;
-      bottom: 2px;
-      right: 3.5px;
-      font-size: 8.5px;
+      bottom: 4px;
+      right: 5px;
+      font-size: 8px;
       font-weight: 500;
       line-height: 1;
       color: #22c55e;
@@ -83,7 +83,7 @@
     html[data-theme="light"] .theme-recommend-badge { display: none !important; }
     html:not([data-theme="light"]) .theme-recommend-badge { display: block !important; }
 
-    /* Tinh chỉnh phân tầng chiều sâu và độ tương phản theme Sáng */
+    /* Giao diện sáng */
     html[data-theme="light"] .sidebar {
       background-color: #ffffff;
       border-right: 1px solid var(--border);
@@ -395,12 +395,10 @@
     @keyframes fadeIn {
       from {
         opacity: 0;
-        transform: translateY(10px);
       }
 
       to {
         opacity: 1;
-        transform: translateY(0);
       }
     }
 
@@ -650,7 +648,7 @@
       line-height: 1.5;
     }
 
-    /* Tông màu biểu tượng & liên kết theme Tối */
+    /* Biểu tượng và liên kết hỗ trợ */
     .sp-rate-item .sp-icon-box {
       background: rgba(245, 158, 11, 0.12);
       color: #fbbf24;
@@ -714,7 +712,7 @@
       border: 1px solid rgba(56, 189, 248, 0.3);
     }
 
-    /* ==================== ĐỊNH DẠNG TAB CÀI ĐẶT (v0.5.0 PREVIEW) ==================== */
+    /* ==================== CÀI ĐẶT TIỆN ÍCH ==================== */
     .setting-row-box {
       display: flex;
       flex-direction: column;
@@ -734,7 +732,7 @@
       line-height: 1.5;
     }
 
-    /* Combobox / Searchable Dropdown cho Tên miền */
+    /* Ô chọn tên miền */
     .domain-combo-wrap {
       position: relative;
       width: 100%;
@@ -876,6 +874,8 @@
       flex-shrink: 0;
       font-family: system-ui, -apple-system, sans-serif;
       line-height: 1;
+      padding-bottom: 1.5px;
+      box-sizing: border-box;
     }
 
     .domain-badge-u {
@@ -893,9 +893,11 @@
       flex-shrink: 0;
       font-family: system-ui, -apple-system, sans-serif;
       line-height: 1;
+      padding-bottom: 1px;
+      box-sizing: border-box;
     }
 
-    /* Toggle switches */
+    /* Công tắc gạt */
     .setting-list {
       display: flex;
       flex-direction: column;
@@ -978,7 +980,7 @@
       transform: translateX(16px);
     }
 
-    /* Grid cài đặt màu sắc */
+    /* Bảng chọn màu sắc */
     .color-setting-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -1092,7 +1094,7 @@
       box-shadow: 0 0 0 2px var(--accent);
     }
 
-    /* Preview box */
+    /* Khung xem trước */
     .preview-box-wrap {
       background: var(--surface2);
       border: 1px solid var(--border);
@@ -1152,7 +1154,7 @@
       background: rgba(232, 160, 69, 0.15);
     }
 
-    /* Nhập & Xuất cài đặt */
+    /* Nhập và xuất dữ liệu */
     .backup-actions-row {
       display: flex;
       gap: 12px;
@@ -1218,7 +1220,7 @@
       color: var(--danger);
     }
 
-    /* Light Theme Overrides cho Tab Cài đặt */
+    /* Giao diện sáng cho cài đặt */
     html[data-theme="light"] .setting-item {
       background: #ffffff;
       border-color: var(--border);
@@ -1274,27 +1276,25 @@
       color: #ffffff;
     }
 
-    /* ==================== BẢN XEM TRƯỚC V0.5.0 (LÀM MỜ & KHÓA) ==================== */
+    /* ==================== BẢN XEM TRƯỚC V0.4.2 ==================== */
     #tab-cai_dat {
       position: relative;
-      min-height: 620px;
+      min-height: calc(100vh - 120px);
     }
 
     .cai_dat-preview-overlay {
-      position: absolute;
-      top: 65px;
-      left: -15px;
-      right: -15px;
-      bottom: -15px;
-      z-index: 50;
+      position: fixed;
+      top: 0;
+      left: 260px;
+      right: 0;
+      bottom: 0;
+      z-index: 999;
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: center;
-      padding-top: 60px;
-      background: rgba(15, 14, 23, 0.72);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border-radius: 14px;
+      background: rgba(15, 14, 23, 0.65);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
@@ -1305,114 +1305,63 @@
     }
 
     html[data-theme="light"] .cai_dat-preview-overlay {
-      background: rgba(255, 255, 255, 0.75);
+      background: rgba(245, 243, 250, 0.7);
     }
 
-    .cai_dat-preview-box {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 38px 32px 32px;
-      text-align: center;
-      max-width: 480px;
-      width: 90%;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(242, 114, 18, 0.2);
-      animation: floatUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    html[data-theme="light"] .cai_dat-preview-box {
-      background: #ffffff;
-      border-color: rgba(242, 114, 18, 0.25);
-      box-shadow: 0 20px 45px -10px rgba(24, 21, 40, 0.15), 0 0 0 1px rgba(242, 114, 18, 0.2);
-    }
-
-    .cai_dat-preview-icon-wrap {
-      width: 60px;
-      height: 60px;
-      border-radius: 16px;
-      background: linear-gradient(135deg, rgba(242, 114, 18, 0.15), rgba(219, 39, 119, 0.15));
-      border: 1px solid rgba(242, 114, 18, 0.3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--accent);
-      margin-bottom: 16px;
-    }
-
-    .cai_dat-preview-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      font-weight: 700;
-      color: #f59e0b;
-      background: rgba(245, 158, 11, 0.12);
-      border: 1px solid rgba(245, 158, 11, 0.3);
-      padding: 4px 10px;
-      border-radius: 20px;
-      margin-bottom: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .cai_dat-preview-title {
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 8px;
-      letter-spacing: -0.2px;
-    }
-
-    .cai_dat-preview-desc {
-      font-size: 13px;
-      color: var(--text-muted);
-      line-height: 1.55;
-      margin-bottom: 22px;
-    }
-
-    /* NÚT TO ĐÙNG Ở GIỮA */
+    /* Nút xem trước v0.4.2 */
     .btn-unlock-preview {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
-      padding: 16px 38px;
-      font-size: 16.5px;
-      font-weight: 700;
-      color: #ffffff;
-      background: linear-gradient(135deg, #f27212 0%, #db2777 100%);
-      border: none;
-      border-radius: 50px;
+      gap: 10px;
+      padding: 14px 34px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
       cursor: pointer;
-      box-shadow: 0 10px 24px -4px rgba(242, 114, 18, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
-      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       letter-spacing: 0.2px;
-      width: 100%;
-      max-width: 330px;
     }
 
     .btn-unlock-preview:hover {
-      transform: translateY(-2px) scale(1.02);
-      box-shadow: 0 14px 28px -4px rgba(242, 114, 18, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.3) inset;
-      background: linear-gradient(135deg, #ff8226 0%, #eb3b88 100%);
+      background: rgba(232, 160, 69, 0.14);
+      border-color: var(--accent);
+      color: #fbbf24;
+      box-shadow: 0 6px 20px rgba(232, 160, 69, 0.28);
+      transform: translateY(-2px);
     }
 
     .btn-unlock-preview:active {
-      transform: translateY(1px) scale(0.98);
-      box-shadow: 0 6px 14px -2px rgba(242, 114, 18, 0.4);
+      transform: scale(0.98);
+      background: rgba(232, 160, 69, 0.22);
+      box-shadow: 0 2px 8px rgba(232, 160, 69, 0.2);
     }
 
-    .cai_dat-preview-subtext {
-      margin-top: 14px;
-      font-size: 11.5px;
-      color: var(--text-muted);
-      opacity: 0.8;
+    html[data-theme="light"] .btn-unlock-preview {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      color: #ea580c;
+      box-shadow: 0 4px 16px rgba(24, 21, 40, 0.08);
     }
 
-    /* Vùng nội dung cài đặt có hiệu ứng làm mờ */
+    html[data-theme="light"] .btn-unlock-preview:hover {
+      background: #fff7ed;
+      border-color: #ea580c;
+      color: #c2410c;
+      box-shadow: 0 6px 18px rgba(234, 88, 12, 0.2);
+      transform: translateY(-2px);
+    }
+
+    html[data-theme="light"] .btn-unlock-preview:active {
+      transform: scale(0.98);
+      background: #ffedd5;
+    }
+
+    /* Vùng nội dung làm mờ */
     .cai_dat-content-wrap {
       transition: filter 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     }
@@ -1424,7 +1373,7 @@
       user-select: none;
     }
 
-    /* Banner thông báo màu đỏ to đùng, nổi bật */
+    /* Bảng cảnh báo bản mẫu */
     .disclaimer-red-banner {
       background: rgba(239, 68, 68, 0.12);
       border: 1.5px solid rgba(239, 68, 68, 0.5);
@@ -1502,7 +1451,7 @@
       border-color: rgba(239, 68, 68, 0.4);
     }
 
-    /* Styling các phần tử khi bị khóa (Lock) */
+    /* Trạng thái khóa */
     .cai_dat-content-wrap input:disabled,
     .cai_dat-content-wrap button:disabled,
     .cai_dat-content-wrap .preset-dot:disabled {
@@ -1585,47 +1534,19 @@
   <main class="main-content">
     <div class="content-container">
 
-      <!-- ==================== TAB CÀI ĐẶT (MỤC MỚI) ==================== -->
+      <!-- Tab cài đặt -->
       <section id="tab-cai_dat" class="content-section active">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
-          <div>
-            <h2 class="page-title" style="margin-bottom: 6px;">Cài đặt Tiện ích</h2>
-            <div class="page-desc" style="margin-bottom: 0; padding-bottom: 0; border-bottom: none;">Tùy biến các tham số hoạt động, giao diện đọc truyện và tính năng tự động hóa.</div>
-          </div>
-          <span class="badge recommend" style="white-space: nowrap; font-size: 11px;">Bản xem trước v0.5.0</span>
-        </div>
-
-        <!-- Lớp phủ làm mờ với nút to đùng ở giữa (Bản xem trước v0.5.0) -->
-        <div id="cai_dat-preview-overlay" class="cai_dat-preview-overlay">
-          <div class="cai_dat-preview-box">
-            <div class="cai_dat-preview-icon-wrap">
-              <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-              </svg>
-            </div>
-            <div class="cai_dat-preview-badge">Tính năng đang phát triển</div>
-            <h3 class="cai_dat-preview-title">Cài Đặt Mở Rộng v0.5.0</h3>
-            <p class="cai_dat-preview-desc">
-              Khu vực cài đặt bao gồm chọn tên miền, tự động cuộn trang, vượt captcha và tùy biến màu sắc highlight đang trong giai đoạn hoàn thiện giao diện.
-            </p>
-            <div style="color: #ef4444; font-size: 13.5px; font-weight: 700; margin-bottom: 18px; background: rgba(239, 68, 68, 0.1); border: 1.5px solid rgba(239, 68, 68, 0.35); border-radius: 10px; padding: 10px 16px; line-height: 1.45;">
-              ⚠️ Các tính năng bên dưới có thể sẽ bị xóa hoặc thêm. Đây chỉ là bản mẫu.
-            </div>
-            <button type="button" id="btn-unlock-preview" class="btn-unlock-preview" title="Bấm để mở giao diện xem trước">
-              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-                <circle cx="12" cy="12" r="3"></circle>
-              </svg>
-              <span>Xem trước v0.5.0</span>
-            </button>
-            <div class="cai_dat-preview-subtext">Bấm nút để gỡ lớp mờ và xem trước toàn bộ bố cục cài đặt</div>
-          </div>
-        </div>
-
-        <!-- Khung nội dung cài đặt (Mặc định bị làm mờ & các tính năng bị khóa) -->
+        <!-- Nội dung cài đặt -->
         <div id="cai_dat-content-wrap" class="cai_dat-content-wrap is-blurred">
-          <!-- Dòng thông báo màu đỏ to đùng, nổi bật -->
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+            <div>
+              <h2 class="page-title" style="margin-bottom: 6px;">Cài đặt tiện ích</h2>
+              <div class="page-desc" style="margin-bottom: 0; padding-bottom: 0; border-bottom: none;">Tùy biến các tham số hoạt động, giao diện đọc truyện và tính năng tự động hóa.</div>
+            </div>
+            <span class="badge recommend" style="white-space: nowrap; font-size: 11px;">Bản xem trước v0.4.2</span>
+          </div>
+
+          <!-- Cảnh báo bản mẫu -->
           <div class="disclaimer-red-banner">
             <div class="disclaimer-red-left">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" class="disclaimer-red-icon">
@@ -1635,13 +1556,13 @@
               </svg>
               <div>
                 <div class="disclaimer-red-title">Các tính năng bên dưới có thể sẽ bị xóa hoặc thêm. Đây chỉ là bản mẫu.</div>
-                <div class="disclaimer-red-subtitle">Toàn bộ cài đặt bên dưới tạm thời bị khóa (chỉ đọc) để chuẩn bị cho bản phát hành chính thức <strong>v0.5.0</strong>.</div>
+                <div class="disclaimer-red-subtitle">Toàn bộ cài đặt bên dưới tạm thời bị khóa để chuẩn bị cho bản phát hành chính thức <strong>v0.4.2</strong>.</div>
               </div>
             </div>
             <button type="button" id="btn-relock-preview" class="btn-relock-preview" title="Khóa mờ lại trang">Khóa lại</button>
           </div>
 
-          <!-- 1. Cài đặt tên miền truy cập -->
+          <!-- 1. Tên miền truy cập -->
           <div class="card">
             <div class="card-header">
               <div class="card-title">1. Tên miền truy cập mặc định</div>
@@ -1652,7 +1573,7 @@
             </div>
             
             <div class="setting-row-box">
-              <label class="setting-field-label">Tên miền đích (Domain):</label>
+              <label class="setting-field-label">Tên miền đích:</label>
               <div class="domain-combo-wrap" id="domain-combo-wrap">
                 <div class="domain-input-box">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="domain-input-icon">
@@ -1712,18 +1633,18 @@
             </div>
           </div>
 
-          <!-- 2. Tự động hóa & Trải nghiệm đọc -->
+          <!-- 2. Tự động hóa -->
           <div class="card">
             <div class="card-header">
-              <div class="card-title">2. Tự động hóa & Trải nghiệm đọc</div>
+              <div class="card-title">2. Tự động hóa & trải nghiệm đọc</div>
             </div>
             <div class="card-desc">Thiết lập các hành vi tự động khi đọc truyện dài chương để thao tác tiện lợi hơn.</div>
 
             <div class="setting-list">
-              <!-- Tự động cuộn trang khi đọc hết -->
+              <!-- Cuộn trang -->
               <div class="setting-item">
                 <div class="setting-info">
-                  <div class="setting-name">Tự động cuộn trang khi đọc hết</div>
+                  <div class="setting-name">Tự động cuộn trang</div>
                   <div class="setting-subtext">Tự động cuộn mượt xuống phía dưới trang theo tiến độ từng đoạn đọc hoặc khi đọc hết nội dung hiển thị.</div>
                 </div>
                 <label class="toggle">
@@ -1732,10 +1653,10 @@
                 </label>
               </div>
 
-              <!-- Tự động vượt Captcha -->
+              <!-- Vượt captcha -->
               <div class="setting-item">
                 <div class="setting-info">
-                  <div class="setting-name">Tự động vượt Captcha</div>
+                  <div class="setting-name">Tự động vượt captcha</div>
                   <div class="setting-subtext">Tự động giải hoặc nhắc nhở mã xác thực trên SangTacViet để tránh bị ngắt quãng luồng đọc audio.</div>
                 </div>
                 <label class="toggle">
@@ -1746,10 +1667,10 @@
             </div>
           </div>
 
-          <!-- 3. Tùy biến màu sắc khi đang đọc -->
+          <!-- 3. Tùy biến màu sắc -->
           <div class="card">
             <div class="card-header">
-              <div class="card-title">3. Tùy biến Màu sắc Đọc truyện</div>
+              <div class="card-title">3. Tùy biến màu sắc đọc truyện</div>
             </div>
             <div class="card-desc">Cá nhân hóa màu chữ và nền tô sáng của câu văn hoặc đoạn văn hiện tại đang được phát âm thanh.</div>
 
@@ -1764,10 +1685,10 @@
                   <input type="text" id="setting-text-color-hex" value="#e8a045" class="color-hex-input" maxlength="7" disabled readonly>
                 </div>
                 <div class="color-presets" id="text-color-presets">
-                  <button type="button" class="preset-dot active" style="background: #e8a045;" data-color="#e8a045" title="Cam Vàng STV" disabled></button>
-                  <button type="button" class="preset-dot" style="background: #4caf86;" data-color="#4caf86" title="Xanh Lục" disabled></button>
-                  <button type="button" class="preset-dot" style="background: #38bdf8;" data-color="#38bdf8" title="Xanh Biển" disabled></button>
-                  <button type="button" class="preset-dot" style="background: #c45c8a;" data-color="#c45c8a" title="Hồng Tím" disabled></button>
+                  <button type="button" class="preset-dot active" style="background: #e8a045;" data-color="#e8a045" title="Cam vàng STV" disabled></button>
+                  <button type="button" class="preset-dot" style="background: #4caf86;" data-color="#4caf86" title="Xanh lục" disabled></button>
+                  <button type="button" class="preset-dot" style="background: #38bdf8;" data-color="#38bdf8" title="Xanh biển" disabled></button>
+                  <button type="button" class="preset-dot" style="background: #c45c8a;" data-color="#c45c8a" title="Hồng tím" disabled></button>
                   <button type="button" class="preset-dot" style="background: #ffffff;" data-color="#ffffff" title="Trắng" disabled></button>
                 </div>
               </div>
@@ -1780,22 +1701,22 @@
                     <input type="color" id="setting-bg-color" value="#e8a045" class="native-color-picker" disabled>
                   </div>
                   <input type="text" id="setting-bg-color-hex" value="#e8a045" class="color-hex-input" maxlength="7" disabled readonly>
-                  <div class="opacity-control" title="Độ mờ nền (Opacity)">
+                  <div class="opacity-control" title="Độ mờ nền">
                     <span id="bg-opacity-label">15%</span>
                     <input type="range" id="setting-bg-opacity" min="5" max="100" value="15" step="5" class="opacity-slider" disabled>
                   </div>
                 </div>
                 <div class="color-presets" id="bg-color-presets">
-                  <button type="button" class="preset-dot active" style="background: rgba(232, 160, 69, 0.6);" data-color="#e8a045" title="Cam Vàng" disabled></button>
-                  <button type="button" class="preset-dot" style="background: rgba(76, 175, 134, 0.6);" data-color="#4caf86" title="Xanh Lục" disabled></button>
-                  <button type="button" class="preset-dot" style="background: rgba(56, 189, 248, 0.6);" data-color="#38bdf8" title="Xanh Biển" disabled></button>
-                  <button type="button" class="preset-dot" style="background: rgba(196, 92, 138, 0.6);" data-color="#c45c8a" title="Hồng Tím" disabled></button>
+                  <button type="button" class="preset-dot active" style="background: rgba(232, 160, 69, 0.6);" data-color="#e8a045" title="Cam vàng" disabled></button>
+                  <button type="button" class="preset-dot" style="background: rgba(76, 175, 134, 0.6);" data-color="#4caf86" title="Xanh lục" disabled></button>
+                  <button type="button" class="preset-dot" style="background: rgba(56, 189, 248, 0.6);" data-color="#38bdf8" title="Xanh biển" disabled></button>
+                  <button type="button" class="preset-dot" style="background: rgba(196, 92, 138, 0.6);" data-color="#c45c8a" title="Hồng tím" disabled></button>
                   <button type="button" class="preset-dot" style="background: rgba(120, 120, 120, 0.6);" data-color="#787878" title="Xám" disabled></button>
                 </div>
               </div>
             </div>
 
-            <!-- Khung xem trước trực tiếp -->
+            <!-- Khung xem trước -->
             <div class="preview-box-wrap">
               <div class="preview-header">
                 <span class="preview-title">Xem trước văn bản trên trang truyện</span>
@@ -1809,13 +1730,22 @@
             </div>
           </div>
 
-          <!-- 4. Sao lưu & Đồng bộ Dữ liệu (Dùng chung với popup) -->
+          <!-- 4. Sao lưu và đồng bộ -->
           <div class="card">
             <div class="card-header">
-              <div class="card-title">4. Sao lưu & Đồng bộ Dữ liệu</div>
+              <div class="card-title">4. Sao lưu & đồng bộ dữ liệu</div>
               <span class="badge info">Đồng bộ toàn bộ tiện ích</span>
             </div>
-            <div class="card-desc">Sao lưu toàn bộ dữ liệu của tiện ích (danh sách truyện đã lưu, từ điển phát âm tùy chỉnh, cài đặt tiện ích, màu sắc đọc truyện). File sao lưu dùng chung và đồng bộ hoàn toàn với mục Sao lưu trên cửa sổ điều khiển popup.</div>
+            <div class="card-desc">
+              <div style="margin-bottom: 8px;">Sao lưu toàn bộ dữ liệu của tiện ích, bao gồm:</div>
+              <ul style="margin: 0 0 12px 20px; padding: 0; line-height: 1.8; color: var(--text);">
+                <li>Danh sách truyện đã lưu</li>
+                <li>Từ điển phát âm tùy chỉnh</li>
+                <li>Cài đặt tiện ích</li>
+                <li>Màu sắc đọc truyện</li>
+              </ul>
+              <div style="font-size: 13.5px; color: var(--text-muted);">Tệp sao lưu dùng chung và đồng bộ hoàn toàn với mục sao lưu trên cửa sổ điều khiển popup.</div>
+            </div>
 
             <div class="backup-actions-row">
               <button type="button" id="btn-export-settings" class="btn-setting-action btn-export" title="Xuất toàn bộ dữ liệu dự phòng dạng JSON" disabled>
@@ -1824,7 +1754,7 @@
                   <polyline points="7 10 12 15 17 10"></polyline>
                   <line x1="12" y1="15" x2="12" y2="3"></line>
                 </svg>
-                Xuất Dữ Liệu (.json)
+                Xuất dữ liệu (.json)
               </button>
 
               <button type="button" id="btn-import-settings" class="btn-setting-action btn-import" title="Nhập và phục hồi dữ liệu từ file sao lưu" disabled>
@@ -1833,7 +1763,7 @@
                   <polyline points="17 8 12 3 7 8"></polyline>
                   <line x1="12" y1="3" x2="12" y2="15"></line>
                 </svg>
-                Nhập Dữ Liệu
+                Nhập dữ liệu
               </button>
               <input type="file" id="input-import-settings-file" accept=".json" disabled style="display: none;">
             </div>
@@ -1843,7 +1773,7 @@
       </section>
 
       <section id="tab-huong_dan" class="content-section">
-        <h2 class="page-title">Cấu hình API Giọng đọc Cao cấp</h2>
+        <h2 class="page-title">Cấu hình API giọng đọc cao cấp</h2>
         <div class="page-desc">Việc sử dụng API Key giúp tiện ích truy cập trực tiếp vào máy chủ của các hãng công nghệ
           lớn, mang lại giọng đọc tự nhiên, ngắt nghỉ như người thật và tốc độ tải cực nhanh.</div>
 
@@ -1875,15 +1805,15 @@
           <ol class="steps-list">
             <li>Truy cập <a href="https://console.fpt.ai" target="_blank" class="link-text">Console FPT.AI</a> và tiến
               hành đăng ký tài khoản (hoặc đăng nhập bằng Google).</li>
-            <li>Hệ thống sẽ yêu cầu bạn <strong>Tạo một Dự án (Project)</strong> mới. Điền tên bất kỳ (Ví dụ:
+            <li>Hệ thống sẽ yêu cầu bạn <strong>tạo một dự án (Project)</strong> mới. Điền tên bất kỳ (Ví dụ:
               <code>Đọc Truyện</code>) rồi ấn tạo.
             </li>
             <li>Tại màn hình chính của dự án, cuộn xuống tìm thẻ <strong>Text to Speech</strong> và <strong>Bấm gạt công
                 tắc</strong> ở góc phải cho thẻ sáng màu xanh lên.</li>
-            <li>Một bảng xác nhận hiện ra yêu cầu bạn điền <strong>Tên Khóa (Key name)</strong>. Nhập <code>STV</code>
+            <li>Một bảng xác nhận hiện ra yêu cầu bạn điền <strong>tên khóa (Key name)</strong>. Nhập <code>STV</code>
               hoặc tên bất kỳ rồi bấm <strong>Tạo</strong>.</li>
             <li>Nhìn sang cột menu bên trái màn hình, nhấp vào mục <strong>API Keys</strong>.</li>
-            <li>Tìm dãy mã vừa được tạo, bấm vào <strong>Biểu tượng Copy</strong> (Hình 2 tờ giấy) ngay bên cạnh.</li>
+            <li>Tìm dãy mã vừa được tạo, bấm vào <strong>biểu tượng sao chép</strong> (Hình 2 tờ giấy) ngay bên cạnh.</li>
             <li>Mở lại bảng <strong>Đọc Truyện Cho Sáng Tác Việt</strong> > Chuyển sang Tab <strong>Cài đặt</strong> >
               Chọn Nguồn giọng
               đọc là <strong>FPT.AI</strong> > Dán dãy mã vào ô trống và bấm <strong>Lưu API Key</strong>.</li>
@@ -1947,7 +1877,7 @@
 
         <div class="card">
           <div class="card-header">
-            <div class="card-title">4. Dành cho Nguồn Khác (Tùy chỉnh API)</div>
+            <div class="card-title">4. Dành cho nguồn khác (Tùy chỉnh API)</div>
             <span class="badge recommend"
               style="background: rgba(196, 92, 138, 0.15); color: var(--accent2); border-color: rgba(196, 92, 138, 0.3);">Nâng
               cao</span>
@@ -2037,7 +1967,7 @@
                 </svg>
               </div>
               <div class="sp-text-group">
-                <div class="sp-title">Báo lỗi / Góp ý</div>
+                <div class="sp-title">Báo lỗi / góp ý</div>
                 <div class="sp-desc">
                   Gặp lỗi phát sinh hay có tính năng mới muốn thêm? Đừng ngại <a href="https://forms.gle/rcrew33xXDU144j79" target="_blank" class="link-mail">gửi phản hồi cho mình</a>.
                 </div>
@@ -2067,6 +1997,17 @@
 
     </div>
   </main>
+
+  <!-- Lớp phủ xem trước v0.4.2 -->
+  <div id="cai_dat-preview-overlay" class="cai_dat-preview-overlay">
+    <button type="button" id="btn-unlock-preview" class="btn-unlock-preview" title="Bấm để xem trước giao diện v0.4.2">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+      </svg>
+      <span>Xem trước v0.4.2</span>
+    </button>
+  </div>
 </body>
 
 </html>

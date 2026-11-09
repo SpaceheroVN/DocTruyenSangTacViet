@@ -1,4 +1,4 @@
-// Tự động chuyển đổi chủ đề sáng tối theo thiết lập đã lưu hoặc hệ thống
+// Chuyển đổi giao diện sáng tối
 function ap_dung_chu_de(chu_de) {
     document.documentElement.setAttribute('data-theme', chu_de);
     const nut_doi_chu_de = document.getElementById('btn-toggle-theme');
@@ -37,7 +37,10 @@ function khoi_tao_chu_de_ngay() {
 
 khoi_tao_chu_de_ngay();
 
-// Chuyển đổi tab hiển thị
+// Trạng thái xem trước v0.4.2
+let da_mo_khoa_xem_truoc = false;
+
+// Chuyển tab hiển thị
 function chuyen_tab(ma_tab) {
     const danh_sach_nut_tab = document.querySelectorAll('.nav-item');
     const danh_sach_khung_noi_dung = document.querySelectorAll('.content-section');
@@ -58,6 +61,17 @@ function chuyen_tab(ma_tab) {
         }
     });
 
+    // Đồng bộ lớp phủ xem trước
+    const lop_phu = document.getElementById('cai_dat-preview-overlay');
+    if (lop_phu) {
+        if (ma_tab === 'cai_dat' && !da_mo_khoa_xem_truoc) {
+            lop_phu.style.display = 'flex';
+            lop_phu.classList.remove('fade-out');
+        } else {
+            lop_phu.style.display = 'none';
+        }
+    }
+
     try {
         const hash_moi = '#' + ma_tab.replace('_', '-');
         if (window.location.hash !== hash_moi) {
@@ -66,7 +80,7 @@ function chuyen_tab(ma_tab) {
     } catch (e) {}
 }
 
-// Kiểm tra hash trên URL khi mở trang
+// Điều hướng theo liên kết (hash)
 function kiem_tra_hash_dieu_huong() {
     const hash = window.location.hash.toLowerCase();
     if (hash === '#huong-dan' || hash === '#huong_dan') {
@@ -76,12 +90,12 @@ function kiem_tra_hash_dieu_huong() {
     } else if (hash === '#cai-dat' || hash === '#cai_dat') {
         chuyen_tab('cai_dat');
     } else {
-        // Mặc định tab Cài đặt
+        // Mặc định tab cài đặt
         chuyen_tab('cai_dat');
     }
 }
 
-// Chuyển mã màu hex sang rgba
+// Chuyển mã hex sang rgba
 function hex_sang_rgba(hex, do_mo) {
     let clean = hex.replace('#', '');
     if (clean.length === 3) {
@@ -93,7 +107,7 @@ function hex_sang_rgba(hex, do_mo) {
     return `rgba(${r}, ${g}, ${b}, ${do_mo})`;
 }
 
-// 1. Khởi tạo combobox chọn hoặc tìm kiếm tên miền
+// 1. Ô chọn tên miền
 function khoi_tao_cai_dat_ten_mien() {
     const o_nhap_ten_mien = document.getElementById('domain-input');
     const nut_mo_danh_sach = document.getElementById('domain-dropdown-trigger');
@@ -109,7 +123,7 @@ function khoi_tao_cai_dat_ten_mien() {
         menu_tuy_chon.classList.add('show');
     };
 
-    // Tải cấu hình đã lưu
+    // Tải dữ liệu đã lưu
     if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
         chrome.storage.local.get('cai_dat_ten_mien', (du_lieu) => {
             if (du_lieu && du_lieu.cai_dat_ten_mien) {
@@ -147,7 +161,7 @@ function khoi_tao_cai_dat_ten_mien() {
 
     o_nhap_ten_mien.addEventListener('focus', () => mo_menu());
 
-    // Gõ để tìm kiếm / lọc danh sách tên miền
+    // Lọc danh sách khi gõ
     o_nhap_ten_mien.addEventListener('input', () => {
         if (o_nhap_ten_mien.disabled) return;
         const tu_khoa = o_nhap_ten_mien.value.trim().toLowerCase();
@@ -179,7 +193,7 @@ function khoi_tao_cai_dat_ten_mien() {
         luu_ten_mien(o_nhap_ten_mien.value);
     });
 
-    // Chọn từ danh sách
+    // Chọn tên miền
     cac_muc_chon.forEach(item => {
         item.addEventListener('click', () => {
             if (o_nhap_ten_mien.disabled) return;
@@ -191,7 +205,7 @@ function khoi_tao_cai_dat_ten_mien() {
         });
     });
 
-    // Đóng khi click ra ngoài
+    // Đóng danh sách khi bấm ra ngoài
     document.addEventListener('click', (e) => {
         if (wrap_combo && !wrap_combo.contains(e.target)) {
             dong_menu();
@@ -199,7 +213,7 @@ function khoi_tao_cai_dat_ten_mien() {
     });
 }
 
-// 2. Khởi tạo tùy biến màu sắc và khung xem trước
+// 2. Tùy biến màu sắc đọc truyện
 function khoi_tao_tuy_bien_mau_sac() {
     const picker_mau_chu = document.getElementById('setting-text-color');
     const input_hex_chu = document.getElementById('setting-text-color-hex');
@@ -241,7 +255,7 @@ function khoi_tao_tuy_bien_mau_sac() {
         }
     }
 
-    // Đọc cài đặt màu đã lưu
+    // Tải màu đã lưu
     if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
         chrome.storage.local.get(['mau_chu_doc', 'mau_nen_doc', 'do_mo_nen_doc'], (du_lieu) => {
             if (du_lieu) {
@@ -253,7 +267,7 @@ function khoi_tao_tuy_bien_mau_sac() {
         });
     }
 
-    // Sự kiện màu chữ
+    // Đổi màu chữ
     picker_mau_chu.addEventListener('input', () => cap_nhat_xem_truoc(true));
     if (input_hex_chu) {
         input_hex_chu.addEventListener('change', () => {
@@ -267,7 +281,7 @@ function khoi_tao_tuy_bien_mau_sac() {
         });
     }
 
-    // Sự kiện màu nền
+    // Đổi màu nền
     picker_mau_nen.addEventListener('input', () => cap_nhat_xem_truoc(true));
     if (input_hex_nen) {
         input_hex_nen.addEventListener('change', () => {
@@ -284,7 +298,7 @@ function khoi_tao_tuy_bien_mau_sac() {
         slider_do_mo.addEventListener('input', () => cap_nhat_xem_truoc(true));
     }
 
-    // Preset màu chữ
+    // Bảng màu chữ có sẵn
     document.querySelectorAll('#text-color-presets .preset-dot').forEach(dot => {
         dot.addEventListener('click', () => {
             if (dot.disabled || picker_mau_chu.disabled) return;
@@ -295,7 +309,7 @@ function khoi_tao_tuy_bien_mau_sac() {
         });
     });
 
-    // Preset màu nền
+    // Bảng màu nền có sẵn
     document.querySelectorAll('#bg-color-presets .preset-dot').forEach(dot => {
         dot.addEventListener('click', () => {
             if (dot.disabled || picker_mau_nen.disabled) return;
@@ -306,7 +320,7 @@ function khoi_tao_tuy_bien_mau_sac() {
         });
     });
 
-    // Nút đặt lại màu mặc định
+    // Đặt lại màu chuẩn
     if (nut_dat_lai) {
         nut_dat_lai.addEventListener('click', () => {
             if (nut_dat_lai.disabled) return;
@@ -320,7 +334,7 @@ function khoi_tao_tuy_bien_mau_sac() {
     cap_nhat_xem_truoc(false);
 }
 
-// 3. Khởi tạo các công tắc tự động hóa
+// 3. Tự động hóa
 function khoi_tao_chuyen_doi_tu_dong() {
     const nut_cuon_trang = document.getElementById('setting-auto-scroll');
     const nut_captcha = document.getElementById('setting-auto-captcha');
@@ -357,7 +371,7 @@ function khoi_tao_chuyen_doi_tu_dong() {
     }
 }
 
-// 4. Khởi tạo chức năng Nhập & Xuất cài đặt
+// 4. Sao lưu và phục hồi dữ liệu
 function khoi_tao_nhap_xuat_cai_dat() {
     const nut_xuat = document.getElementById('btn-export-settings');
     const nut_nhap = document.getElementById('btn-import-settings');
@@ -374,7 +388,7 @@ function khoi_tao_nhap_xuat_cai_dat() {
         }, 3500);
     }
 
-    // Xuất dữ liệu sao lưu toàn bộ (chuẩn định dạng chung với popup)
+    // Xuất dữ liệu sao lưu
     if (nut_xuat) {
         nut_xuat.addEventListener('click', () => {
             if (nut_xuat.disabled) return;
@@ -386,7 +400,7 @@ function khoi_tao_nhap_xuat_cai_dat() {
             chrome.storage.local.get(null, dl_cuc_bo => {
                 chrome.storage.sync.get(null, dl_dong_bo => {
                     const cuc_bo_copy = { ...(dl_cuc_bo || {}) };
-                    // Lọc API Key an toàn
+                    // Ẩn khóa API
                     delete cuc_bo_copy.fpt_key;
                     delete cuc_bo_copy.azure_key;
                     delete cuc_bo_copy.gcp_key;
@@ -424,7 +438,7 @@ function khoi_tao_nhap_xuat_cai_dat() {
         });
     }
 
-    // Nhập dữ liệu sao lưu (nhận file từ cả trang tiện ích và popup)
+    // Nhập dữ liệu sao lưu
     if (nut_nhap && the_chon_tep) {
         nut_nhap.addEventListener('click', () => {
             if (nut_nhap.disabled) return;
@@ -448,7 +462,7 @@ function khoi_tao_nhap_xuat_cai_dat() {
                     let cuc_bo_sach = du_lieu.local || du_lieu.cai_dat || {};
                     let dong_bo_sach = du_lieu.sync || {};
 
-                    // Hỗ trợ file cấu trúc phẳng từ bản cũ
+                    // Hỗ trợ định dạng cũ
                     if (!du_lieu.local && !du_lieu.sync && !du_lieu.cai_dat) {
                         cuc_bo_sach = { ...du_lieu };
                     }
@@ -462,7 +476,7 @@ function khoi_tao_nhap_xuat_cai_dat() {
                     }
 
                     Promise.all(cong_viec).then(() => {
-                        // Cập nhật lại các trường hiển thị trên trang tiện ích nếu có trong file
+                        // Cập nhật giao diện
                         if (cuc_bo_sach.cai_dat_ten_mien) {
                             const o_mien = document.getElementById('domain-input');
                             if (o_mien) o_mien.value = cuc_bo_sach.cai_dat_ten_mien;
@@ -488,7 +502,7 @@ function khoi_tao_nhap_xuat_cai_dat() {
                             if (sl_mo) sl_mo.value = cuc_bo_sach.do_mo_nen_doc;
                         }
 
-                        // Cập nhật khung xem trước
+                        // Cập nhật xem trước
                         const pk_chu = document.getElementById('setting-text-color');
                         if (pk_chu) pk_chu.dispatchEvent(new Event('input'));
 
@@ -505,8 +519,8 @@ function khoi_tao_nhap_xuat_cai_dat() {
     }
 }
 
-// 5. Khởi tạo chế độ xem trước v0.5.0 (Lớp phủ làm mờ và khóa các tính năng)
-function khoi_tao_che_do_xem_truoc_v050() {
+// 5. Chế độ xem trước v0.4.2
+function khoi_tao_che_do_xem_truoc_v042() {
     const nut_mo_khoa = document.getElementById('btn-unlock-preview');
     const nut_khoa_lai = document.getElementById('btn-relock-preview');
     const lop_phu = document.getElementById('cai_dat-preview-overlay');
@@ -514,6 +528,7 @@ function khoi_tao_che_do_xem_truoc_v050() {
 
     if (nut_mo_khoa && lop_phu && khung_noi_dung) {
         nut_mo_khoa.addEventListener('click', () => {
+            da_mo_khoa_xem_truoc = true;
             lop_phu.classList.add('fade-out');
             khung_noi_dung.classList.remove('is-blurred');
             setTimeout(() => {
@@ -524,15 +539,16 @@ function khoi_tao_che_do_xem_truoc_v050() {
 
     if (nut_khoa_lai && lop_phu && khung_noi_dung) {
         nut_khoa_lai.addEventListener('click', () => {
+            da_mo_khoa_xem_truoc = false;
             lop_phu.style.display = 'flex';
-            void lop_phu.offsetWidth; // Force reflow
+            void lop_phu.offsetWidth; // Vẽ lại giao diện
             lop_phu.classList.remove('fade-out');
             khung_noi_dung.classList.add('is-blurred');
         });
     }
 }
 
-// Khởi tạo tương tác nút và điều hướng các tab khi tải trang
+// Khởi tạo trang khi tải xong
 document.addEventListener('DOMContentLoaded', () => {
     const chu_de_hien_tai = document.documentElement.getAttribute('data-theme');
     if (chu_de_hien_tai) ap_dung_chu_de(chu_de_hien_tai);
@@ -559,8 +575,8 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('hashchange', kiem_tra_hash_dieu_huong);
     kiem_tra_hash_dieu_huong();
 
-    // Khởi tạo các thành phần của tab Cài đặt
-    khoi_tao_che_do_xem_truoc_v050();
+    // Khởi tạo các mục cài đặt
+    khoi_tao_che_do_xem_truoc_v042();
     khoi_tao_cai_dat_ten_mien();
     khoi_tao_tuy_bien_mau_sac();
     khoi_tao_chuyen_doi_tu_dong();

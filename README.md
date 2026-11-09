@@ -12,11 +12,11 @@
 ## Tính năng
 
 **Engine giọng đọc**
-- **Web Speech API** — Dùng ngay, không cần cấu hình.
-- **FPT.AI TTS** — Giọng Việt tự nhiên, 100.000 ký tự miễn phí/tháng. *(Khuyên dùng)*
-- **Microsoft Azure TTS** — Giọng chất lượng cao nhất (Hoài My...), 500.000 ký tự miễn phí/tháng (yêu cầu thẻ VISA xác minh).
-- **Google Cloud TTS** — 8 giọng Wavenet/Standard tiếng Việt, 1 triệu ký tự miễn phí/tháng (yêu cầu thẻ VISA xác minh).
-- **Nguồn đọc tự tạo (Custom TTS)** — Tự do kết nối và tích hợp bất kỳ máy chủ giọng đọc API nào (hỗ trợ tùy biến POST/GET, Headers, Body JSON).
+- **Web Speech API** - Dùng ngay, không cần cấu hình.
+- **FPT.AI TTS** - Giọng Việt tự nhiên, 100.000 ký tự miễn phí/tháng. *(Khuyên dùng)*
+- **Microsoft Azure TTS** - Giọng chất lượng cao nhất (Hoài My...), 500.000 ký tự miễn phí/tháng (yêu cầu thẻ VISA xác minh).
+- **Google Cloud TTS** - 8 giọng Wavenet/Standard tiếng Việt, 1 triệu ký tự miễn phí/tháng (yêu cầu thẻ VISA xác minh).
+- **Nguồn đọc tự tạo (Custom TTS)** - Tự do kết nối và tích hợp bất kỳ máy chủ giọng đọc API nào (hỗ trợ tùy biến POST/GET, Headers, Body JSON).
 
 **Điều khiển phát**
 - Phát / Tạm dừng / Chuyển chương tự động
@@ -25,16 +25,16 @@
 - Phím tắt bàn phím: `K` (phát/dừng), `R` (đọc lại), `←` / `→` (chuyển chương), `[` / `]` (tốc độ), `,` / `.` (nhảy đoạn)
 
 **Tính năng nâng cao**
-- **Giao diện hiện đại** — Thiết kế tiện ích đẹp mắt với các hiệu ứng tương tác (glow/hover) mượt mà.
-- **Tối ưu hóa đa tab** — Hoạt động mượt mà không gây giật lag kể cả khi mở hàng chục tab Sáng Tác Việt cùng lúc.
-- **Thay nhanh Web API** — Hỗ trợ 3 mức cấu hình (Tắt / Bật 5s / Cực đoan 1s) tự động chuyển nguồn đọc nếu API lỗi.
-- **Mini Player** — Thanh điều khiển thu gọn nổi trên trang, hỗ trợ chế độ CHƯƠNG / ĐOẠN
-- **Tự động dừng** — Hẹn giờ theo thời lượng, giờ thực, số chương, hoặc kết hợp tùy chỉnh
-- **Từ điển tùy chỉnh** — Thay thế/phát âm lại từ ngữ theo ý muốn, hỗ trợ regex Unicode
-- **Danh sách đọc** — Lưu và quản lý tiến độ nhiều truyện
-- **Cache âm thanh** — Lưu audio vào IndexedDB, tự dọn dẹp sau 12 giờ
-- **Sao lưu & đồng bộ** — Xuất/nhập toàn bộ dữ liệu (API Key, truyện đã lưu, cài đặt) dưới dạng `.json`
-- **Bỏ chặn copy** — Gỡ bỏ bảo vệ sao chép văn bản của trang
+- **Giao diện hiện đại** - Thiết kế tiện ích đẹp mắt với các hiệu ứng tương tác (glow/hover) mượt mà.
+- **Tối ưu hóa đa tab** - Hoạt động mượt mà không gây giật lag kể cả khi mở hàng chục tab Sáng Tác Việt cùng lúc.
+- **Thay nhanh Web API** - Hỗ trợ 3 mức cấu hình (Tắt / Bật 5s / Cực đoan 1s) tự động chuyển nguồn đọc nếu API lỗi.
+- **Mini Player** - Thanh điều khiển thu gọn nổi trên trang, hỗ trợ chế độ CHƯƠNG / ĐOẠN
+- **Tự động dừng** - Hẹn giờ theo thời lượng, giờ thực, số chương, hoặc kết hợp tùy chỉnh
+- **Từ điển tùy chỉnh** - Thay thế/phát âm lại từ ngữ theo ý muốn, hỗ trợ regex Unicode
+- **Danh sách đọc** - Lưu và quản lý tiến độ nhiều truyện
+- **Cache âm thanh** - Lưu audio vào IndexedDB, tự dọn dẹp sau 12 giờ
+- **Sao lưu & đồng bộ** - Xuất/nhập toàn bộ dữ liệu (API Key, truyện đã lưu, cài đặt) dưới dạng `.json`
+- **Bỏ chặn copy** - Gỡ bỏ bảo vệ sao chép văn bản của trang
 
 ---
 
