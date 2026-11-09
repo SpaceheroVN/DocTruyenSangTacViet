@@ -676,12 +676,22 @@
     }
 
     .release-card.latest {
+      border-color: rgba(23, 201, 100, 0.35);
+      box-shadow: 0 0 0 1px rgba(23, 201, 100, 0.1), 0 10px 30px rgba(0, 0, 0, 0.3);
+      background: linear-gradient(180deg, rgba(23, 201, 100, 0.04) 0%, transparent 100%), var(--surface);
+    }
+
+    .release-card.latest:hover {
+      border-color: rgba(23, 201, 100, 0.65);
+    }
+
+    .release-card.prerelease {
       border-color: rgba(245, 165, 36, 0.3);
       box-shadow: 0 0 0 1px rgba(245, 165, 36, 0.1), 0 10px 30px rgba(0, 0, 0, 0.3);
       background: linear-gradient(180deg, rgba(245, 165, 36, 0.05) 0%, transparent 100%), var(--surface);
     }
 
-    .release-card.latest:hover {
+    .release-card.prerelease:hover {
       border-color: rgba(245, 165, 36, 0.6);
     }
 
@@ -738,11 +748,16 @@
     }
 
     .release-card.latest .version-dot {
+      background: var(--green, #17c964);
+      box-shadow: 0 0 12px rgba(23, 201, 100, 0.8), inset 0 0 4px rgba(255, 255, 255, 0.5);
+    }
+
+    .release-card.prerelease .version-dot {
       background: var(--accent);
       box-shadow: 0 0 12px rgba(245, 165, 36, 0.8), inset 0 0 4px rgba(255, 255, 255, 0.5);
     }
 
-    .release-card.open:not(.latest) .version-dot {
+    .release-card.open:not(.latest):not(.prerelease) .version-dot {
       background: var(--text-sub);
     }
 
@@ -765,24 +780,32 @@
     }
 
     .badge {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: .5px;
-      text-transform: uppercase;
-      padding: 3px 8px;
-      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .2px;
+      padding: 2px 10px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      line-height: 1.4;
     }
 
     .badge-latest {
-      background: rgba(23, 201, 100, 0.15);
+      background: rgba(23, 201, 100, 0.12);
       color: var(--green);
-      border: 1px solid rgba(23, 201, 100, 0.3);
+      border: 1px solid rgba(23, 201, 100, 0.35);
+    }
+
+    .badge-prerelease {
+      background: rgba(245, 165, 36, 0.12);
+      color: var(--accent);
+      border: 1px solid rgba(245, 165, 36, 0.35);
     }
 
     .badge-first {
-      background: rgba(243, 18, 96, 0.15);
+      background: rgba(243, 18, 96, 0.12);
       color: var(--accent2);
-      border: 1px solid rgba(243, 18, 96, 0.3);
+      border: 1px solid rgba(243, 18, 96, 0.35);
     }
 
     .card-date {
@@ -1863,24 +1886,39 @@
         : { url: `https://github.com/${REPO}/releases/download/${tenTag}/DocTruyenSTV_${tenTag}.zip`, ten: `DocTruyenSTV_${tenTag}.zip`, dungLuong: '' };
     }
 
-    function taoThe(phatHanh, chiSo) {
-      const laMoiNhat = chiSo === 0;
+    function taoThe(phatHanh, chiSo, idBanChinhThucMoiNhat) {
+      const laDauTien = chiSo === 0;
+      const laPreRelease = Boolean(phatHanh.prerelease);
+      const laChinhThucMoiNhat = phatHanh.id === idBanChinhThucMoiNhat;
+
       const tenTag = phatHanh.tag_name;
       const ten = phatHanh.name || tenTag;
       const ngay = dinhDangNgay(phatHanh.published_at);
       const thongTinTai = layUrlTai(tenTag, phatHanh.assets || []);
       const noiDung = phatHanh.body || '';
 
+      let classThe = 'release-card';
+      if (laDauTien) classThe += ' open';
+      if (laPreRelease) classThe += ' prerelease';
+      else if (laChinhThucMoiNhat) classThe += ' latest';
+
+      let badgeHtml = '';
+      if (laPreRelease) {
+        badgeHtml = '<span class="badge badge-prerelease">Pre-release</span>';
+      } else if (laChinhThucMoiNhat) {
+        badgeHtml = '<span class="badge badge-latest">Latest</span>';
+      }
+
       const the = document.createElement('div');
-      the.className = 'release-card' + (laMoiNhat ? ' latest open' : '');
+      the.className = classThe;
 
       the.innerHTML = `
-    <div class="card-head" role="button" aria-expanded="${laMoiNhat}">
+    <div class="card-head" role="button" aria-expanded="${laDauTien}">
       <div class="version-dot"></div>
       <div class="card-head-info">
         <div class="card-version-row">
           <span class="card-title">${thoatHtml(ten)}</span>
-          ${laMoiNhat ? '<span class="badge badge-latest">Latest</span>' : ''}
+          ${badgeHtml}
         </div>
         <div class="card-date">${ngay}</div>
         <div class="tag-pill">
@@ -1937,15 +1975,18 @@
         document.getElementById('stat-releases').innerHTML = `<span>${danhSachPH.length}</span>`;
         thanhThongKe.style.display = 'flex';
 
-        const phienBanMoiNhat = danhSachPH[0];
-        const thongTinTaiMoiNhat = layUrlTai(phienBanMoiNhat.tag_name, phienBanMoiNhat.assets || []);
+        // Xác định bản phát hành chính thức mới nhất (không phải Pre-release)
+        const banChinhThucMoiNhat = danhSachPH.find(r => !r.prerelease && !r.draft) || danhSachPH[0];
+        const idBanChinhThucMoiNhat = banChinhThucMoiNhat ? banChinhThucMoiNhat.id : null;
+
+        const thongTinTaiMoiNhat = layUrlTai(banChinhThucMoiNhat.tag_name, banChinhThucMoiNhat.assets || []);
         const nutTaiHero = document.getElementById('btn-download-hero');
         if (nutTaiHero && thongTinTaiMoiNhat.url) {
           nutTaiHero.href = thongTinTaiMoiNhat.url;
         }
 
         danhSachPH.forEach((r, i) => {
-          const the = taoThe(r, i);
+          const the = taoThe(r, i, idBanChinhThucMoiNhat);
           if (i === danhSachPH.length - 1) {
             const hang = the.querySelector('.card-version-row');
             if (!hang.querySelector('.badge')) {
@@ -2021,23 +2062,51 @@
     let daTaiPhatHanh = false;
     let daTaiTag = false;
 
+    function chuyenTab(tabDich, capNhatHash = true) {
+      const nutTab = document.querySelector(`.htab[data-target="${tabDich}"]`);
+      if (!nutTab) return;
+
+      document.querySelectorAll('.htab').forEach(t => t.classList.remove('active'));
+      nutTab.classList.add('active');
+
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      const noiDungTab = document.getElementById(tabDich);
+      if (noiDungTab) noiDungTab.classList.add('active');
+
+      if (tabDich === 'tab-releases' && !daTaiPhatHanh) {
+        taiPhatHanh();
+      }
+      if (tabDich === 'tab-tags' && !daTaiTag) {
+        taiTag();
+      }
+
+      if (capNhatHash) {
+        const hashMoi = tabDich.replace('tab-', '');
+        if (hashMoi === 'about') {
+          history.replaceState(null, '', window.location.pathname + window.location.search);
+        } else {
+          history.replaceState(null, '', '#' + hashMoi);
+        }
+      }
+    }
+
     document.querySelectorAll('.htab').forEach(tab => {
       tab.addEventListener('click', () => {
-        document.querySelectorAll('.htab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        const tabDich = tab.getAttribute('data-target');
-        document.getElementById(tabDich).classList.add('active');
-
-        if (tabDich === 'tab-releases' && !daTaiPhatHanh) {
-          taiPhatHanh();
-        }
-        if (tabDich === 'tab-tags' && !daTaiTag) {
-          taiTag();
-        }
+        chuyenTab(tab.getAttribute('data-target'));
       });
     });
+
+    function kiemTraHashTrang() {
+      const hash = window.location.hash.toLowerCase().replace('#', '');
+      if (hash === 'releases') {
+        chuyenTab('tab-releases', false);
+      } else if (hash === 'tags') {
+        chuyenTab('tab-tags', false);
+      }
+    }
+
+    window.addEventListener('hashchange', kiemTraHashTrang);
+    kiemTraHashTrang();
 
     const nenModal = document.getElementById('modal-backdrop');
     const khungPreview = document.getElementById('popup-frame');
