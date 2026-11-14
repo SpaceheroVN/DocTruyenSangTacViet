@@ -43,7 +43,7 @@
 
 ### Cài đặt
 
-**Từ cửa hàng (Edge)**
+**Từ cửa hàng Edge**
 
 Tải trực tiếp tại [Microsoft Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/mabgcghglcjheefkkicmkpmlhaooiiae).
 
