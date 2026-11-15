@@ -12,7 +12,8 @@ Chào bạn! Đây là kênh thông báo chính thức của tiện ích **Đọ
 
 ---
 
-## Lưu ý nhanh khi sử dụng
+## Lưu ý khi sử dụng
 - Nếu **Web Speech API** chưa có giọng tiếng Việt, bạn hãy cài thêm gói ngôn ngữ Tiếng Việt trong Windows hoặc Microsoft Edge.
 - Nếu FPT.AI, Azure hoặc Google Cloud gặp lỗi quá tải máy chủ, hãy thử bật **Thay nhanh Web API** trong phần Cài đặt để tự chuyển sang giọng dự phòng khi cần.
+- Vì đây là **phiên bản được cải tiến** khá nhiều, không chỉ **bề ngoài** mà cả **logic bên trong**, nên vì thế mình chưa thể thử nghiệm toàn bộ tính năng kỹ lưỡng được. Nhưng nhìn chung toàn bộ chức năng và các báo cáo lỗi các bạn đã gửi đã được xử lý.
 - Nếu phát hiện lỗi hoặc cần góp ý, bạn có thể bấm nút **Báo lỗi** hoặc ghé thăm [mã nguồn GitHub](https://github.com/SpaceheroVN/DocTruyenSangTacViet).
