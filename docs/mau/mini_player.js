@@ -1,5 +1,5 @@
 /**
- * Trình phát thu nhỏ và xem ảnh bìa mẫu
+ * Trình phát thu nhỏ và xem ảnh bìa mẫu (phiên bản v0.4.1)
  */
 (function () {
   function khoi_tao_trinh_phat_nho() {
@@ -16,9 +16,22 @@
     const nut_sau = document.getElementById('stv-mp-next');
     const bieu_tuong_phat = document.getElementById('stv-mp-icon-play');
     const bieu_tuong_tam_dung = document.getElementById('stv-mp-icon-pause');
+    const bieu_tuong_dang_tai = document.getElementById('stv-mp-icon-loading');
     const thanh_tien_trinh = document.getElementById('stv-mp-bar-fill');
     const chu_tien_trinh = document.getElementById('stv-mp-progress-txt');
     const the_huy_hieu_dong_co = document.getElementById('stv-mp-engine-badge');
+
+    let che_do_mini_player = 'chapter';
+
+    function cap_nhat_che_do() {
+      if (!nut_che_do) return;
+      const la_che_do_chuong = che_do_mini_player === 'chapter';
+      nut_che_do.textContent = la_che_do_chuong ? 'CHƯƠNG' : 'ĐOẠN';
+      nut_che_do.classList.toggle('stv-mp-mode-chapter', la_che_do_chuong);
+      nut_che_do.classList.toggle('stv-mp-mode-chunk', !la_che_do_chuong);
+    }
+
+    cap_nhat_che_do();
 
     // Thu nhỏ và mở rộng trình phát
     if (nut_thu_nho && bong_bong) {
@@ -34,14 +47,12 @@
       });
     }
 
-    // Chuyển chế độ đọc
+    // Chuyển chế độ đọc (Chương / Đoạn)
     if (nut_che_do) {
       nut_che_do.addEventListener('click', (su_kien) => {
         su_kien.stopPropagation();
-        const che_do_hien_tai = nut_che_do.textContent.trim();
-        nut_che_do.style.transform = 'scale(0.92)';
-        setTimeout(() => { nut_che_do.style.transform = ''; }, 150);
-        nut_che_do.textContent = che_do_hien_tai === 'CHƯƠNG' ? 'ĐOẠN' : 'CHƯƠNG';
+        che_do_mini_player = che_do_mini_player === 'chapter' ? 'chunk' : 'chapter';
+        cap_nhat_che_do();
       });
     }
 
@@ -49,24 +60,22 @@
     if (nut_phat) {
       nut_phat.addEventListener('click', (su_kien) => {
         su_kien.stopPropagation();
-        nut_phat.style.transform = 'scale(0.92)';
-        setTimeout(() => { nut_phat.style.transform = ''; }, 150);
         gui_tin_nhan_den_he_thong('daoTrangThaiPhat');
       });
     }
 
-    // Chuyển chương sau và chương trước
+    // Chuyển chương hoặc đoạn sau/trước theo chế độ hiện tại
     if (nut_sau) {
       nut_sau.addEventListener('click', (su_kien) => {
         su_kien.stopPropagation();
-        gui_tin_nhan_den_he_thong('chuongTiep');
+        gui_tin_nhan_den_he_thong(che_do_mini_player === 'chapter' ? 'chuongTiep' : 'doanTiep');
       });
     }
 
     if (nut_truoc) {
       nut_truoc.addEventListener('click', (su_kien) => {
         su_kien.stopPropagation();
-        gui_tin_nhan_den_he_thong('chuongTruoc');
+        gui_tin_nhan_den_he_thong(che_do_mini_player === 'chapter' ? 'chuongTruoc' : 'doanTruoc');
       });
     }
 
@@ -154,92 +163,55 @@
       } catch (_) {}
     }
 
-    function ap_dung_chu_de_modal_anh(khung_mo_mo, chu_de) {
-      if (!khung_mo_mo) return;
-      const la_chu_de_sang = chu_de === 'light';
-      khung_mo_mo.setAttribute('data-theme', chu_de);
-
-      const cac_phan_tu = khung_mo_mo._cac_phan_tu;
-      if (!cac_phan_tu) return;
-
-      khung_mo_mo.style.background = la_chu_de_sang ? 'rgba(18, 14, 28, 0.65)' : 'rgba(8, 7, 14, 0.82)';
-
-      if (cac_phan_tu.hop_thoai) {
-        cac_phan_tu.hop_thoai.style.background = la_chu_de_sang ? 'linear-gradient(145deg, #ffffff 0%, #f6f5fb 100%)' : 'linear-gradient(145deg, #181528 0%, #100e1c 100%)';
-        cac_phan_tu.hop_thoai.style.color = la_chu_de_sang ? '#1e1b2e' : '#f0edf7';
-        cac_phan_tu.hop_thoai.style.border = la_chu_de_sang ? '1.5px solid rgba(234, 88, 12, 0.35)' : '1.5px solid rgba(232, 160, 69, 0.35)';
-        cac_phan_tu.hop_thoai.style.boxShadow = la_chu_de_sang ? '0 28px 75px rgba(24, 21, 40, 0.28), 0 0 0 1px rgba(234, 88, 12, 0.2), 0 0 30px rgba(234, 88, 12, 0.15)' : '0 28px 75px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(232, 160, 69, 0.25), 0 0 35px rgba(232, 160, 69, 0.2)';
-      }
-
-      if (cac_phan_tu.phan_dau) {
-        cac_phan_tu.phan_dau.style.background = la_chu_de_sang ? 'rgba(234, 88, 12, 0.04)' : 'rgba(232, 160, 69, 0.04)';
-        cac_phan_tu.phan_dau.style.borderBottom = la_chu_de_sang ? '1px solid rgba(24, 21, 40, 0.08)' : '1px solid rgba(255, 255, 255, 0.08)';
-      }
-
-      if (cac_phan_tu.the_tieu_de) {
-        cac_phan_tu.the_tieu_de.style.color = la_chu_de_sang ? '#181528' : '#ffffff';
-        const bieu_tuong_anh = cac_phan_tu.the_tieu_de.querySelector('svg');
-        if (bieu_tuong_anh) bieu_tuong_anh.setAttribute('stroke', la_chu_de_sang ? '#ea580c' : '#e8a045');
-      }
-
-      if (cac_phan_tu.nut_dong) {
-        cac_phan_tu.nut_dong.style.background = la_chu_de_sang ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.06)';
-        cac_phan_tu.nut_dong.style.borderColor = la_chu_de_sang ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.1)';
-        cac_phan_tu.nut_dong.style.color = la_chu_de_sang ? '#5a566f' : '#a09cb0';
-      }
-
-      if (cac_phan_tu.phan_than) {
-        cac_phan_tu.phan_than.style.background = la_chu_de_sang ? '#ece8f5' : 'rgba(0, 0, 0, 0.45)';
-      }
-
-      if (cac_phan_tu.the_anh) {
-        cac_phan_tu.the_anh.style.boxShadow = la_chu_de_sang ? '0 10px 32px rgba(24, 21, 40, 0.22)' : '0 10px 38px rgba(0, 0, 0, 0.7)';
-        cac_phan_tu.the_anh.style.borderColor = la_chu_de_sang ? 'rgba(234, 88, 12, 0.2)' : 'rgba(255, 255, 255, 0.1)';
-      }
-
-      if (cac_phan_tu.phan_chan) {
-        cac_phan_tu.phan_chan.style.background = la_chu_de_sang ? '#fdfcff' : '#12101e';
-        cac_phan_tu.phan_chan.style.borderTop = la_chu_de_sang ? '1px solid rgba(24, 21, 40, 0.08)' : '1px solid rgba(255, 255, 255, 0.08)';
-      }
-
-      if (cac_phan_tu.nut_mo_tab) {
-        cac_phan_tu.nut_mo_tab.style.background = la_chu_de_sang ? '#ffffff' : 'rgba(255, 255, 255, 0.07)';
-        cac_phan_tu.nut_mo_tab.style.color = la_chu_de_sang ? '#2e2a42' : '#d0cce0';
-        cac_phan_tu.nut_mo_tab.style.border = la_chu_de_sang ? '1.5px solid #d8d3e6' : '1.5px solid rgba(255, 255, 255, 0.14)';
-        cac_phan_tu.nut_mo_tab.style.boxShadow = la_chu_de_sang ? '0 2px 6px rgba(0,0,0,0.05)' : 'none';
-      }
-
-      if (cac_phan_tu.nut_tai_ve) {
-        cac_phan_tu.nut_tai_ve.style.background = la_chu_de_sang ? 'linear-gradient(135deg, #ea580c 0%, #db2777 100%)' : 'linear-gradient(135deg, #e8a045 0%, #c45c8a 100%)';
-        cac_phan_tu.nut_tai_ve.style.boxShadow = la_chu_de_sang ? '0 4px 16px rgba(234, 88, 12, 0.42)' : '0 4px 16px rgba(232, 160, 69, 0.45)';
-      }
-    }
-
     function ap_dung_chu_de(chu_de) {
       const chu_de_hop_le = chu_de === 'light' ? 'light' : 'dark';
       if (trinh_phat) trinh_phat.setAttribute('data-theme', chu_de_hop_le);
       if (bong_bong) bong_bong.setAttribute('data-theme', chu_de_hop_le);
       const khung_anh_hien_tai = document.getElementById('stv-image-lightbox');
       if (khung_anh_hien_tai) {
-        ap_dung_chu_de_modal_anh(khung_anh_hien_tai, chu_de_hop_le);
+        khung_anh_hien_tai.setAttribute('data-theme', chu_de_hop_le);
       }
     }
 
     function cap_nhat_giao_dien(trang_thai) {
-      const dang_phat = Boolean(trang_thai.isPlaying && !trang_thai.isPaused);
+      const dang_tai = Boolean(trang_thai.isBuffering);
+      const dang_phat_thuc_su = Boolean(trang_thai.isPlaying && !trang_thai.isPaused);
       const dang_tam_dung = Boolean(trang_thai.isPlaying && trang_thai.isPaused);
 
       if (bieu_tuong_phat && bieu_tuong_tam_dung) {
-        bieu_tuong_phat.style.display = dang_phat ? 'none' : 'block';
-        bieu_tuong_tam_dung.style.display = dang_phat ? 'block' : 'none';
+        if (dang_tai) {
+          if (bieu_tuong_dang_tai) bieu_tuong_dang_tai.style.display = 'block';
+          bieu_tuong_phat.style.display = 'none';
+          bieu_tuong_tam_dung.style.display = 'none';
+        } else {
+          if (bieu_tuong_dang_tai) bieu_tuong_dang_tai.style.display = 'none';
+          bieu_tuong_phat.style.display = dang_phat_thuc_su ? 'none' : 'block';
+          bieu_tuong_tam_dung.style.display = dang_phat_thuc_su ? 'block' : 'none';
+        }
       }
 
       if (cham_trang_thai) {
-        cham_trang_thai.className = 'stv-mp-status-dot' + (dang_phat ? '' : (dang_tam_dung ? ' paused' : ' stopped'));
+        cham_trang_thai.className = 'stv-mp-status-dot' + (dang_phat_thuc_su ? '' : (dang_tam_dung ? ' paused' : ' stopped'));
       }
 
       if (bong_bong) {
-        bong_bong.classList.toggle('stv-playing', dang_phat);
+        bong_bong.classList.toggle('stv-playing', dang_phat_thuc_su);
+      }
+
+      const chi_so_hien_tai = trang_thai.progress ? Math.max(0, (trang_thai.progress.current || 1) - 1) : 0;
+      if (nut_phat) {
+        nut_phat.classList.remove('stv-mp-state-play', 'stv-mp-state-pause', 'stv-mp-state-resume');
+        let lop_nut_phat = 'stv-mp-state-play';
+        let nhan_nut_phat = 'Nghe';
+        if (dang_tai || dang_phat_thuc_su) {
+          lop_nut_phat = 'stv-mp-state-pause';
+          nhan_nut_phat = 'Tạm dừng';
+        } else if (dang_tam_dung || (!trang_thai.isPlaying && chi_so_hien_tai > 0)) {
+          lop_nut_phat = 'stv-mp-state-resume';
+          nhan_nut_phat = 'Tiếp tục';
+        }
+        nut_phat.classList.add(lop_nut_phat);
+        nut_phat.title = nhan_nut_phat;
       }
 
       if (the_huy_hieu_dong_co) {
@@ -257,7 +229,7 @@
         const the_muc_tieu = document.getElementById('tts-c-' + (chi_so_doan + 1)) || document.getElementById('tts-c-' + chi_so_doan);
         if (the_muc_tieu) {
           the_muc_tieu.classList.add('tts-reading');
-          if (dang_phat) {
+          if (dang_phat_thuc_su) {
             the_muc_tieu.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
           }
         }
@@ -268,125 +240,82 @@
     function hien_thi_modal_xem_anh(duong_dan_anh, ten_truyen, chu_de) {
       if (!duong_dan_anh || duong_dan_anh.includes('icon128.png')) return;
 
+      let url_anh_an_toan = '';
+      try {
+        const url_phan_tich = new URL(duong_dan_anh, window.location.origin);
+        if (url_phan_tich.protocol !== 'https:' && url_phan_tich.protocol !== 'http:') return;
+        url_anh_an_toan = url_phan_tich.href;
+      } catch (_) {
+        return;
+      }
+
       const cu = document.getElementById('stv-image-lightbox');
       if (cu) cu.remove();
 
-      const la_chu_de_sang = chu_de === 'light' || (!chu_de && trinh_phat.getAttribute('data-theme') === 'light');
+      const chu_de_hien_tai = chu_de === 'light' || chu_de === 'dark'
+        ? chu_de
+        : (trinh_phat.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
 
-      const khung_mo_mo = document.createElement('div');
-      khung_mo_mo.id = 'stv-image-lightbox';
-      khung_mo_mo.style.cssText = `
-        position: fixed; inset: 0; z-index: 2147483647;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        display: flex; align-items: center; justify-content: center;
-        padding: 24px; box-sizing: border-box;
-        opacity: 0; transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1), background 0.24s ease;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      `;
+      const overlay = document.createElement('div');
+      overlay.id = 'stv-image-lightbox';
+      overlay.setAttribute('data-theme', chu_de_hien_tai);
 
-      const hop_thoai = document.createElement('div');
-      hop_thoai.style.cssText = `
-        border-radius: 16px;
-        max-width: 92vw;
-        max-height: 92vh;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        transform: scale(0.92) translateY(10px);
-        transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), background 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease, color 0.24s ease;
-      `;
+      const dialog = document.createElement('div');
+      dialog.className = 'stv-lb-dialog';
 
       const tieu_de_an_toan = (ten_truyen || 'Ảnh bìa truyện').trim();
 
-      const phan_dau = document.createElement('div');
-      phan_dau.style.cssText = `
-        padding: 13px 20px;
-        display: flex; align-items: center; justify-content: space-between;
-        gap: 16px;
-        transition: background 0.24s ease, border-color 0.24s ease;
-      `;
+      const header = document.createElement('div');
+      header.className = 'stv-lb-header';
 
       const the_tieu_de = document.createElement('div');
-      the_tieu_de.style.cssText = `
-        font-size: 15px; font-weight: 700;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        display: flex; align-items: center; gap: 8px;
-        transition: color 0.24s ease;
-      `;
+      the_tieu_de.className = 'stv-lb-title';
       the_tieu_de.innerHTML = `
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
           <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
           <circle cx="9" cy="9" r="2"/>
           <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
         </svg>
-        <span style="overflow: hidden; text-overflow: ellipsis;">${tieu_de_an_toan}</span>
       `;
-      phan_dau.appendChild(the_tieu_de);
+      const the_chu_tieu_de = document.createElement('span');
+      the_chu_tieu_de.style.overflow = 'hidden';
+      the_chu_tieu_de.style.textOverflow = 'ellipsis';
+      the_chu_tieu_de.textContent = tieu_de_an_toan;
+      the_tieu_de.appendChild(the_chu_tieu_de);
+      header.appendChild(the_tieu_de);
 
       const nut_dong = document.createElement('button');
+      nut_dong.type = 'button';
+      nut_dong.className = 'stv-lb-close';
       nut_dong.title = 'Đóng (ESC)';
-      nut_dong.style.cssText = `
-        width: 30px; height: 30px; border-radius: 8px; cursor: pointer;
-        display: flex; align-items: center; justify-content: center;
-        transition: all 0.2s ease; flex-shrink: 0;
-      `;
-      nut_dong.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-      nut_dong.onmouseenter = () => {
-        const la_sang = khung_mo_mo.getAttribute('data-theme') === 'light';
-        nut_dong.style.background = la_sang ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.14)';
-        nut_dong.style.color = la_sang ? '#181528' : '#ffffff';
-      };
-      nut_dong.onmouseleave = () => {
-        const la_sang = khung_mo_mo.getAttribute('data-theme') === 'light';
-        nut_dong.style.background = la_sang ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.06)';
-        nut_dong.style.color = la_sang ? '#5a566f' : '#a09cb0';
-      };
-      nut_dong.onclick = () => dong_hop_thoai();
-      phan_dau.appendChild(nut_dong);
-      hop_thoai.appendChild(phan_dau);
+      nut_dong.setAttribute('aria-label', 'Đóng ảnh bìa');
+      nut_dong.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><g class="stv-lb-close-x"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></g></svg>';
+      header.appendChild(nut_dong);
+      dialog.appendChild(header);
 
-      const phan_than = document.createElement('div');
-      phan_than.style.cssText = `
-        padding: 20px;
-        display: flex; align-items: center; justify-content: center;
-        overflow: auto; flex: 1; min-height: 200px;
-        transition: background 0.24s ease;
-      `;
+      const body = document.createElement('div');
+      body.className = 'stv-lb-body';
 
-      const the_anh = document.createElement('img');
-      the_anh.src = duong_dan_anh;
-      the_anh.alt = tieu_de_an_toan;
-      the_anh.referrerPolicy = 'no-referrer';
-      the_anh.style.cssText = `
-        max-height: calc(85vh - 140px);
-        max-width: 100%;
-        object-fit: contain;
-        display: block;
-        border-radius: 10px;
-        transition: box-shadow 0.24s ease, border-color 0.24s ease;
-      `;
-      phan_than.appendChild(the_anh);
-      hop_thoai.appendChild(phan_than);
+      const img = document.createElement('img');
+      img.className = 'stv-lb-img';
+      const danh_dau_da_tai = () => img.classList.add('da-tai');
+      img.addEventListener('load', danh_dau_da_tai, { once: true });
+      img.addEventListener('error', danh_dau_da_tai, { once: true });
+      img.alt = tieu_de_an_toan;
+      img.referrerPolicy = 'no-referrer';
+      img.src = url_anh_an_toan;
+      if (img.complete) danh_dau_da_tai();
+      body.appendChild(img);
+      dialog.appendChild(body);
 
-      const phan_chan = document.createElement('div');
-      phan_chan.style.cssText = `
-        padding: 14px 20px;
-        display: flex; align-items: center; justify-content: flex-end;
-        gap: 12px;
-        transition: background 0.24s ease, border-color 0.24s ease;
-      `;
+      const footer = document.createElement('div');
+      footer.className = 'stv-lb-footer';
 
       const nut_mo_tab = document.createElement('a');
-      nut_mo_tab.href = duong_dan_anh;
+      nut_mo_tab.className = 'stv-lb-btn-tab';
+      nut_mo_tab.href = url_anh_an_toan;
       nut_mo_tab.target = '_blank';
       nut_mo_tab.rel = 'noopener noreferrer';
-      nut_mo_tab.style.cssText = `
-        display: inline-flex; align-items: center; gap: 7px;
-        padding: 9px 16px; border-radius: 9px;
-        font-size: 13px; font-weight: 600;
-        text-decoration: none; cursor: pointer; transition: all 0.2s ease;
-      `;
       nut_mo_tab.innerHTML = `
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
@@ -395,28 +324,11 @@
         </svg>
         Mở tab mới
       `;
-      nut_mo_tab.onmouseenter = () => {
-        const la_sang = khung_mo_mo.getAttribute('data-theme') === 'light';
-        nut_mo_tab.style.background = la_sang ? '#f5f3fa' : 'rgba(255, 255, 255, 0.12)';
-        nut_mo_tab.style.borderColor = la_sang ? '#ea580c' : 'rgba(232, 160, 69, 0.4)';
-        nut_mo_tab.style.color = la_sang ? '#ea580c' : '#ffffff';
-      };
-      nut_mo_tab.onmouseleave = () => {
-        const la_sang = khung_mo_mo.getAttribute('data-theme') === 'light';
-        nut_mo_tab.style.background = la_sang ? '#ffffff' : 'rgba(255, 255, 255, 0.07)';
-        nut_mo_tab.style.borderColor = la_sang ? '#d8d3e6' : 'rgba(255, 255, 255, 0.14)';
-        nut_mo_tab.style.color = la_sang ? '#2e2a42' : '#d0cce0';
-      };
-      phan_chan.appendChild(nut_mo_tab);
+      footer.appendChild(nut_mo_tab);
 
       const nut_tai_ve = document.createElement('button');
-      nut_tai_ve.style.cssText = `
-        display: inline-flex; align-items: center; gap: 8px;
-        padding: 9px 20px; border-radius: 9px;
-        font-size: 13px; font-weight: 700;
-        border: none; cursor: pointer;
-        transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-      `;
+      nut_tai_ve.type = 'button';
+      nut_tai_ve.className = 'stv-lb-btn-dl';
       nut_tai_ve.innerHTML = `
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -425,54 +337,62 @@
         </svg>
         Tải ảnh về
       `;
-      nut_tai_ve.onmouseenter = () => {
-        nut_tai_ve.style.transform = 'translateY(-1.5px)';
-        nut_tai_ve.style.filter = 'brightness(1.08)';
-      };
-      nut_tai_ve.onmouseleave = () => {
-        nut_tai_ve.style.transform = 'translateY(0)';
-        nut_tai_ve.style.filter = 'none';
-      };
-      nut_tai_ve.onclick = () => {
-        const the_tai = document.createElement('a');
-        the_tai.href = duong_dan_anh;
-        the_tai.target = '_blank';
-        the_tai.download = tieu_de_an_toan.replace(/[\\/:*?"<>|]/g, '_') + '.jpg';
-        document.body.appendChild(the_tai);
-        the_tai.click();
-        the_tai.remove();
-      };
-      phan_chan.appendChild(nut_tai_ve);
 
-      hop_thoai.appendChild(phan_chan);
-      khung_mo_mo.appendChild(hop_thoai);
+      nut_tai_ve.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const bieu_tuong_goc = nut_tai_ve.innerHTML;
+        nut_tai_ve.innerHTML = `
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="animation: stv-spin 1s linear infinite;">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+          </svg>
+          Đang tải...
+        `;
+        try {
+          const res = await fetch(url_anh_an_toan);
+          const blob = await res.blob();
+          const blobUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = tieu_de_an_toan.replace(/[\\/:*?"<>|]/g, '_').slice(0, 60) + '.jpg';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 15000);
 
-      khung_mo_mo._cac_phan_tu = {
-        hop_thoai,
-        phan_dau,
-        the_tieu_de,
-        nut_dong,
-        phan_than,
-        the_anh,
-        phan_chan,
-        nut_mo_tab,
-        nut_tai_ve
-      };
-      ap_dung_chu_de_modal_anh(khung_mo_mo, la_chu_de_sang ? 'light' : 'dark');
+          nut_tai_ve.innerHTML = `
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#52c41a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Đã lưu ảnh!
+          `;
+          setTimeout(() => { nut_tai_ve.innerHTML = bieu_tuong_goc; }, 2000);
+        } catch (_) {
+          const a = document.createElement('a');
+          a.href = url_anh_an_toan;
+          a.download = tieu_de_an_toan.replace(/[\\/:*?"<>|]/g, '_').slice(0, 60) + '.jpg';
+          a.target = '_blank';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          nut_tai_ve.innerHTML = bieu_tuong_goc;
+        }
+      });
 
-      document.body.appendChild(khung_mo_mo);
+      footer.appendChild(nut_tai_ve);
+      dialog.appendChild(footer);
+      overlay.appendChild(dialog);
+      document.body.appendChild(overlay);
 
       requestAnimationFrame(() => {
-        khung_mo_mo.style.opacity = '1';
-        hop_thoai.style.transform = 'scale(1)';
+        overlay.style.opacity = '1';
+        dialog.style.transform = 'scale(1)';
       });
 
       function dong_hop_thoai() {
-        khung_mo_mo.style.opacity = '0';
-        hop_thoai.style.transform = 'scale(0.95)';
+        overlay.style.opacity = '0';
+        dialog.style.transform = 'scale(0.95)';
         setTimeout(() => {
-          khung_mo_mo._cac_phan_tu = null;
-          khung_mo_mo.remove();
+          overlay.remove();
           document.removeEventListener('keydown', xu_ly_phim);
         }, 200);
       }
@@ -484,9 +404,10 @@
         }
       }
       document.addEventListener('keydown', xu_ly_phim);
-      khung_mo_mo.addEventListener('click', (e) => {
-        if (e.target === khung_mo_mo) dong_hop_thoai();
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) dong_hop_thoai();
       });
+      nut_dong.addEventListener('click', dong_hop_thoai);
     }
 
     try {

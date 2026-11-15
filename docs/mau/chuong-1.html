@@ -848,7 +848,7 @@
 		<div id="stv-mini-player" class="">
 			<div class="stv-mp-drag" id="stv-mp-drag-handle">
 				<span class="stv-mp-status-dot stopped" id="stv-mp-dot"></span>
-				<span class="stv-mp-lbl">Auto Đọc STV</span>
+				<span class="stv-mp-lbl">Đọc Truyện Cho Sáng Tác Việt</span>
 				<button class="stv-mp-min-btn" id="stv-mp-minimize" title="Thu nhỏ" tabindex="-1">
 					<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
 						stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -863,11 +863,11 @@
 				</div>
 			</div>
 			<div class="stv-mp-controls">
-				<button class="stv-mp-btn" id="stv-mp-mode" title="Đổi chức năng Tới/Lùi (Chương hoặc Đoạn)"
+				<button class="stv-mp-btn stv-mp-mode-chapter" id="stv-mp-mode" title="Đổi chức năng Tới/Lùi (Chương hoặc Đoạn)"
 					tabindex="-1"
-					style="height: 28px; padding: 0px 8px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px; flex-shrink: 0; min-width: 62px; color: rgb(232, 230, 240); border-color: rgb(46, 44, 69); background: rgba(255, 255, 255, 0.04);">CHƯƠNG</button>
+					style="height: 28px; padding: 0 8px; font-size: 10.5px; font-weight: 700; min-width: 62px;">CHƯƠNG</button>
 
-				<button class="stv-mp-btn stv-mp-btn-sm" id="stv-mp-prev" title="Chương trước" tabindex="-1">
+				<button class="stv-mp-btn stv-mp-btn-sm" id="stv-mp-prev" title="Lùi lại" tabindex="-1">
 					<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
 						stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 						<polygon points="19 20 9 12 19 4 19 20"></polygon>
@@ -875,19 +875,24 @@
 					</svg>
 				</button>
 
-				<button class="stv-mp-btn stv-mp-btn-play" id="stv-mp-playpause" title="Phát / Dừng" tabindex="-1">
-					<svg id="stv-mp-icon-play" xmlns="http://www.w3.org/2000/svg" width="15" height="15"
-						viewBox="0 0 24 24" fill="currentColor" style="display: block; margin-left: 2px;">
-						<polygon points="5 3 19 12 5 21 5 3"></polygon>
+				<button class="stv-mp-btn stv-mp-btn-play stv-mp-state-play" id="stv-mp-playpause" title="Nghe" tabindex="-1">
+					<svg id="stv-mp-icon-play" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+						viewBox="0 0 16 16" fill="currentColor" style="display: block;">
+						<polygon points="4 2 14 8 4 14"></polygon>
 					</svg>
-					<svg id="stv-mp-icon-pause" xmlns="http://www.w3.org/2000/svg" width="15" height="15"
-						viewBox="0 0 24 24" fill="currentColor" style="display: none;">
-						<rect x="6" y="4" width="4" height="16"></rect>
-						<rect x="14" y="4" width="4" height="16"></rect>
+					<svg id="stv-mp-icon-pause" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+						viewBox="0 0 16 16" fill="currentColor" style="display: none;">
+						<rect x="4" y="2" width="3" height="12" rx="0.6"></rect>
+						<rect x="9" y="2" width="3" height="12" rx="0.6"></rect>
+					</svg>
+					<svg id="stv-mp-icon-loading" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+						viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+						stroke-linejoin="round" class="stv-mp-spinner" style="display: none;">
+						<path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
 					</svg>
 				</button>
 
-				<button class="stv-mp-btn stv-mp-btn-sm" id="stv-mp-next" title="Chương sau" tabindex="-1">
+				<button class="stv-mp-btn stv-mp-btn-sm" id="stv-mp-next" title="Tiếp theo" tabindex="-1">
 					<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
 						stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 						<polygon points="5 4 15 12 5 20 5 4"></polygon>

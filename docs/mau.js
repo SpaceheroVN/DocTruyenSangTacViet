@@ -35,8 +35,9 @@ const danh_sach_lang_nghe_luu_tru = [];
 
 function phat_tin_hieu_thay_doi(trang_thai) {
   if (trang_thai) {
-    trang_thai.engine = trang_thai.engine || 'fpt';
-    trang_thai.ttsEngine = trang_thai.ttsEngine || 'fpt';
+    const cong_cu = trang_thai.ttsEngine || trang_thai.engine || 'fpt';
+    trang_thai.engine = cong_cu;
+    trang_thai.ttsEngine = cong_cu;
   }
   const tin_nhan = {
     hanhDong: 'thayDoiTrangThai',
@@ -97,12 +98,13 @@ function lay_thong_tin_mau() {
       : "Thứ 1 chương Khắc kim cải mệnh, cỗ thứ nhất phân thân",
     imgUrl: "https://p6-novel.byteimg.com/novel-pic/7a4843d945562c7de76f4104e5fde2b1~tplv-shrink:640:0.image",
     pageUrl: duong_dan_chuong,
-    ttsEngine: "fpt",
-    engine: "fpt",
+    ttsEngine: trang_thai.ttsEngine || "fpt",
+    engine: trang_thai.engine || "fpt",
     elapsed: trang_thai.elapsed,
     coDocDo: false,
     progress: trang_thai.progress,
     stats: {
+      view: "32.5k",
       read: "32.5k",
       like: "1.2k",
       status: "Còn tiếp"
@@ -121,6 +123,43 @@ function xu_ly_tin_nhan(tin_nhan, ham_goi) {
         phan_hoi_lai({ voices: thong_tin.voices });
       } else if (hanh_dong === 'getStatus' || hanh_dong === 'getInfo' || hanh_dong === 'layThongTin') {
         phan_hoi_lai(thong_tin);
+      } else if (hanh_dong === 'layTrangThai') {
+        phan_hoi_lai({
+          isPlaying: trang_thai.isPlaying,
+          isPaused: trang_thai.isPaused,
+          isBuffering: false,
+          elapsed: trang_thai.elapsed,
+          progress: trang_thai.progress,
+          ttsEngine: thong_tin.ttsEngine,
+          engine: thong_tin.engine,
+          coDocDo: false
+        });
+      } else if (hanh_dong === 'doiChuDe' || hanh_dong === 'doi_chu_de') {
+        const chu_de = tin_nhan.chuDe || tin_nhan.chu_de || 'dark';
+        try {
+          if (window.parent && window.parent !== window) {
+            window.parent.__chu_de_hien_tai = chu_de;
+            window.parent.postMessage({ type: 'STV_THEME_CHANGE', theme: chu_de }, '*');
+          }
+        } catch (_) {}
+        phan_hoi_lai({ success: true });
+      } else if (hanh_dong === 'capNhatCaiDat' || hanh_dong === 'doiGiongDoc') {
+        const cai_dat = (tin_nhan && typeof tin_nhan.caiDat === 'object' && tin_nhan.caiDat) ? tin_nhan.caiDat : tin_nhan;
+        const may_moi = (cai_dat && (cai_dat.maydoc || cai_dat.engine || cai_dat.ttsEngine)) || '';
+        if (may_moi) {
+          trang_thai.engine = may_moi;
+          trang_thai.ttsEngine = may_moi;
+          phat_tin_hieu_thay_doi({
+            isPlaying: trang_thai.isPlaying,
+            isPaused: trang_thai.isPaused,
+            isBuffering: false,
+            elapsed: trang_thai.elapsed,
+            progress: trang_thai.progress,
+            engine: may_moi,
+            ttsEngine: may_moi
+          });
+        }
+        phan_hoi_lai({ success: true });
       } else if (hanh_dong === 'daoTrangThaiPhat' || hanh_dong === 'toggle' || hanh_dong === 'togglePlay' || hanh_dong === 'playPause') {
         const thoi_gian_hien_tai = Date.now();
         if (trang_thai._thoi_gian_doi_cuoi && (thoi_gian_hien_tai - trang_thai._thoi_gian_doi_cuoi) < 250) {
@@ -207,7 +246,7 @@ function xu_ly_tin_nhan(tin_nhan, ham_goi) {
           progress: trang_thai.progress
         });
         phan_hoi_lai({ success: true });
-      } else if (hanh_dong === 'nextChunk') {
+      } else if (hanh_dong === 'nextChunk' || hanh_dong === 'doanTiep') {
         if (trang_thai.progress.current < trang_thai.progress.total) trang_thai.progress.current++;
         phat_tin_hieu_thay_doi({
           isPlaying: trang_thai.isPlaying,
@@ -217,7 +256,7 @@ function xu_ly_tin_nhan(tin_nhan, ham_goi) {
           progress: trang_thai.progress
         });
         phan_hoi_lai({ success: true, progress: trang_thai.progress });
-      } else if (hanh_dong === 'prevChunk') {
+      } else if (hanh_dong === 'prevChunk' || hanh_dong === 'doanTruoc') {
         if (trang_thai.progress.current > 1) trang_thai.progress.current--;
         phat_tin_hieu_thay_doi({
           isPlaying: trang_thai.isPlaying,
@@ -226,6 +265,19 @@ function xu_ly_tin_nhan(tin_nhan, ham_goi) {
           elapsed: trang_thai.elapsed,
           progress: trang_thai.progress
         });
+        phan_hoi_lai({ success: true, progress: trang_thai.progress });
+      } else if (hanh_dong === 'nhayDenDoan') {
+        const chi_so = parseInt(tin_nhan.chi_so, 10);
+        if (!Number.isNaN(chi_so)) {
+          trang_thai.progress.current = Math.max(1, Math.min(trang_thai.progress.total, chi_so + 1));
+          phat_tin_hieu_thay_doi({
+            isPlaying: trang_thai.isPlaying,
+            isPaused: trang_thai.isPaused,
+            isBuffering: false,
+            elapsed: trang_thai.elapsed,
+            progress: trang_thai.progress
+          });
+        }
         phan_hoi_lai({ success: true, progress: trang_thai.progress });
       } else if (hanh_dong === 'phatLai' || hanh_dong === 'replay' || hanh_dong === 'replayChap') {
         trang_thai.elapsed = 0;
@@ -360,7 +412,16 @@ if (typeof window.chrome === 'undefined' || !window.chrome.__isEdgeMock) {
         maydoc: "fpt",
         fpt_key: "mock_fpt_api_key",
         phien_ban_du_lieu: "0.4.1",
-        giao_dien_chu_de: "dark"
+        giao_dien_chu_de: (() => {
+          try {
+            if (window.parent && window.parent !== window) {
+              const chu_de = window.parent.__chu_de_hien_tai || 'dark';
+              localStorage.setItem('stv_theme_cache', chu_de);
+              return chu_de;
+            }
+          } catch (_) {}
+          return "dark";
+        })()
       }, 'local'),
 
       sync: tao_mock_storage({

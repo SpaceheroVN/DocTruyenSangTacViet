@@ -1,0 +1,2352 @@
+<!DOCTYPE html>
+<!-- Trang tiện ích và hướng dẫn STV -->
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Cài đặt & Thông tin - Đọc Truyện Cho Sáng Tác Việt</title>
+  <link rel="icon" href="icons/icon128.png" type="image/png">
+  <script src="../../mau.js"></script>
+  <script type="module" src="trang_tien_ich.js"></script>
+  <style>
+    :root,
+    html[data-theme="dark"] {
+      --bg: #0f0e17;
+      --surface: #1a1929;
+      --surface2: #222136;
+      --border: #2e2c45;
+      --accent: #e8a045;
+      --accent2: #c45c8a;
+      --text: #e8e6f0;
+      --text-muted: #7a7896;
+      --success: #4caf86;
+      --danger: #e05c6e;
+      --warning: #f0c040;
+      --hover-bg: rgba(255, 255, 255, 0.08);
+      --hover-border: rgba(255, 255, 255, 0.18);
+      --hover-filter: brightness(1.15);
+      --fs-base: 13px;
+      --fs-sub: 11px;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root:not([data-theme="dark"]) {
+        --bg: #e7e4f0;
+        --surface: #f7f6fb;
+        --surface2: #eeebf6;
+        --border: #d1cbe0;
+        --accent: #c95b0c;
+        --accent2: #86198f;
+        --text: #161423;
+        --text-muted: #524d6b;
+        --success: #047857;
+        --danger: #be123c;
+        --warning: #a16207;
+        --hover-bg: rgba(201, 91, 12, 0.08);
+        --hover-border: rgba(201, 91, 12, 0.35);
+        --hover-filter: brightness(0.97);
+      }
+    }
+
+    html[data-theme="light"] {
+      --bg: #e7e4f0;
+      --surface: #f7f6fb;
+      --surface2: #eeebf6;
+      --border: #d1cbe0;
+      --accent: #c95b0c;
+      --accent2: #86198f;
+      --text: #161423;
+      --text-muted: #524d6b;
+      --success: #047857;
+      --danger: #be123c;
+      --warning: #a16207;
+      --hover-bg: rgba(201, 91, 12, 0.08);
+      --hover-border: rgba(201, 91, 12, 0.35);
+      --hover-filter: brightness(0.97);
+    }
+
+    html[data-theme="light"] #theme-icon-sun { display: block !important; }
+    html[data-theme="light"] #theme-icon-moon { display: none !important; }
+    html:not([data-theme="light"]) #theme-icon-sun { display: none !important; }
+    html:not([data-theme="light"]) #theme-icon-moon { display: block !important; }
+
+    /* Huy hiệu khuyên dùng chữ R */
+    .theme-recommend-badge {
+      position: absolute;
+      bottom: 4px;
+      right: 5px;
+      font-size: 8px;
+      font-weight: 500;
+      line-height: 1;
+      color: #22c55e;
+      text-shadow: 0 0 2px rgba(34, 197, 94, 0.35);
+      user-select: none;
+      pointer-events: none;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    html[data-theme="light"] .theme-recommend-badge { display: none !important; }
+    html:not([data-theme="light"]) .theme-recommend-badge { display: block !important; }
+
+    /* Giao diện sáng */
+    html[data-theme="light"] .sidebar {
+      background-color: var(--surface);
+      border-right: 1px solid var(--border);
+      box-shadow: 1px 0 3px rgba(24, 21, 40, 0.03);
+    }
+
+    html[data-theme="light"] .nav-item.active {
+      background: rgba(201, 91, 12, 0.11);
+      color: var(--accent);
+    }
+
+    html[data-theme="light"] .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 8px rgba(24, 21, 40, 0.04), 0 12px 28px -6px rgba(24, 21, 40, 0.06);
+    }
+
+    html[data-theme="light"] .steps-list li::before {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      box-shadow: 0 1px 2px rgba(24, 21, 40, 0.04);
+    }
+
+    html[data-theme="light"] a.link-text {
+      color: var(--accent);
+      border-bottom-color: rgba(201, 91, 12, 0.4);
+    }
+
+    html[data-theme="light"] a.link-text:hover {
+      color: #9a3412;
+      border-bottom-color: #9a3412;
+    }
+
+    html[data-theme="light"] .alert {
+      background: #f5f0e1;
+      border: 1px solid #dfd2af;
+      border-left: 4px solid #b45309;
+    }
+
+    html[data-theme="light"] .alert-icon {
+      color: #b45309;
+    }
+
+    html[data-theme="light"] .alert-content > strong:first-child {
+      color: #92400e;
+    }
+
+    html[data-theme="light"] .alert.canh-bao-sao {
+      background: #e9f0f8;
+      border: 1px solid #bfd1e6;
+      border-left: 4px solid #0369a1;
+    }
+
+    html[data-theme="light"] .alert.canh-bao-sao .alert-icon,
+    html[data-theme="light"] .alert.canh-bao-sao .alert-content > strong:first-child {
+      color: #0369a1;
+    }
+
+    html[data-theme="light"] .chu-luu-y {
+      color: #78350f;
+    }
+
+    html[data-theme="light"] .badge.info {
+      background: rgba(3, 105, 161, 0.10);
+      color: #0369a1;
+      border-color: rgba(3, 105, 161, 0.28);
+    }
+
+    html[data-theme="light"] .badge.recommend {
+      background: rgba(4, 120, 87, 0.10);
+      color: #047857;
+      border-color: rgba(4, 120, 87, 0.28);
+    }
+
+    html[data-theme="light"] .badge.warning {
+      background: rgba(190, 18, 60, 0.09);
+      color: #be123c;
+      border-color: rgba(190, 18, 60, 0.26);
+    }
+
+    html[data-theme="light"] .badge.ca-nhan-hoa {
+      background: rgba(134, 25, 143, 0.09);
+      color: #86198f;
+      border-color: rgba(134, 25, 143, 0.26);
+    }
+
+    html[data-theme="light"] .the-sao {
+      background: #f5f0e1;
+      color: #b45309;
+      border-color: #dec892;
+    }
+
+    html[data-theme="light"] .the-sao.dac-biet {
+      background: #e7f3ec;
+      color: #b45309;
+      border-color: #9ecdb4;
+    }
+
+    html[data-theme="light"] .support-block {
+      background: transparent;
+      border: none;
+      border-top: 1px dashed var(--border);
+      padding: 20px 0 0 0;
+      gap: 12px;
+    }
+
+    html[data-theme="light"] .support-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(24, 21, 40, 0.04);
+    }
+
+    html[data-theme="light"] .support-item:hover {
+      border-color: #b8b0cc;
+      box-shadow: 0 4px 12px rgba(24, 21, 40, 0.08);
+      background: #faf9fd;
+    }
+
+    html[data-theme="light"] .sp-rate-item .sp-icon-box {
+      background: #f5f0e1;
+      color: #b45309;
+      border: 1px solid #dfd2af;
+    }
+
+    html[data-theme="light"] .link-rate {
+      color: #92400e;
+    }
+
+    html[data-theme="light"] .link-rate:hover {
+      color: #b45309;
+    }
+
+    html[data-theme="light"] .sp-mail-item .sp-icon-box {
+      background: #e9f0f8;
+      color: #0369a1;
+      border: 1px solid #bfd1e6;
+    }
+
+    html[data-theme="light"] .link-mail {
+      color: #0369a1;
+    }
+
+    html[data-theme="light"] .link-mail:hover {
+      color: #075985;
+    }
+
+    html[data-theme="light"] .sp-donate-item .sp-icon-box {
+      background: #f8ecee;
+      color: #be123c;
+      border: 1px solid #e6bfc7;
+    }
+
+    html[data-theme="light"] .link-donate {
+      color: #be123c;
+    }
+
+    html[data-theme="light"] .link-donate:hover {
+      color: #e11d48;
+    }
+
+    html[data-theme="light"] .github-link {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 2px rgba(24, 21, 40, 0.04);
+    }
+
+    html[data-theme="light"] .theme-toggle-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 2px rgba(24, 21, 40, 0.04);
+    }
+
+    html[data-theme="light"] .note {
+      background: var(--surface2);
+      border: 1px dashed var(--border);
+      color: var(--text);
+    }
+
+    html[data-theme="light"] code {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--accent2);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 260px;
+      background-color: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    .sidebar-header {
+      padding: 35px 20px 25px;
+      text-align: center;
+    }
+
+    .sidebar-header h1 {
+      font-size: 26px;
+      margin: 0;
+      letter-spacing: 0.5px;
+    }
+
+    .sidebar-header h1 span {
+      color: var(--accent);
+    }
+
+    /* === Thanh bên và thẻ nội dung === */
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      padding: 0 16px;
+      gap: 6px;
+    }
+
+    .nav-item {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 14.5px;
+      font-weight: 500;
+      text-align: left;
+      padding: 12px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s ease;
+    }
+
+    .nav-item svg {
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+
+    .nav-item:hover {
+      background: var(--hover-bg);
+      color: var(--text);
+      filter: var(--hover-filter);
+    }
+
+    .nav-item.active {
+      background: rgba(232, 160, 69, 0.12);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .nav-item.active svg {
+      opacity: 1;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 20px;
+      border-top: 1px dashed var(--border);
+    }
+
+    .github-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--surface2);
+      color: var(--text-muted);
+      text-decoration: none;
+      height: 40px;
+      box-sizing: border-box;
+      padding: 0 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      transition: all 0.2s;
+    }
+
+    .github-link:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--hover-bg);
+      filter: var(--hover-filter);
+    }
+
+    .theme-toggle-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .theme-toggle-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--hover-bg);
+      filter: var(--hover-filter);
+    }
+
+    .main-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 40px 40px;
+      scroll-behavior: smooth;
+    }
+
+    .main-content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .main-content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .main-content::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 10px;
+    }
+
+    .content-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .content-section {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .content-section.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    .page-title {
+      font-size: 26px;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .page-desc {
+      color: var(--text-muted);
+      font-size: 15px;
+      margin-bottom: 35px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .alert {
+      background: rgba(240, 192, 64, 0.1);
+      border: 1px solid rgba(240, 192, 64, 0.3);
+      border-left: 4px solid var(--warning);
+      padding: 16px 20px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .alert-icon {
+      color: var(--warning);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .alert-content > strong:first-child {
+      color: var(--warning);
+      display: block;
+      margin-bottom: 4px;
+      font-size: 15px;
+    }
+
+    .alert-content p {
+      font-size: 13.5px;
+      color: var(--text);
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    /* === Đầu thẻ, huy hiệu và cảnh báo === */
+    .card-header {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+      border-bottom: 1px dashed var(--border);
+      padding-bottom: 15px;
+    }
+
+    .card-title {
+      color: var(--text);
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 99px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge.recommend {
+      background: rgba(76, 175, 134, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(76, 175, 134, 0.3);
+    }
+
+    .badge.warning {
+      background: rgba(224, 92, 110, 0.15);
+      color: var(--danger);
+      border: 1px solid rgba(224, 92, 110, 0.3);
+    }
+
+    .card-desc {
+      color: var(--text-muted);
+      margin-bottom: 25px;
+      font-size: 14.5px;
+    }
+
+    .steps-list {
+      list-style: none;
+      counter-reset: step-counter;
+    }
+
+    .steps-list li {
+      position: relative;
+      padding-left: 45px;
+      margin-bottom: 20px;
+      font-size: 14.5px;
+    }
+
+    .steps-list li::before {
+      counter-increment: step-counter;
+      content: counter(step-counter);
+      position: absolute;
+      left: 0;
+      top: -2px;
+      width: 28px;
+      height: 28px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    a.link-text {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+      border-bottom: 1px dashed rgba(232, 160, 69, 0.4);
+      transition: all 0.2s;
+    }
+
+    a.link-text:hover {
+      color: #ffb85c;
+      border-bottom: 1px solid #ffb85c;
+    }
+
+    code {
+      background: var(--surface2);
+      padding: 3px 6px;
+      border-radius: 4px;
+      color: var(--accent2);
+      font-family: monospace;
+      font-size: 13px;
+      border: 1px solid var(--border);
+    }
+
+    .note {
+      background: var(--surface2);
+      border-radius: 6px;
+      padding: 12px 15px;
+      margin-top: 10px;
+      font-size: 13.5px;
+      color: var(--text-muted);
+      border: 1px dashed var(--border);
+    }
+
+    .info-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      font-size: 15px;
+    }
+
+    .info-row {
+      display: flex;
+      align-items: flex-start;
+      color: var(--text);
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .info-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .info-row strong {
+      color: var(--text);
+      min-width: 140px;
+      flex-shrink: 0;
+    }
+
+    .support-block {
+      background: transparent;
+      border: none;
+      border-top: 1px dashed var(--border);
+      padding: 20px 0 0 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .support-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .support-item:hover {
+      border-color: rgba(255, 255, 255, 0.16);
+      transform: translateY(-1.5px);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    }
+
+    .sp-icon-box {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+
+    .support-item:hover .sp-icon-box {
+      transform: scale(1.05);
+    }
+
+    .sp-text-group {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .sp-title {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .sp-desc {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Biểu tượng và liên kết hỗ trợ */
+    .sp-rate-item .sp-icon-box {
+      background: rgba(245, 158, 11, 0.12);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.25);
+    }
+
+    .link-rate {
+      color: #fbbf24;
+      font-weight: 600;
+      text-decoration: none;
+      border-bottom: 1px dashed currentColor;
+      transition: all 0.2s;
+    }
+
+    .link-rate:hover {
+      color: #f59e0b;
+      border-bottom-style: solid;
+    }
+
+    .sp-mail-item .sp-icon-box {
+      background: rgba(56, 189, 248, 0.12);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.25);
+    }
+
+    .link-mail {
+      color: #38bdf8;
+      font-weight: 600;
+      text-decoration: none;
+      border-bottom: 1px dashed currentColor;
+      transition: all 0.2s;
+    }
+
+    .link-mail:hover {
+      color: #0284c7;
+      border-bottom-style: solid;
+    }
+
+    .sp-donate-item .sp-icon-box {
+      background: rgba(244, 63, 94, 0.12);
+      color: #fb7185;
+      border: 1px solid rgba(244, 63, 94, 0.25);
+    }
+
+    .link-donate {
+      color: #fb7185;
+      font-weight: 600;
+      text-decoration: none;
+      border-bottom: 1px dashed currentColor;
+      transition: all 0.2s;
+    }
+
+    .link-donate:hover {
+      color: #e11d48;
+      border-bottom-style: solid;
+    }
+
+    .badge.info {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    /* === Cài đặt tiện ích mở rộng === */
+    .setting-row-box {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .setting-field-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .field-hint {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+
+    /* === Phân nhóm và thẻ sao hướng dẫn API === */
+    .nhom-huong-dan {
+      margin-top: 32px;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .tieu-de-nhom {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .mo-ta-nhom {
+      font-size: 12.5px;
+      color: var(--text-muted);
+    }
+
+    .the-sao {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      padding: 4px 9px;
+      border-radius: 99px;
+      background: rgba(245, 158, 11, 0.12);
+      color: #f59e0b;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      white-space: nowrap;
+    }
+
+    .the-sao.dac-biet {
+      background: rgba(16, 185, 129, 0.14);
+      color: #fbbf24;
+      border-color: rgba(16, 185, 129, 0.45);
+    }
+
+    .sao-bieu-tuong {
+      width: 14px;
+      height: 14px;
+      display: block;
+      flex-shrink: 0;
+    }
+
+    .alert.canh-bao-sao {
+      background: rgba(56, 189, 248, 0.08);
+      border-color: rgba(56, 189, 248, 0.28);
+      margin-bottom: 18px;
+    }
+
+    .alert.canh-bao-sao .alert-icon,
+    .alert.canh-bao-sao .alert-content > strong:first-child {
+      color: #38bdf8;
+    }
+
+    .chu-luu-y {
+      color: var(--warning);
+    }
+
+    .badge.ca-nhan-hoa {
+      background: rgba(196, 92, 138, 0.15);
+      color: var(--accent2);
+      border: 1px solid rgba(196, 92, 138, 0.3);
+    }
+
+    /* Ô chọn tên miền */
+    .domain-combo-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 440px;
+    }
+
+    .domain-input-box {
+      display: flex;
+      align-items: center;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0 8px 0 12px;
+      transition: all 0.2s ease;
+    }
+
+    .domain-input-box:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(232, 160, 69, 0.2);
+    }
+
+    .domain-input-icon {
+      color: var(--text-muted);
+      flex-shrink: 0;
+      margin-right: 8px;
+    }
+
+    .domain-text-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+      padding: 10px 0;
+    }
+
+    .domain-arrow-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .domain-arrow-btn:hover {
+      color: var(--accent);
+      background: var(--hover-bg);
+    }
+
+    .domain-options-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      z-index: 100;
+      display: none;
+      flex-direction: column;
+      max-height: 220px;
+      overflow-y: auto;
+      padding: 6px;
+    }
+
+    .domain-options-menu.show {
+      display: flex;
+    }
+
+    .domain-opt-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13.5px;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+
+    .domain-opt-item:hover {
+      background: var(--hover-bg);
+      color: var(--accent);
+    }
+
+    .domain-opt-item.selected {
+      background: rgba(232, 160, 69, 0.15);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .domain-opt-tag {
+      font-size: 10.5px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--surface2);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    .domain-opt-tag.tag-verified {
+      background: rgba(34, 197, 94, 0.12);
+      color: #22c55e;
+      border-color: rgba(34, 197, 94, 0.3);
+      font-weight: 600;
+    }
+
+    .domain-group-title {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 6px 10px 2px;
+      user-select: none;
+    }
+
+    .domain-badge-r {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: normal;
+      color: #22c55e;
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1;
+      padding-bottom: 1.5px;
+      box-sizing: border-box;
+    }
+
+    .domain-badge-u {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: normal;
+      color: #f59e0b;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1;
+      padding-bottom: 1px;
+      box-sizing: border-box;
+    }
+
+    /* Công tắc gạt */
+    .setting-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .setting-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 18px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      transition: all 0.2s;
+    }
+
+    .setting-item:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .setting-info {
+      flex: 1;
+    }
+
+    .setting-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 3px;
+    }
+
+    .setting-subtext {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .toggle {
+      position: relative;
+      width: 38px;
+      height: 22px;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: var(--border);
+      border-radius: 99px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      left: 3px;
+      top: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: 0.2s;
+    }
+
+    .toggle input:checked + .toggle-slider {
+      background: var(--accent);
+    }
+
+    .toggle input:checked + .toggle-slider::before {
+      transform: translateX(16px);
+    }
+
+    /* Bảng chọn màu sắc */
+    .color-setting-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .color-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .color-card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .color-picker-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .color-swatch-wrap {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      background: #e8a045;
+      transition: transform 0.15s;
+    }
+
+    .color-swatch-wrap:hover {
+      transform: scale(1.05);
+    }
+
+    .native-color-picker {
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+      border: none;
+      padding: 0;
+    }
+
+    .color-hex-input {
+      width: 85px;
+      padding: 7px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-family: monospace;
+      font-size: 13px;
+      outline: none;
+      text-transform: uppercase;
+    }
+
+    .color-hex-input:focus {
+      border-color: var(--accent);
+    }
+
+    .opacity-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .opacity-slider {
+      width: 75px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .color-presets {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .preset-dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .preset-dot:hover {
+      transform: scale(1.15);
+    }
+
+    .preset-dot.active {
+      border-color: #ffffff;
+      box-shadow: 0 0 0 2px var(--accent);
+    }
+
+    /* Khung xem trước */
+    .preview-box-wrap {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+    }
+
+    .preview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .preview-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-reset-preview {
+      background: transparent;
+      border: none;
+      color: var(--accent);
+      font-size: 12px;
+      cursor: pointer;
+      text-decoration: underline;
+      font-family: inherit;
+    }
+
+    .btn-reset-preview:hover {
+      filter: brightness(1.2);
+    }
+
+    .reading-preview-content {
+      font-size: 15px;
+      line-height: 1.8;
+      color: var(--text);
+      padding: 14px 16px;
+      background: var(--surface);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .preview-dim {
+      opacity: 0.65;
+    }
+
+    .preview-highlight-text {
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      color: #e8a045;
+      background: rgba(232, 160, 69, 0.15);
+    }
+
+    /* Nhập và xuất dữ liệu */
+    .backup-actions-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-setting-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+    }
+
+    .btn-setting-action.btn-export {
+      background: var(--surface2);
+      border-color: var(--border);
+      color: var(--text);
+    }
+
+    .btn-setting-action.btn-export:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--hover-bg);
+      transform: translateY(-1px);
+    }
+
+    .btn-setting-action.btn-import {
+      background: var(--accent);
+      color: #ffffff;
+      border-color: var(--accent);
+    }
+
+    .btn-setting-action.btn-import:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(232, 160, 69, 0.35);
+    }
+
+    .settings-toast-msg {
+      margin-top: 14px;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .settings-toast-msg.success {
+      background: rgba(76, 175, 134, 0.15);
+      border: 1px solid rgba(76, 175, 134, 0.3);
+      color: var(--success);
+    }
+
+    .settings-toast-msg.error {
+      background: rgba(224, 92, 110, 0.15);
+      border: 1px solid rgba(224, 92, 110, 0.3);
+      color: var(--danger);
+    }
+
+    /* Giao diện sáng cho cài đặt */
+    html[data-theme="light"] .setting-item {
+      background: #ffffff;
+      border-color: var(--border);
+      box-shadow: 0 1px 3px rgba(24, 21, 40, 0.04);
+    }
+    html[data-theme="light"] .setting-item:hover {
+      border-color: #cbd5e1;
+    }
+    html[data-theme="light"] .color-card,
+    html[data-theme="light"] .preview-box-wrap {
+      background: #ffffff;
+      border-color: var(--border);
+      box-shadow: 0 1px 3px rgba(24, 21, 40, 0.04);
+    }
+    html[data-theme="light"] .reading-preview-content {
+      background: var(--surface2);
+      border-color: var(--border);
+    }
+    html[data-theme="light"] .domain-input-box {
+      background: #ffffff;
+      border-color: var(--border);
+    }
+    html[data-theme="light"] .domain-options-menu {
+      background: #ffffff;
+      border-color: var(--border);
+      box-shadow: 0 8px 24px rgba(24, 21, 40, 0.12);
+    }
+    html[data-theme="light"] .domain-opt-item.selected {
+      background: rgba(242, 114, 18, 0.12);
+      color: var(--accent);
+    }
+    html[data-theme="light"] .domain-badge-r {
+      background: rgba(34, 197, 94, 0.15);
+      color: #16a34a;
+      border-color: rgba(34, 197, 94, 0.4);
+    }
+    html[data-theme="light"] .domain-badge-u {
+      background: rgba(245, 158, 11, 0.15);
+      color: #d97706;
+      border-color: rgba(245, 158, 11, 0.4);
+    }
+    html[data-theme="light"] .domain-opt-tag.tag-verified {
+      background: rgba(34, 197, 94, 0.12);
+      color: #16a34a;
+      border-color: rgba(34, 197, 94, 0.3);
+    }
+    html[data-theme="light"] .btn-setting-action.btn-export {
+      background: #ffffff;
+      border-color: var(--border);
+    }
+    html[data-theme="light"] .btn-setting-action.btn-import {
+      background: linear-gradient(135deg, #f27212 0%, #db2777 100%);
+      color: #ffffff;
+    }
+
+    /* === Bản xem trước v0.4.2 === */
+    #tab-cai_dat {
+      position: relative;
+      min-height: calc(100vh - 120px);
+    }
+
+    .cai_dat-preview-overlay {
+      position: fixed;
+      top: 0;
+      left: 260px;
+      right: 0;
+      bottom: 0;
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(15, 14, 23, 0.65);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .cai_dat-preview-overlay.fade-out {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    html[data-theme="light"] .cai_dat-preview-overlay {
+      background: rgba(245, 243, 250, 0.7);
+    }
+
+    /* Nút xem trước v0.4.2 */
+    .btn-unlock-preview {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 34px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      letter-spacing: 0.2px;
+    }
+
+    .btn-unlock-preview:hover {
+      background: rgba(232, 160, 69, 0.14);
+      border-color: var(--accent);
+      color: #fbbf24;
+      box-shadow: 0 6px 20px rgba(232, 160, 69, 0.28);
+      transform: translateY(-2px);
+    }
+
+    .btn-unlock-preview:active {
+      transform: scale(0.98);
+      background: rgba(232, 160, 69, 0.22);
+      box-shadow: 0 2px 8px rgba(232, 160, 69, 0.2);
+    }
+
+    html[data-theme="light"] .btn-unlock-preview {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      box-shadow: 0 4px 16px rgba(24, 21, 40, 0.08);
+    }
+
+    html[data-theme="light"] .btn-unlock-preview:hover {
+      background: #f5efe6;
+      border-color: var(--accent);
+      color: #9a3412;
+      box-shadow: 0 6px 18px rgba(201, 91, 12, 0.18);
+      transform: translateY(-2px);
+    }
+
+    html[data-theme="light"] .btn-unlock-preview:active {
+      transform: scale(0.98);
+      background: #ffedd5;
+    }
+
+    /* Vùng nội dung làm mờ */
+    .cai_dat-content-wrap {
+      transition: filter 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .cai_dat-content-wrap.is-blurred {
+      filter: blur(7px) saturate(0.85);
+      opacity: 0.35;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    /* Bảng cảnh báo bản mẫu */
+    .disclaimer-red-banner {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1.5px solid rgba(239, 68, 68, 0.5);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      box-shadow: 0 4px 20px rgba(239, 68, 68, 0.15);
+    }
+
+    html[data-theme="light"] .disclaimer-red-banner {
+      background: rgba(239, 68, 68, 0.08);
+      border-color: rgba(239, 68, 68, 0.4);
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.08);
+    }
+
+    .disclaimer-red-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex: 1;
+    }
+
+    .disclaimer-red-icon {
+      color: #ef4444;
+      flex-shrink: 0;
+    }
+
+    .disclaimer-red-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ef4444;
+      line-height: 1.4;
+      letter-spacing: 0.2px;
+    }
+
+    .disclaimer-red-subtitle {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    html[data-theme="light"] .disclaimer-red-title {
+      color: #dc2626;
+    }
+
+    html[data-theme="light"] .disclaimer-red-icon {
+      color: #dc2626;
+    }
+
+    .btn-relock-preview {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #ef4444;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .btn-relock-preview:hover {
+      background: rgba(239, 68, 68, 0.25);
+      border-color: #ef4444;
+      transform: translateY(-1px);
+    }
+
+    html[data-theme="light"] .btn-relock-preview {
+      color: #dc2626;
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+
+    /* Trạng thái khóa */
+    .cai_dat-content-wrap input:disabled,
+    .cai_dat-content-wrap button:disabled,
+    .cai_dat-content-wrap .preset-dot:disabled {
+      cursor: not-allowed !important;
+      opacity: 0.55 !important;
+    }
+
+    .cai_dat-content-wrap .toggle input:disabled + .toggle-slider {
+      cursor: not-allowed !important;
+      opacity: 0.55 !important;
+    }
+
+    .cai_dat-content-wrap .domain-arrow-btn:disabled {
+      cursor: not-allowed !important;
+      opacity: 0.4 !important;
+    }
+
+    .cai_dat-content-wrap .color-swatch-wrap.locked {
+      cursor: not-allowed !important;
+      opacity: 0.65;
+    }
+
+    /* Viền nét đứt khi chọn bằng bàn phím */
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible,
+    select:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* Khung cấu hình HTML tên miền khác v0.4.2 */
+    .khung-cau-hinh-ten-mien-khac {
+      margin-top: 14px;
+      padding: 14px;
+      background: var(--surface2);
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .tieu-de-khung-ten-mien-khac {
+      font-size: var(--fs-base);
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .luoi-bo-chon-ten-mien {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .truong-bo-chon-html {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .truong-bo-chon-html label {
+      font-size: var(--fs-sub);
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .o-nhap-bo-chon-html,
+    .o-nhap-html-mau {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: var(--fs-base);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .o-nhap-html-mau {
+      min-height: 76px;
+      resize: vertical;
+    }
+
+    .cai_dat-content-wrap textarea:disabled {
+      cursor: not-allowed !important;
+      opacity: 0.55 !important;
+    }
+  </style>
+</head>
+
+<body>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h1>Đọc Truyện Cho <span>Sáng Tác Việt</span></h1>
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-tab="cai_dat">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+        Cài đặt
+      </button>
+      <button class="nav-item" data-tab="huong_dan">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="-1.2 -1.2 18.4 18.4" fill="none">
+          <path fill-rule="evenodd" clip-rule="evenodd" transform="matrix(0 1 1 0 0 0)"
+            d="M10.5 9C12.9853 9 15 6.98528 15 4.5C15 2.01472 12.9853 0 10.5 0C8.01475 0 6.00003 2.01472 6.00003 4.5C6.00003 5.38054 6.25294 6.20201 6.69008 6.89574L0.585815 13L3.58292 15.9971L4.99714 14.5829L3.41424 13L5.00003 11.4142L6.58292 12.9971L7.99714 11.5829L6.41424 10L8.10429 8.30995C8.79801 8.74709 9.61949 9 10.5 9ZM10.5 7C11.8807 7 13 5.88071 13 4.5C13 3.11929 11.8807 2 10.5 2C9.11932 2 8.00003 3.11929 8.00003 4.5C8.00003 5.88071 9.11932 7 10.5 7Z"
+            fill="currentColor" />
+        </svg>
+        Hướng dẫn lấy API
+      </button>
+      <button class="nav-item" data-tab="info">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="16" x2="12" y2="12" />
+          <line x1="12" y1="8" x2="12.01" y2="8" />
+        </svg>
+        Thông tin
+      </button>
+    </nav>
+
+    <div class="sidebar-footer" style="display: flex; gap: 8px; align-items: center;">
+      <a href="https://spaceherovn.github.io/DocTruyenSangTacViet/" target="_blank" class="github-link" style="flex: 1;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path
+            d="M15 22v-4a4.8 4.8 0 0 0-1-3.02c3.14-.35 6.5-1.4 6.5-7a4.6 4.6 0 0 0-1.39-3.2c.15-.35.6-1.5-.12-3.2 0 0-1.18-.38-3.9 1.47a13.38 13.38 0 0 0-7 0C6.27 2.22 5.08 2.6 5.08 2.6c-.72 1.7-.27 2.85-.12 3.2A4.6 4.6 0 0 0 3.5 10c0 5.6 3.35 6.65 6.5 7a4.8 4.8 0 0 0-1 3.02V22" />
+          <path d="M9 20c-5 1.5-5-2.5-7-3" />
+        </svg>
+        Trang dự án
+      </a>
+      <button id="btn-toggle-theme" class="theme-toggle-btn" title="Chuyển đổi giao diện Sáng / Tối" aria-label="Chuyển đổi giao diện Sáng hoặc Tối">
+        <svg id="theme-icon-sun" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+        <svg id="theme-icon-moon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-moon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        <span class="theme-recommend-badge" title="Khuyên dùng (Recommended)">R</span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="content-container">
+
+      <!-- Tab cài đặt -->
+      <section id="tab-cai_dat" class="content-section active">
+        <!-- Nội dung cài đặt -->
+        <div id="cai_dat-content-wrap" class="cai_dat-content-wrap is-blurred">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+            <div>
+              <h2 class="page-title" style="margin-bottom: 6px;">Cài đặt tiện ích</h2>
+              <div class="page-desc" style="margin-bottom: 0; padding-bottom: 0; border-bottom: none;">Tùy biến các tham số hoạt động, giao diện đọc truyện và tính năng tự động hóa.</div>
+            </div>
+            <span class="badge recommend" style="white-space: nowrap; font-size: 11px;">Bản xem trước v0.4.2</span>
+          </div>
+
+          <!-- Cảnh báo bản mẫu -->
+          <div class="disclaimer-red-banner">
+            <div class="disclaimer-red-left">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" class="disclaimer-red-icon">
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+              <div>
+                <div class="disclaimer-red-title">Các tính năng bên dưới có thể sẽ bị xóa hoặc thêm. Đây chỉ là bản mẫu.</div>
+                <div class="disclaimer-red-subtitle">Toàn bộ cài đặt bên dưới tạm thời bị khóa để chuẩn bị cho bản phát hành chính thức <strong>v0.4.2</strong>.</div>
+              </div>
+            </div>
+            <button type="button" id="btn-relock-preview" class="btn-relock-preview" title="Khóa mờ lại trang">Khóa lại</button>
+          </div>
+
+          <!-- === Tên miền truy cập mặc định === -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">1. Tên miền truy cập mặc định</div>
+              <span class="badge info">Nút nhanh STV</span>
+            </div>
+            <div class="card-desc">
+              Chọn hoặc nhập tên miền SangTacViet được ưu tiên khi bạn bấm nút mở trang nhanh trên thanh điều khiển.
+            </div>
+            
+            <div class="setting-row-box">
+              <label for="domain-input" class="setting-field-label">Tên miền đích:</label>
+              <div class="domain-combo-wrap" id="domain-combo-wrap">
+                <div class="domain-input-box">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="domain-input-icon">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                  </svg>
+                  <input type="text" id="domain-input" class="domain-text-input" placeholder="Gõ để tìm hoặc nhập tên miền..." value="sangtacviet.com" autocomplete="off" aria-label="Tên miền đích mặc định" disabled readonly>
+                  <button type="button" id="domain-dropdown-trigger" class="domain-arrow-btn" title="Danh sách gợi ý" aria-label="Mở danh sách tên miền" disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </button>
+                </div>
+                <div id="domain-options-menu" class="domain-options-menu">
+                  <div class="domain-group-title">1. Sáng Tác Việt (Chính thức v0.4.1)</div>
+                  <div class="domain-opt-item selected" data-value="sangtacviet.com">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span class="domain-badge-r" title="Khuyên dùng / Đã xác thực (Recommended)">R</span>
+                      <span class="domain-opt-name">sangtacviet.com</span>
+                    </div>
+                    <span class="domain-opt-tag tag-verified">Chính thức</span>
+                  </div>
+
+                  <div class="domain-group-title" style="margin-top: 6px; border-top: 1px dashed var(--border); padding-top: 8px;">2. TruyenFull (Hỗ trợ sơ bộ v0.4.2)</div>
+                  <div class="domain-opt-item" data-value="truyenfull.live">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span class="domain-badge-u" title="Sườn hỗ trợ bản v0.4.2">v0.4.2</span>
+                      <span class="domain-opt-name">truyenfull.live</span>
+                    </div>
+                    <span class="domain-opt-tag">Xem trước</span>
+                  </div>
+
+                  <div class="domain-group-title" style="margin-top: 6px; border-top: 1px dashed var(--border); padding-top: 8px;">3. Trang web khác (Tùy chỉnh HTML v0.4.2)</div>
+                  <div class="domain-opt-item" data-value="khac">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span class="domain-badge-u" title="Cấu hình selector HTML riêng cho từng trang">#</span>
+                      <span class="domain-opt-name">khac</span>
+                    </div>
+                    <span class="domain-opt-tag">Nhúng HTML</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Khung cấu hình HTML tên miền khác v0.4.2 -->
+              <div id="khung-cau-hinh-ten-mien-khac" class="khung-cau-hinh-ten-mien-khac" style="display: none;">
+                <div class="tieu-de-khung-ten-mien-khac">
+                  <span id="tieu-de-cau-hinh-ten-mien-khac">Cấu hình bóc tách HTML (Sườn v0.4.2)</span>
+                  <span class="badge info">Chỉ lưu cục bộ</span>
+                </div>
+                <div class="truong-bo-chon-html">
+                  <label for="o-url-ten-mien-khac">Tên miền trang web khác (ví dụ: truyenmoi.example):</label>
+                  <input type="text" id="o-url-ten-mien-khac" class="o-nhap-bo-chon-html" placeholder="example.com" aria-label="Tên miền trang web khác" disabled>
+                </div>
+                <div class="luoi-bo-chon-ten-mien">
+                  <div class="truong-bo-chon-html">
+                    <label for="bo-chon-html-ten-truyen">Bộ chọn Tên truyện:</label>
+                    <input type="text" id="bo-chon-html-ten-truyen" class="o-nhap-bo-chon-html" placeholder="h3.title, #booknameholder" aria-label="Bộ chọn tên truyện" disabled>
+                  </div>
+                  <div class="truong-bo-chon-html">
+                    <label for="bo-chon-html-ten-chuong">Bộ chọn Tên chương:</label>
+                    <input type="text" id="bo-chon-html-ten-chuong" class="o-nhap-bo-chon-html" placeholder="a.chapter-title, #chapnameholder" aria-label="Bộ chọn tên chương" disabled>
+                  </div>
+                  <div class="truong-bo-chon-html">
+                    <label for="bo-chon-html-noi-dung">Bộ chọn Nội dung chương:</label>
+                    <input type="text" id="bo-chon-html-noi-dung" class="o-nhap-bo-chon-html" placeholder="#chapter-c, #content-container" aria-label="Bộ chọn nội dung chương" disabled>
+                  </div>
+                  <div class="truong-bo-chon-html">
+                    <label for="bo-chon-html-dieu-huong">Bộ chọn Chuyển chương (Trước / Sau):</label>
+                    <input type="text" id="bo-chon-html-dieu-huong" class="o-nhap-bo-chon-html" placeholder="#prev_chap, #next_chap" aria-label="Bộ chọn nút chuyển chương" disabled>
+                  </div>
+                </div>
+                <div class="truong-bo-chon-html">
+                  <label for="mau-html-tho">Mã HTML mẫu của phần đọc truyện (dùng để điều chỉnh bộ lọc ở bản v0.4.2):</label>
+                  <textarea id="mau-html-tho" class="o-nhap-html-mau" placeholder="<div class='noi-dung-chuong'>...</div>" aria-label="Mã HTML mẫu của trang web" disabled></textarea>
+                </div>
+              </div>
+
+              <div class="field-hint">Bản v0.4.1 hỗ trợ chính thức sangtacviet.com; mục truyenfull.live và khac là sườn cấu hình HTML chuẩn bị cho bản v0.4.2.</div>
+            </div>
+          </div>
+
+          <!-- === Tự động hóa khi đọc === -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">2. Tự động hóa & trải nghiệm đọc</div>
+            </div>
+            <div class="card-desc">Thiết lập các hành vi tự động khi đọc truyện dài chương để thao tác tiện lợi hơn.</div>
+
+            <div class="setting-list">
+              <!-- Cuộn trang -->
+              <div class="setting-item">
+                <div class="setting-info">
+                  <div class="setting-name">Tự động cuộn trang</div>
+                  <div class="setting-subtext">Tự động cuộn mượt xuống phía dưới trang theo tiến độ từng đoạn đọc hoặc khi đọc hết nội dung hiển thị.</div>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="setting-auto-scroll" aria-label="Bật tự động cuộn trang" checked disabled>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+
+              <!-- Vượt captcha -->
+              <div class="setting-item">
+                <div class="setting-info">
+                  <div class="setting-name">Tự động vượt captcha</div>
+                  <div class="setting-subtext">Tự động giải hoặc nhắc nhở mã xác thực trên SangTacViet để tránh bị ngắt quãng luồng đọc audio.</div>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" id="setting-auto-captcha" aria-label="Bật tự động vượt captcha" disabled>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- === Tùy biến màu sắc đoạn đọc === -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">3. Tùy biến màu sắc đọc truyện</div>
+            </div>
+            <div class="card-desc">Cá nhân hóa màu chữ và nền tô sáng của câu văn hoặc đoạn văn hiện tại đang được phát âm thanh.</div>
+
+            <div class="color-setting-grid">
+              <!-- Màu chữ -->
+              <div class="color-card">
+                <div class="color-card-title">Màu chữ khi đang đọc</div>
+                <div class="color-picker-row">
+                  <div class="color-swatch-wrap locked" id="swatch-text-wrap">
+                    <input type="color" id="setting-text-color" value="#e8a045" class="native-color-picker" aria-label="Chọn màu chữ khi đang đọc" disabled>
+                  </div>
+                  <input type="text" id="setting-text-color-hex" value="#e8a045" class="color-hex-input" maxlength="7" aria-label="Mã màu hex của chữ" disabled readonly>
+                </div>
+                <div class="color-presets" id="text-color-presets">
+                  <button type="button" class="preset-dot active" style="background: #e8a045;" data-color="#e8a045" title="Cam vàng STV" disabled></button>
+                  <button type="button" class="preset-dot" style="background: #4caf86;" data-color="#4caf86" title="Xanh lục" disabled></button>
+                  <button type="button" class="preset-dot" style="background: #38bdf8;" data-color="#38bdf8" title="Xanh biển" disabled></button>
+                  <button type="button" class="preset-dot" style="background: #c45c8a;" data-color="#c45c8a" title="Hồng tím" disabled></button>
+                  <button type="button" class="preset-dot" style="background: #ffffff;" data-color="#ffffff" title="Trắng" disabled></button>
+                </div>
+              </div>
+
+              <!-- Nền màu chữ -->
+              <div class="color-card">
+                <div class="color-card-title">Nền màu chữ khi đang đọc</div>
+                <div class="color-picker-row">
+                  <div class="color-swatch-wrap locked" id="swatch-bg-wrap">
+                    <input type="color" id="setting-bg-color" value="#e8a045" class="native-color-picker" aria-label="Chọn màu nền khi đang đọc" disabled>
+                  </div>
+                  <input type="text" id="setting-bg-color-hex" value="#e8a045" class="color-hex-input" maxlength="7" aria-label="Mã màu hex của nền" disabled readonly>
+                  <div class="opacity-control" title="Độ mờ nền">
+                    <span id="bg-opacity-label">15%</span>
+                    <input type="range" id="setting-bg-opacity" min="5" max="100" value="15" step="5" class="opacity-slider" aria-label="Độ mờ nền tô sáng" disabled>
+                  </div>
+                </div>
+                <div class="color-presets" id="bg-color-presets">
+                  <button type="button" class="preset-dot active" style="background: rgba(232, 160, 69, 0.6);" data-color="#e8a045" title="Cam vàng" disabled></button>
+                  <button type="button" class="preset-dot" style="background: rgba(76, 175, 134, 0.6);" data-color="#4caf86" title="Xanh lục" disabled></button>
+                  <button type="button" class="preset-dot" style="background: rgba(56, 189, 248, 0.6);" data-color="#38bdf8" title="Xanh biển" disabled></button>
+                  <button type="button" class="preset-dot" style="background: rgba(196, 92, 138, 0.6);" data-color="#c45c8a" title="Hồng tím" disabled></button>
+                  <button type="button" class="preset-dot" style="background: rgba(120, 120, 120, 0.6);" data-color="#787878" title="Xám" disabled></button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Khung xem trước -->
+            <div class="preview-box-wrap">
+              <div class="preview-header">
+                <span class="preview-title">Xem trước văn bản trên trang truyện</span>
+                <button type="button" id="btn-reset-preview" class="btn-reset-preview" disabled>Đặt lại màu chuẩn</button>
+              </div>
+              <div class="reading-preview-content">
+                <span class="preview-dim">Chương 108: Phong vân tái khởi. </span>
+                <span id="preview-active-sentence" class="preview-highlight-text">Đây là câu văn mẫu đang được hệ thống phát âm thanh bằng TTS Engine.</span>
+                <span class="preview-dim"> Tiện ích sẽ liên tục đồng bộ câu đọc tiếp theo một cách mượt mà và trực quan nhất.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- === Sao lưu và đồng bộ dữ liệu === -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">4. Sao lưu & đồng bộ dữ liệu</div>
+              <span class="badge info">Đồng bộ toàn bộ tiện ích</span>
+            </div>
+            <div class="card-desc">
+              <div style="margin-bottom: 8px;">Sao lưu toàn bộ dữ liệu của tiện ích, bao gồm:</div>
+              <ul style="margin: 0 0 12px 20px; padding: 0; line-height: 1.8; color: var(--text);">
+                <li>Danh sách truyện đã lưu</li>
+                <li>Từ điển phát âm tùy chỉnh</li>
+                <li>Cài đặt tiện ích</li>
+                <li>Màu sắc đọc truyện</li>
+              </ul>
+              <div style="font-size: 13.5px; color: var(--text-muted);">Tệp sao lưu dùng chung và đồng bộ hoàn toàn với mục sao lưu trên cửa sổ điều khiển popup.</div>
+            </div>
+
+            <div class="backup-actions-row">
+              <button type="button" id="btn-export-settings" class="btn-setting-action btn-export" title="Xuất toàn bộ dữ liệu dự phòng dạng JSON" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Xuất dữ liệu (.json)
+              </button>
+
+              <button type="button" id="btn-import-settings" class="btn-setting-action btn-import" title="Nhập và phục hồi dữ liệu từ file sao lưu" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                Nhập dữ liệu
+              </button>
+              <input type="file" id="input-import-settings-file" accept=".json" disabled style="display: none;">
+            </div>
+            <div id="settings-toast-msg" class="settings-toast-msg" style="display: none;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- === Tab hướng dẫn lấy API và phân loại nhà cung cấp === -->
+      <section id="tab-huong_dan" class="content-section">
+        <svg aria-hidden="true" style="position: absolute; width: 0; height: 0; overflow: hidden;">
+          <defs>
+            <symbol id="sao-day" viewBox="0 0 24 24">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+            </symbol>
+            <symbol id="sao-nua" viewBox="0 0 24 24">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill="rgba(148, 163, 184, 0.14)" stroke="rgba(148, 163, 184, 0.55)" stroke-width="1.5" stroke-linejoin="round" />
+              <polygon points="12 2 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+            </symbol>
+            <symbol id="sao-rong" viewBox="0 0 24 24">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill="rgba(148, 163, 184, 0.14)" stroke="rgba(148, 163, 184, 0.55)" stroke-width="1.5" stroke-linejoin="round" />
+            </symbol>
+          </defs>
+        </svg>
+        <h2 class="page-title">Cấu hình API giọng đọc cao cấp</h2>
+        <div class="page-desc">Tiện ích tích hợp sẵn <strong>Web Speech API</strong> (không giới hạn, miễn phí mặc định) làm cốt lõi; ngoài ra bạn có thể gắn thêm API Key từ các hãng công nghệ hoặc máy chủ cá nhân để có thêm lựa chọn giọng đọc tự nhiên.</div>
+
+        <div class="alert canh-bao-sao">
+          <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="16" x2="12" y2="12" />
+            <line x1="12" y1="8" x2="12.01" y2="8" />
+          </svg>
+          <div class="alert-content">
+            <strong>Cảnh báo: Xếp hạng sao dựa trên đánh giá chủ quan</strong>
+            <p>Số sao xếp hạng dưới đây (bao gồm cả mức <strong>6 sao</strong> đặc biệt dành cho Google Gemini TTS) được đánh giá dựa trên <strong>quan điểm chủ quan của tác giả</strong> về độ tiện lợi, mức miễn phí và chất lượng trải nghiệm cá nhân, nên có thể khác với trải nghiệm thực tế của từng người. Khuyến khích bạn ưu tiên thử <i>Web Speech API</i> có sẵn hoặc tự trải nghiệm để chọn nguồn phù hợp nhất.</p>
+          </div>
+        </div>
+
+        <div class="alert">
+          <svg class="alert-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+          <div class="alert-content">
+            <strong>Lưu ý về sự cố trong quá trình sử dụng</strong>
+            <p>Vì đây là dịch vụ miễn phí lấy từ bên thứ 3, đôi lúc hệ thống máy chủ của các nhà cung cấp hoặc Azure có thể bị quá tải (lỗi Request / Quota) hoặc do kết nối mạng kém khiến giọng đọc bị khựng, nhảy đoạn đọc.<br><br>Tiện ích đã có sẵn cơ chế tự động thử tải lại, nhưng nếu lỗi vẫn tiếp diễn, bạn chỉ cần <strong>tạm dừng khoảng 1 phút</strong> rồi bấm phát lại, hoặc chuyển tạm sang <i>Web Speech API</i> để đọc tiếp.<br><br>
+              <span class="chu-luu-y">Microsoft Azure TTS đã được kiểm thử thực tế hoạt động ổn định (Đã test OK). FPT.AI vẫn được giữ tương thích cho khóa cũ với endpoint v5 nhưng FPT.AI Console đã ngừng cung cấp dịch vụ cá nhân từ ngày 06/07/2026 nên các khóa Free hết hạn mức có thể trả HTTP 429. Google Gemini TTS, Zalo AI, VNPT SmartVoice, Cartesia AI, ElevenLabs, Fish Audio, Viettel AI, Google Cloud TTS, VieNeu-TTS và nguồn API tùy chỉnh cần thêm khóa hoặc máy chủ thực tế để kiểm thử tiếp.</span>
+            </p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Web Speech API của trình duyệt</div>
+            <span class="badge recommend">Có sẵn</span>
+            <span class="badge info">Không giới hạn</span>
+          </div>
+          <div class="card-desc">Tích hợp trực tiếp bên trong Microsoft Edge / Google Chrome, <strong>không cần tạo tài khoản hay API Key</strong> và không giới hạn số ký tự đọc mỗi ngày. Trên Edge, giọng tiếng Việt (Hoài My / Nam Minh Online) có sẵn chất lượng cao và đồng thời làm nguồn dự phòng tự động khi API ngoài gặp lỗi.</div>
+          <div class="note">Hoặc truy cập vào tài liệu chính thức này để xem chi tiết: <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API/Using_the_Web_Speech_API" target="_blank" class="link-text">MDN Web Speech API</a></div>
+        </div>
+
+        <div class="nhom-huong-dan">
+          <div class="tieu-de-nhom">Nhóm 1: Gói Free (Không cần thẻ Visa)</div>
+          <div class="mo-ta-nhom">Xếp theo số sao từ cao xuống thấp, sao bằng nhau xếp theo bảng chữ cái</div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">1. Google Gemini TTS</div>
+            <span class="the-sao dac-biet" title="6 sao (Đánh giá chủ quan đặc biệt)" aria-label="6 sao"><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg></span>
+            <span class="badge recommend">Khuyến khích nên dùng</span>
+            <span class="badge info">Chưa test key</span>
+          </div>
+          <div class="card-desc">Miễn phí hàng ngày (reset theo giới hạn RPM/RPD, không tính phí tháng với Gmail thường), chất giọng biểu cảm, ngắt nghỉ tự nhiên theo ngữ cảnh truyện (Model mặc định: <code>gemini-3.8-flash-lite-tts</code>).</div>
+          <ol class="steps-list">
+            <li>Truy cập <a href="https://aistudio.google.com/apikey" target="_blank" class="link-text">Google AI Studio</a> và đăng nhập bằng tài khoản Gmail cá nhân (không yêu cầu thẻ thanh toán).</li>
+            <li>Bấm nút <strong>Create API key</strong>, chọn hoặc tạo mới một dự án Google AI miễn phí rồi sao chép khóa vừa tạo.</li>
+            <li>Mở cửa sổ nổi <strong>Đọc Truyện Cho STV</strong> &gt; <strong>Nguồn giọng đọc</strong> &gt; <strong>+ Thêm Nguồn Đọc Mới</strong> &gt; chọn <strong>Google Gemini TTS</strong>, dán API Key (giữ Model <code>gemini-3.8-flash-lite-tts</code>) rồi bấm <strong>Thêm</strong>.</li>
+          </ol>
+          <div class="note">Hoặc truy cập vào tài liệu chính thức này để xem chi tiết: <a href="https://aistudio.google.com/docs/speech-generation" target="_blank" class="link-text">Google Gemini Speech Generation Docs</a></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">2. Zalo AI TTS</div>
+            <span class="the-sao" title="4/5 sao" aria-label="4 sao"><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg><svg class="sao-bieu-tuong"><use href="#sao-rong" /></svg></span>
+            <span class="badge info">Chưa test key</span>
+          </div>
+          <div class="card-desc">Cung cấp gói miễn phí hàng tháng dành cho nhà phát triển, có đủ giọng Nam/Nữ 3 miền Bắc - Trung - Nam, độ trễ tốt tại Việt Nam.</div>
+          <ol class="steps-list">
+            <li>Truy cập <a href="https://developers.zalo.me/" target="_blank" class="link-text">Zalo Developers</a> (hoặc <a href="https://ai.zalo.solutions/" target="_blank" class="link-text">Zalo AI Solutions</a>) và đăng nhập tài khoản Zalo.</li>
+            <li>Tạo ứng dụng (App) hoặc dự án mới, bật API <strong>Text to Speech (Chuyển văn bản thành giọng nói)</strong> trong danh mục dịch vụ.</li>
+            <li>Vào phần quản lý khóa của ứng dụng để sao chép <strong>API Key</strong> (<code>apikey</code>), rồi chọn <strong>Zalo AI TTS</strong> trong <strong>+ Thêm Nguồn Đọc Mới</strong> để dán vào.</li>
+          </ol>
+          <div class="note">Hoặc truy cập vào tài liệu chính thức này để xem chi tiết: <a href="https://ai.zalo.solutions/docs/api/text-to-audio-converter" target="_blank" class="link-text">Tài liệu chính thức Zalo AI TTS (Text to Audio Converter)</a></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">3. VNPT SmartVoice</div>
+            <span class="the-sao" title="3.5/5 sao" aria-label="3.5 sao"><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg><svg class="sao-bieu-tuong"><use href="#sao-nua" /></svg><svg class="sao-bieu-tuong"><use href="#sao-rong" /></svg></span>
+            <span class="badge info">Chưa test key</span>
+          </div>
+          <div class="card-desc">Cấp <strong>30.000 ký tự miễn phí/tháng</strong> cho giọng chuẩn 3 miền Việt Nam (tối đa 500 ký tự/lần gọi, phù hợp với cơ chế chia đoạn tự động của tiện ích). Yêu cầu tài khoản VNPT AI, không cần thẻ Visa.</div>
+          <ol class="steps-list">
+            <li>Đăng ký tài khoản tại <a href="https://smartvoice.vnpt.vn" target="_blank" class="link-text">VNPT SmartVoice</a> hoặc <a href="https://vnptai.io" target="_blank" class="link-text">VNPT AI Portal</a> bằng email hoặc số điện thoại Việt Nam.</li>
+            <li>Đăng ký sử dụng gói miễn phí dịch vụ <strong>Text to Speech (TTS)</strong> và tạo thông tin xác thực API.</li>
+            <li>Sao chép đủ 3 giá trị: <strong>Access Token</strong> (JWT), <strong>Token-id</strong> và <strong>Token-key</strong>, sau đó chọn <strong>VNPT SmartVoice</strong> trong <strong>+ Thêm Nguồn Đọc Mới</strong> để nhập cả 3 trường.</li>
+          </ol>
+          <div class="note">Hoặc truy cập vào tài liệu chính thức này để xem chi tiết: <a href="https://smartvoice.vnpt.vn/documents/api" target="_blank" class="link-text">Tài liệu API chính thức VNPT SmartVoice</a></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">4. Cartesia AI</div>
+            <span class="the-sao" title="3/5 sao" aria-label="3 sao"><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg><svg class="sao-bieu-tuong"><use href="#sao-rong" /></svg><svg class="sao-bieu-tuong"><use href="#sao-rong" /></svg></span>
+            <span class="badge info">Chưa test key</span>
+          </div>
+          <div class="card-desc">Tặng <strong>20.000 credits/tháng</strong> (~20.000 ký tự, ~27 phút audio), tốc độ phản hồi cực nhanh dưới 90ms với model <code>sonic-3.6</code> hỗ trợ mã ngôn ngữ tiếng Việt (<code>vi</code>).</div>
+          <ol class="steps-list">
+            <li>Đăng ký tài khoản miễn phí bằng email tại <a href="https://play.cartesia.ai/" target="_blank" class="link-text">Cartesia Playground</a> (không cần thẻ tín dụng).</li>
+            <li>Vào mục <strong>API Keys</strong> trên thanh menu, bấm tạo khóa mới và sao chép. Bạn có thể chọn thêm Voice ID trong mục <strong>Voices</strong> hoặc bỏ trống để tiện ích tự nạp danh sách giọng.</li>
+            <li>Chọn <strong>Cartesia AI</strong> trong <strong>+ Thêm Nguồn Đọc Mới</strong>, dán API Key và nhấn <strong>Thêm</strong>.</li>
+          </ol>
+          <div class="note">Hoặc truy cập vào tài liệu chính thức này để xem chi tiết: <a href="https://docs.cartesia.ai/api-reference/tts/bytes" target="_blank" class="link-text">Cartesia TTS API Documentation</a></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">5. ElevenLabs</div>
+            <span class="the-sao" title="3/5 sao" aria-label="3 sao"><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg><svg class="sao-bieu-tuong"><use href="#sao-rong" /></svg><svg class="sao-bieu-tuong"><use href="#sao-rong" /></svg></span>
+            <span class="badge info">Chưa test key</span>
+          </div>
+          <div class="card-desc">Tặng <strong>10.000 ký tự/tháng</strong> (~10 phút audio), giọng đọc có độ truyền cảm và ngắt nhịp cao với model đa ngôn ngữ tốc độ nhanh <code>eleven_flash_v2_5</code>.</div>
+          <ol class="steps-list">
+            <li>Đăng ký tài khoản bằng email tại <a href="https://elevenlabs.io/" target="_blank" class="link-text">ElevenLabs</a> (không cần thẻ).</li>
+            <li>Nhấp vào ảnh hồ sơ ở góc màn hình &gt; chọn <strong>API Keys</strong> (hoặc mục Developers), tạo mới một API Key có quyền đọc Text-to-Speech và sao chép.</li>
+            <li>Chọn <strong>ElevenLabs</strong> trong <strong>+ Thêm Nguồn Đọc Mới</strong>, dán API Key (có thể nhập thêm Voice ID yêu thích hoặc bỏ trống dùng giọng mặc định) rồi nhấn <strong>Thêm</strong>.</li>
+          </ol>
+          <div class="note">Hoặc truy cập vào tài liệu chính thức này để xem chi tiết: <a href="https://elevenlabs.io/docs/api-reference/text-to-speech/convert" target="_blank" class="link-text">ElevenLabs Text-to-Speech API Docs</a></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">6. Fish Audio</div>
+            <span class="the-sao" title="2.5/5 sao" aria-label="2.5 sao"><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg><svg class="sao-bieu-tuong"><use href="#sao-nua" /></svg><svg class="sao-bieu-tuong"><use href="#sao-rong" /></svg><svg class="sao-bieu-tuong"><use href="#sao-rong" /></svg></span>
+            <span class="badge info">Chưa test key</span>
+          </div>
+          <div class="card-desc">Hỗ trợ tạo giọng đọc qua model <code>s2.1-pro-free</code> với hạn mức Free tier có giới hạn; có thể ghép thêm giọng cộng đồng thông qua Reference ID.</div>
+          <ol class="steps-list">
+            <li>Đăng ký tài khoản miễn phí tại <a href="https://fish.audio/" target="_blank" class="link-text">Fish Audio</a>.</li>
+            <li>Mở mục quản lý <strong>API Keys</strong> trong tài khoản để tạo khóa mới (tùy chọn lấy <strong>Reference ID</strong> của giọng tiếng Việt ưng ý trên thư viện mẫu).</li>
+            <li>Chọn <strong>Fish Audio</strong> trong <strong>+ Thêm Nguồn Đọc Mới</strong>, dán API Key rồi nhấn <strong>Thêm</strong>.</li>
+          </ol>
+          <div class="note">Hoặc truy cập vào tài liệu chính thức này để xem chi tiết: <a href="https://docs.fish.audio/api-reference/endpoint/openapi-v1/text-to-speech" target="_blank" class="link-text">Fish Audio TTS API Docs</a></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">7. Viettel AI TTS</div>
+            <span class="the-sao" title="1.5/5 sao" aria-label="1.5 sao"><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg><svg class="sao-bieu-tuong"><use href="#sao-nua" /></svg><svg class="sao-bieu-tuong"><use href="#sao-rong" /></svg><svg class="sao-bieu-tuong"><use href="#sao-rong" /></svg><svg class="sao-bieu-tuong"><use href="#sao-rong" /></svg></span>
+            <span class="badge info">Chưa test key</span>
+          </div>
+          <div class="card-desc">Tặng <strong>50.000 ký tự một lần</strong> khi tạo tài khoản mới (giới hạn trải nghiệm ban đầu), hỗ trợ nhiều giọng đọc 3 miền khá rõ ràng.</div>
+          <ol class="steps-list">
+            <li>Đăng ký tài khoản tại <a href="https://viettelai.vn/" target="_blank" class="link-text">Viettel AI</a> bằng email hoặc số điện thoại Việt Nam (không cần thẻ).</li>
+            <li>Kích hoạt dịch vụ <strong>Text to Speech</strong> trên bảng điều khiển, sau đó truy cập <a href="https://viettelai.vn/dashboard/token" target="_blank" class="link-text">Quản lý Token Viettel AI</a> để sao chép <strong>Token</strong>.</li>
+            <li>Chọn <strong>Viettel AI TTS</strong> trong <strong>+ Thêm Nguồn Đọc Mới</strong>, dán Token và nhấn <strong>Thêm</strong>.</li>
+          </ol>
+          <div class="note">Hoặc truy cập vào tài liệu chính thức này để xem chi tiết: <a href="https://viettelai.vn/tai-lieu" target="_blank" class="link-text">Tài liệu chính thức Viettel AI</a></div>
+        </div>
+
+        <!-- === Nhóm các nhà cung cấp cần thẻ Visa === -->
+        <div class="nhom-huong-dan">
+          <div class="tieu-de-nhom">Nhóm 2: Cần thẻ Visa / Mastercard</div>
+          <div class="mo-ta-nhom">Yêu cầu liên kết thẻ thanh toán quốc tế để kích hoạt tài khoản Cloud</div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">1. Microsoft Azure TTS</div>
+            <span class="the-sao" title="5/5 sao" aria-label="5 sao"><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg></span>
+            <span class="badge warning">Cần thẻ VISA</span>
+            <span class="badge recommend">Đã test OK</span>
+          </div>
+          <div class="card-desc">Giọng Azure (đặc biệt là giọng <i>Hoài My</i> và <i>Nam Minh</i>) cực kỳ mượt mà, ổn định. Microsoft tặng gói <strong>Free F0 lên tới 500.000 ký tự Neural/tháng</strong>. Bắt buộc có thẻ VISA/Mastercard để xác minh tài khoản chống spam.</div>
+          <ol class="steps-list">
+            <li>Truy cập <a href="https://portal.azure.com" target="_blank" class="link-text">Portal Azure</a> để đăng ký tài khoản (cần thẻ thanh toán để xác minh danh tính).</li>
+            <li>Gõ <strong>Speech Services</strong> vào thanh tìm kiếm trên cùng và bấm nút <strong>Create (Tạo mới)</strong> một tài nguyên.</li>
+            <li>Lưu ý các thông số cấu hình:
+              <div class="note">
+                <div style="margin-bottom: 8px;">- <strong>Region:</strong> Nên chọn <code>Southeast Asia</code> (Đông Nam Á) để tải nhanh.</div>
+                <div>- <strong>Pricing tier (Gói cước):</strong> Bắt buộc chọn <strong style="color: var(--success);">Free F0 (Miễn phí)</strong>. Chọn nhầm sang <span style="color: var(--danger);">Standard S0</span> sẽ bị tính phí ngay!</div>
+              </div>
+            </li>
+            <li>Đợi khoảng 1-2 phút khởi tạo xong, bấm <strong>Go to resource</strong> &gt; chọn <strong>Keys and Endpoint</strong> ở menu bên trái.</li>
+            <li>Copy <strong>KEY 1</strong> và <strong>Location/Region</strong> (VD: <code>southeastasia</code>), chọn <strong>Microsoft Azure TTS</strong> trong <strong>+ Thêm Nguồn Đọc Mới</strong> để dán vào và bấm <strong>Thêm</strong>.</li>
+          </ol>
+          <div class="note">Hoặc truy cập vào tài liệu chính thức này để xem chi tiết: <a href="https://learn.microsoft.com/en-us/azure/ai-services/speech-service/rest-text-to-speech" target="_blank" class="link-text">Microsoft Azure Speech REST Docs</a></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">2. Google Cloud TTS</div>
+            <span class="the-sao" title="3/5 sao" aria-label="3 sao"><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg><svg class="sao-bieu-tuong"><use href="#sao-day" /></svg><svg class="sao-bieu-tuong"><use href="#sao-rong" /></svg><svg class="sao-bieu-tuong"><use href="#sao-rong" /></svg></span>
+            <span class="badge warning">Cần thẻ VISA · Có rủi ro mất tiền</span>
+            <span class="badge info">Chưa test key</span>
+          </div>
+          <div class="card-desc">Hỗ trợ nhiều giọng đọc (Wavenet/Standard/Neural2) với hạn mức Free tier hàng tháng là <strong>4.000.000 ký tự Standard/WaveNet</strong> hoặc <strong>1.000.000 ký tự Neural2</strong>. <strong style="color: var(--danger);">Cảnh báo rủi ro mất tiền:</strong> Bạn bắt buộc phải bật Billing Account; nếu dùng vượt quá hạn mức miễn phí hàng tháng, Google sẽ tự động trừ tiền qua thẻ đã liên kết.</div>
+          <ol class="steps-list">
+            <li>Truy cập <a href="https://console.cloud.google.com/" target="_blank" class="link-text">Google Cloud Console</a> và thiết lập Billing Account bằng thẻ thanh toán quốc tế (nên đặt thêm Budget Alert cảnh báo chi tiêu).</li>
+            <li>Bấm chọn <strong>Select a project</strong> ở thanh trên cùng và tạo một dự án mới (VD: <code>Doc-Truyen-STV</code>).</li>
+            <li>Tìm dịch vụ <strong>Cloud Text-to-Speech API</strong> trên thanh tìm kiếm và bấm <strong>Enable (Bật)</strong>.</li>
+            <li>Vào menu <strong>APIs &amp; Services &gt; Credentials</strong> &gt; <strong>Create Credentials &gt; API key</strong> để tạo khóa (nên giới hạn khóa chỉ dùng cho API Text-to-Speech).</li>
+            <li>Sao chép API Key, chọn <strong>Google Cloud TTS</strong> trong <strong>+ Thêm Nguồn Đọc Mới</strong> để dán vào và bấm <strong>Thêm</strong>.</li>
+          </ol>
+          <div class="note">Hoặc truy cập vào tài liệu chính thức này để xem chi tiết: <a href="https://docs.cloud.google.com/text-to-speech/docs" target="_blank" class="link-text">Google Cloud Text-to-Speech Documentation</a></div>
+        </div>
+
+        <!-- === Nhóm cài đặt cá nhân hóa === -->
+        <div class="nhom-huong-dan">
+          <div class="tieu-de-nhom">Nhóm 3: Cài đặt cá nhân (Cá nhân hóa)</div>
+          <div class="mo-ta-nhom">Dành cho máy chủ chạy cục bộ (Self-host) hoặc endpoint API tùy biến riêng</div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">1. VieNeu-TTS (Chạy cục bộ trên máy cá nhân)</div>
+            <span class="badge recommend">Cá nhân hóa · Miễn phí vô hạn</span>
+            <span class="badge info">Chưa test máy chủ</span>
+          </div>
+          <div class="card-desc">Mô hình tổng hợp tiếng Việt mã nguồn mở chạy hoàn toàn offline trên máy tính cá nhân của bạn (không phụ thuộc Internet, không giới hạn ký tự), giao tiếp qua máy chủ cục bộ chuẩn OpenAI Speech (<code>/v1/audio/speech</code>, model mặc định <code>vieneu-v3-turbo</code>).</div>
+          <ol class="steps-list">
+            <li>Tải mã nguồn VieNeu-TTS về máy cá nhân theo hướng dẫn cài đặt bằng Python / <code>uv</code> hoặc Docker từ trang GitHub chính thức.</li>
+            <li>Khởi chạy máy chủ OpenAI Speech cục bộ (VD: <code>uv run python -m apps.openai_speech</code>) để mở cổng mặc định tại <code>http://127.0.0.1:8000</code> (hoặc <code>http://localhost:8000</code>).</li>
+            <li>Mở cửa sổ nổi &gt; <strong>+ Thêm Nguồn Đọc Mới</strong> &gt; chọn <strong>VieNeu-TTS (Cục bộ)</strong>, nhập địa chỉ máy chủ đang chạy rồi bấm <strong>Thêm</strong>.</li>
+          </ol>
+          <div class="note">Hoặc truy cập vào tài liệu chính thức này để xem chi tiết: <a href="https://github.com/pnnbao97/VieNeu-TTS" target="_blank" class="link-text">GitHub VieNeu-TTS Chính Thức</a></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">2. Nguồn đọc khác (Khác · Tùy chỉnh API)</div>
+            <span class="badge ca-nhan-hoa">Cá nhân hóa · Nâng cao</span>
+            <span class="badge info">Chưa test API</span>
+          </div>
+          <div class="card-desc">Dành cho người dùng am hiểu kỹ thuật muốn tự kết nối với các dịch vụ REST API hoặc máy chủ trung gian tự xây dựng bằng cách tự định nghĩa đường dẫn, tiêu đề và khuôn mẫu JSON.</div>
+          <ol class="steps-list">
+            <li>Nhập <strong>Đường dẫn (API URL)</strong> của nguồn đọc và chọn phương thức <strong>POST</strong> hoặc <strong>GET</strong>.</li>
+            <li>Tại <strong>Headers JSON</strong>, nhập đối tượng JSON chứa khóa xác thực hoặc kiểu dữ liệu theo tài liệu của máy chủ đích.
+              <div class="note"><strong>Ví dụ:</strong><br><code>{"Authorization": "Bearer mã_bí_mật_của_bạn"}</code></div>
+            </li>
+            <li>Tại <strong>Body Template</strong>, chèn biến <code>{{van_ban}}</code> vào đúng vị trí chứa đoạn truyện cần đọc.
+              <div class="note"><strong>Ví dụ:</strong><br><code>{"text": "{{van_ban}}", "voice": "mặc_định"}</code></div>
+            </li>
+            <li>Tại <strong>Audio Path</strong>, điền đường dẫn thuộc tính tới URL/Base64 âm thanh nếu API trả về JSON (VD: <code>data.audioUrl</code>), hoặc <strong>bỏ trống</strong> nếu API trả trực tiếp tệp âm thanh (Audio Blob).</li>
+          </ol>
+          <div class="note">Hoặc truy cập vào tài liệu chính thức này để xem chi tiết: <a href="https://github.com/SpaceheroVN/DocTruyenSangTacViet" target="_blank" class="link-text">Kho mã nguồn Đọc Truyện Cho Sáng Tác Việt</a></div>
+        </div>
+      </section>
+
+      <section id="tab-info" class="content-section">
+        <h2 class="page-title">Thông tin</h2>
+        <div class="page-desc">Giới thiệu dự án mã nguồn mở và liên kết hỗ trợ.</div>
+
+        <div class="card">
+          <div class="info-grid">
+            <div class="info-row">
+              <strong>Tên tiện ích</strong>
+              <span>Đọc Truyện Cho Sáng Tác Việt (Doc Truyen STV)</span>
+            </div>
+            <div class="info-row">
+              <strong>Mô tả</strong>
+              <span>Tự động đọc truyện trên Sáng Tác Việt. Hỗ trợ Web Speech, FPT.AI, Azure, Google Cloud TTS.
+                (Unofficial)</span>
+            </div>
+            <div class="info-row">
+              <strong>Tác giả</strong>
+              <span>SpaceheroVN</span>
+            </div>
+            <div class="info-row">
+              <strong>Giấy phép</strong>
+              <span>MIT License</span>
+            </div>
+            <div class="info-row">
+              <strong>Mục đích tạo ra</strong>
+              <span>"<strong>Lười</strong> tự đọc quá nên làm cái này chơi vậy á."</span>
+            </div>
+          </div>
+
+          <div class="support-block">
+            <div class="support-item sp-rate-item">
+              <div class="sp-icon-box">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path
+                    d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" />
+                </svg>
+              </div>
+              <div class="sp-text-group">
+                <div class="sp-title">Hãy đánh giá</div>
+                <div class="sp-desc">
+                  Tiện ích giúp trải nghiệm tốt hơn? Xin hãy dành chút thời gian <a href="https://microsoftedge.microsoft.com/addons/detail/mabgcghglcjheefkkicmkpmlhaooiiae" target="_blank" class="link-rate">đánh giá 5 sao trên cửa hàng</a> nhé!
+                </div>
+              </div>
+            </div>
+
+            <div class="support-item sp-mail-item">
+              <div class="sp-icon-box">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+              </div>
+              <div class="sp-text-group">
+                <div class="sp-title">Báo lỗi / góp ý</div>
+                <div class="sp-desc">
+                  Gặp lỗi phát sinh hay có tính năng mới muốn thêm? Đừng ngại <a href="https://forms.gle/rcrew33xXDU144j79" target="_blank" class="link-mail">gửi phản hồi cho mình</a>.
+                </div>
+              </div>
+            </div>
+
+            <div class="support-item sp-donate-item">
+              <div class="sp-icon-box">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M10 2v2" />
+                  <path d="M14 2v2" />
+                  <path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1" />
+                  <path d="M6 2v2" />
+                </svg>
+              </div>
+              <div class="sp-text-group">
+                <div class="sp-title">Đóng góp (Donate)</div>
+                <div class="sp-desc">
+                  Sự ủng hộ của bạn là động lực rất lớn. Nếu bạn thích, hãy <a href="https://biolink.com.vn/autostv" target="_blank" class="link-donate">mời mình một ly cafe</a> nhé.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Lớp phủ xem trước v0.4.2 -->
+  <div id="cai_dat-preview-overlay" class="cai_dat-preview-overlay">
+    <button type="button" id="btn-unlock-preview" class="btn-unlock-preview" title="Bấm để xem trước giao diện v0.4.2">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+      </svg>
+      <span>Xem trước v0.4.2</span>
+    </button>
+  </div>
+</body>
+
+</html>

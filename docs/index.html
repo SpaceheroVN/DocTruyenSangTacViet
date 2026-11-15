@@ -396,6 +396,7 @@
     .hero-features {
       display: flex;
       flex-wrap: wrap;
+      justify-content: center;
       gap: 10px;
       margin-bottom: 32px;
     }
@@ -556,6 +557,9 @@
 
     .stat-item {
       flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       text-align: center;
       padding: 16px 12px;
       border-right: 1px solid var(--border);
@@ -566,12 +570,22 @@
     }
 
     .stat-num {
+      flex: 1;
+      min-height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-family: 'Sora', sans-serif;
       font-size: 24px;
       font-weight: 800;
       color: var(--text);
       line-height: 1;
       margin-bottom: 4px;
+    }
+
+    .stat-num.stat-num--text {
+      font-size: clamp(13px, 2.8vw, 17px);
+      line-height: 1.2;
     }
 
     .stat-num span {
@@ -1583,11 +1597,6 @@
         <path
           d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0 0 22 12.017C22 6.484 17.522 2 12 2z" />
       </symbol>
-      <symbol id="icon-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-        stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="11" width="18" height="11" rx="2" />
-        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-      </symbol>
       <symbol id="icon-logo" viewBox="0 0 160 80">
         <text x="4" y="50" font-family="'Baloo 2', cursive" font-size="46" font-weight="800" font-style="italic"
           fill="url(#g1)" filter="url(#glow)">STV</text>
@@ -1669,19 +1678,13 @@
             <svg width="12" height="12">
               <use href="#icon-volume-hero"></use>
             </svg>
-            Web TTS · FPT.AI · Azure
+            Web TTS · Khác
           </div>
           <div class="hero-feat">
             <svg width="12" height="12">
               <use href="#icon-bookmark-hero"></use>
             </svg>
             Lưu danh sách
-          </div>
-          <div class="hero-feat">
-            <svg width="12" height="12">
-              <use href="#icon-lock"></use>
-            </svg>
-            Hoàn toàn miễn phí
           </div>
         </div>
         <div class="hero-actions">
@@ -1705,9 +1708,9 @@
           </button>
         </div>
 
-        <div class="stats-strip" id="stats-strip" style="display:none">
+        <div class="stats-strip" id="stats-strip">
           <div class="stat-item">
-            <div class="stat-num" id="stat-releases">—</div>
+            <div class="stat-num" id="stat-releases"><span>—</span></div>
             <div class="stat-label">Phiên bản</div>
           </div>
           <div class="stat-item">
@@ -1715,7 +1718,7 @@
             <div class="stat-label">Miễn phí</div>
           </div>
           <div class="stat-item">
-            <div class="stat-num"><span>3</span></div>
+            <div class="stat-num stat-num--text"><span>Không giới hạn</span></div>
             <div class="stat-label">Nguồn giọng</div>
           </div>
         </div>
@@ -1838,13 +1841,13 @@
             src="mau/chuong-1.html"></iframe>
         </div>
 
-        <div class="popup-anchor">
+        <div class="popup-anchor" id="popup-anchor">
           <div class="popup-panel-label">
             <div class="popup-panel-label-dot" id="popup-panel-dot"></div>
             <span id="popup-panel-status-text">Extension đang hoạt động</span>
           </div>
           <iframe class="popup-frame" id="popup-frame" title="Preview extension popup"
-            src="mau/DocTruyenSTV_v0.4.1/popup.html"></iframe>
+            src="mau/DocTruyenSTV_v0.4.1/cua_so_noi.html"></iframe>
         </div>
       </div>
     </div>
@@ -1954,7 +1957,11 @@
       return the;
     }
 
+    const KHOA_DEM_PHIEN_BAN = 'stv_release_count';
+
     async function taiPhatHanh() {
+      if (dangTaiPhatHanh || daTaiPhatHanh) return;
+      dangTaiPhatHanh = true;
       const danhSach = document.getElementById('releases-list');
       try {
         const ketQua = await fetch(URLPHATHANH, { headers: { 'Accept': 'application/vnd.github+json' } });
@@ -1971,9 +1978,11 @@
 
         danhSachPH.sort((a, b) => new Date(b.published_at || b.created_at) - new Date(a.published_at || a.created_at));
 
-        const thanhThongKe = document.getElementById('stats-strip');
-        document.getElementById('stat-releases').innerHTML = `<span>${danhSachPH.length}</span>`;
-        thanhThongKe.style.display = 'flex';
+        const soPhienBan = String(danhSachPH.length);
+        document.getElementById('stat-releases').innerHTML = `<span>${soPhienBan}</span>`;
+        try {
+          localStorage.setItem(KHOA_DEM_PHIEN_BAN, soPhienBan);
+        } catch (_) { }
 
         // Xác định bản phát hành chính thức mới nhất (không phải Pre-release)
         const banChinhThucMoiNhat = danhSachPH.find(r => !r.prerelease && !r.draft) || danhSachPH[0];
@@ -2011,6 +2020,8 @@
         </p>
         <button onclick="daTaiPhatHanh=false;taiPhatHanh()" style="margin-top:14px;padding:7px 18px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:12px;cursor:pointer;">↻ Thử lại</button>
       </div>`;
+      } finally {
+        dangTaiPhatHanh = false;
       }
     }
 
@@ -2060,6 +2071,7 @@
     }
 
     let daTaiPhatHanh = false;
+    let dangTaiPhatHanh = false;
     let daTaiTag = false;
 
     function chuyenTab(tabDich, capNhatHash = true) {
@@ -2119,12 +2131,18 @@
     ];
     let bo_nho_dem_danh_sach_mau = null;
 
+    const bo_nho_dem_tep_popup = { 'v0.4.1': 'cua_so_noi.html' };
+
     async function lay_danh_sach_mau() {
       if (bo_nho_dem_danh_sach_mau) return bo_nho_dem_danh_sach_mau;
       try {
         const phan_hoi = await fetch('mau/danh_sach.json?t=' + Date.now());
         if (phan_hoi.ok) {
           const danh_sach = await phan_hoi.json();
+          danh_sach.forEach(muc => {
+            const pb = muc.phien_ban || muc.version;
+            if (pb && muc.popup) bo_nho_dem_tep_popup[pb] = muc.popup;
+          });
           bo_nho_dem_danh_sach_mau = danh_sach.map(muc => muc.phien_ban || muc.version);
           return bo_nho_dem_danh_sach_mau;
         }
@@ -2198,7 +2216,17 @@
           throw new Error('Không tìm thấy mẫu');
         }
 
-        const duong_dan_popup = `mau/DocTruyenSTV_${phien_ban}/popup.html`;
+        const tep_popup = bo_nho_dem_tep_popup[phien_ban] || (phien_ban === 'v0.4.1' ? 'cua_so_noi.html' : 'popup.html');
+        const duong_dan_popup = `mau/DocTruyenSTV_${phien_ban}/${tep_popup}`;
+        const neoPopup = document.getElementById('popup-anchor');
+        if (neoPopup && window.innerWidth > 900) {
+          const kich_thuoc_popup = tep_popup === 'cua_so_noi.html' ? 380 : 350;
+          const kieuKhung = khungPreview ? getComputedStyle(khungPreview) : null;
+          const vienNgang = kieuKhung ? ((parseFloat(kieuKhung.borderLeftWidth) || 0) + (parseFloat(kieuKhung.borderRightWidth) || 0)) : 0;
+          neoPopup.style.width = `${kich_thuoc_popup + vienNgang + 10}px`;
+        } else if (neoPopup) {
+          neoPopup.style.width = '';
+        }
 
         window.__phien_ban_xem_truoc = phien_ban;
         window.__previewVersion = phien_ban;
@@ -2409,10 +2437,16 @@
     nenModal.addEventListener('click', e => { if (e.target === nenModal) dongModal(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') dongModal(); });
 
-    setTimeout(() => {
-      if (!daTaiPhatHanh) {
-        taiPhatHanh();
+    try {
+      const soPhienBanDaLuu = localStorage.getItem(KHOA_DEM_PHIEN_BAN);
+      if (soPhienBanDaLuu && /^\d+$/.test(soPhienBanDaLuu)) {
+        document.getElementById('stat-releases').innerHTML = `<span>${soPhienBanDaLuu}</span>`;
       }
+    } catch (_) { }
+
+    taiPhatHanh();
+
+    setTimeout(() => {
       tai_danh_sach_phien_ban();
     }, 300);
 
